@@ -1,0 +1,127 @@
+import {test,expect} from '@playwright/test'
+
+test('notification reminders, dismissal, clearing, action events and keyboard dismissal',async({page})=>{
+ await page.goto('/')
+ const bell=page.getByRole('button',{name:'Notifications',exact:true})
+ await bell.click()
+ const dialog=page.getByRole('dialog',{name:'Notifications',exact:true})
+ await expect(dialog).toBeVisible()
+ await expect(dialog.getByRole('button',{name:'View follow-up'})).toHaveCount(3)
+ await dialog.getByRole('button',{name:'Dismiss reminder: Share the website proposal and project timeline',exact:true}).click()
+ await expect(dialog.getByRole('button',{name:'View follow-up'})).toHaveCount(2)
+ await page.keyboard.press('Escape')
+ await expect(dialog).toHaveCount(0)
+ await expect(bell).toBeFocused()
+ await bell.click()
+ await expect(dialog.getByRole('button',{name:'View follow-up'})).toHaveCount(2)
+ await dialog.getByRole('button',{name:'View follow-up'}).first().click()
+ await expect(page.getByRole('dialog',{name:'Amara Okafor',exact:true})).toBeVisible()
+ await page.getByRole('dialog').getByRole('checkbox').check()
+ await page.getByLabel('Close dialog').click()
+ await page.getByLabel('Status for Olivia Bennett').selectOption('Contacted')
+ await bell.click()
+ await expect(dialog).toContainText('Olivia Bennett moved to Contacted.')
+ await expect(dialog).toContainText('Follow-up completed.')
+ await dialog.getByRole('button',{name:'Clear all notifications'}).click()
+ await expect(dialog).toContainText('No new notifications.')
+ await page.getByLabel('Close dialog').click()
+ await expect(page.getByRole('button',{name:'Follow-ups due: 2. View follow-ups due',exact:true})).toBeVisible()
+})
+
+test('reset cancel, confirmation, filter reset and unrelated storage preservation',async({page})=>{
+ await page.goto('/')
+ await expect(page.getByRole('heading',{name:'Pipeline snapshot'})).toBeVisible()
+ await page.evaluate(()=>localStorage.setItem('unrelated-app','keep'))
+ await page.getByLabel('Filter by source').selectOption('Email')
+ await page.getByLabel('Filter by status').selectOption('Lost')
+ await page.getByLabel('Search leads').fill('nothing')
+ await page.getByRole('button',{name:'Clear filters',exact:true}).click()
+ await expect(page.getByLabel('Search leads')).toHaveValue('')
+ await expect(page.getByLabel('Filter by source')).toHaveValue('All sources')
+ await page.getByLabel('Filter by source').selectOption('Email')
+ const before=await page.evaluate(()=>localStorage.getItem('leadflow.demo.v1'))
+ await page.getByRole('button',{name:'Reset demo data',exact:true}).click()
+ await expect(page.getByRole('dialog',{name:'Reset your demo workspace?'})).toBeVisible()
+ await page.getByRole('button',{name:'Keep my data',exact:true}).click()
+ expect(await page.evaluate(()=>localStorage.getItem('leadflow.demo.v1'))).toBe(before)
+ await page.getByRole('button',{name:'Reset demo data',exact:true}).click()
+ await page.getByRole('dialog').getByRole('button',{name:'Reset demo data',exact:true}).click()
+ await expect(page.getByLabel('Filter by source')).toHaveValue('All sources')
+ await expect(page.getByRole('table').getByRole('row')).toHaveCount(6)
+ expect(await page.evaluate(()=>localStorage.getItem('unrelated-app'))).toBe('keep')
+})
+
+test('empty workspace actions, form cancellation and modal keyboard containment',async({page})=>{
+ await page.goto('/')
+ await expect(page.getByRole('heading',{name:'Pipeline snapshot'})).toBeVisible()
+ await page.evaluate(()=>localStorage.setItem('leadflow.demo.v1',JSON.stringify({version:1,leads:[],tasks:[],activities:[]})))
+ await page.reload()
+ await expect(page.getByRole('heading',{name:'No leads found'})).toBeVisible()
+ await page.getByRole('navigation').getByRole('button',{name:'Activity',exact:true}).click()
+ await expect(page.getByText('Your activity will appear here.')).toBeVisible()
+ await page.getByRole('navigation').getByRole('button',{name:'Follow-ups',exact:true}).click()
+ for(const state of ['Open','Due','Overdue','Upcoming','Completed','All']){
+  await page.getByLabel('Filter tasks').selectOption(state)
+  await expect(page.getByRole('heading',{name:'All clear here'})).toBeVisible()
+ }
+ await page.getByRole('button',{name:'Add follow-up',exact:false}).click()
+ await expect(page.getByRole('dialog')).toContainText('Add a lead before scheduling')
+ await page.getByRole('dialog').getByRole('button',{name:'Add lead',exact:true}).click()
+ const dialog=page.getByRole('dialog',{name:'Capture a new lead'})
+ await expect(dialog).toBeVisible()
+ for(let i=0;i<12;i++){
+  await page.keyboard.press('Tab')
+  expect(await page.evaluate(()=>document.activeElement?.closest('dialog')!==null)).toBe(true)
+ }
+ await page.getByRole('button',{name:'Cancel',exact:true}).click()
+ await expect(dialog).toHaveCount(0)
+ await page.getByRole('link',{name:'LeadFlow overview'}).click()
+ await expect(page.getByRole('heading',{name:'Pipeline snapshot'})).toBeVisible()
+})
+
+test('save retry recovers from quota failure without discarding session changes',async({page})=>{
+ await page.addInitScript(()=>{
+  const original=Storage.prototype.setItem
+  let fail=true
+  Object.defineProperty(window,'allowSaving',{value:()=>{fail=false}})
+  Storage.prototype.setItem=function(key,value){if(fail)throw new DOMException('Full','QuotaExceededError');original.call(this,key,value)}
+ })
+ await page.goto('/')
+ await expect(page.getByRole('alert')).toContainText('only in memory')
+ await page.getByLabel('Status for Olivia Bennett').selectOption('Converted')
+ await page.getByRole('button',{name:'Retry saving'}).click()
+ await expect(page.getByRole('alert')).toBeVisible()
+ await page.evaluate(()=>(window as unknown as {allowSaving:()=>void}).allowSaving())
+ await page.getByRole('button',{name:'Retry saving'}).click()
+ await expect(page.getByRole('alert')).toHaveCount(0)
+ const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('leadflow.demo.v1')!))
+ expect(saved.leads.find((lead:{id:string})=>lead.id==='sample-0').status).toBe('Converted')
+})
+
+test('all metric shortcuts, pipeline links and mobile notifications work',async({page})=>{
+ await page.setViewportSize({width:360,height:800})
+ await page.goto('/')
+ for(const [metric,status] of [['Total leads','All statuses'],['New leads','New'],['Qualified leads','Qualified'],['Converted leads','Converted']]){
+  await page.getByRole('button',{name:new RegExp(`^${metric}:`)}).click()
+  await expect(page.getByLabel('Filter by status')).toHaveValue(status)
+  await page.getByRole('navigation').getByRole('button',{name:'Overview'}).click()
+ }
+ for(const status of ['New','Contacted','Qualified','Converted','Lost']){
+  await page.locator('.pipeline-legend').getByRole('button',{name:new RegExp(`${status.toLowerCase()} leads$`)}).click()
+  await expect(page.getByLabel('Filter by status')).toHaveValue(status)
+  await page.getByRole('navigation').getByRole('button',{name:'Overview'}).click()
+ }
+ await page.getByRole('button',{name:'View pipeline',exact:false}).click()
+ await expect(page.getByLabel('Filter by status')).toHaveValue('All statuses')
+ await page.getByRole('navigation').getByRole('button',{name:'Overview'}).click()
+ await page.getByRole('button',{name:'Review follow-ups',exact:false}).click()
+ await expect(page.getByLabel('Filter tasks')).toHaveValue('Due')
+ await page.getByRole('button',{name:'Notifications',exact:true}).click()
+ const dialog=page.getByRole('dialog',{name:'Notifications'})
+ await expect(dialog).toBeVisible()
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true)
+ const bounds=await dialog.boundingBox()
+ expect(bounds!.width).toBeLessThanOrEqual(360)
+ await page.screenshot({path:'test-results/mobile-notifications.png',fullPage:true})
+})
+
