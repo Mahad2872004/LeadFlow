@@ -1,99 +1,85 @@
-# LeadFlow
+# LeadFlow — M2
 
-A local, fictional lead-management demo built with React, TypeScript, Vite, and plain CSS. No account, API key, backend, or paid service is required.
+LeadFlow is a React + TypeScript + Vite dashboard backed by Supabase PostgreSQL and Supabase Auth. It uses the Supabase Data API and database functions directly; no Express server, paid messaging service, or CRM integration is needed.
 
-## Run locally
+## Set up a Supabase project
 
-Use Node.js 22.12+ (Node 24 recommended) and npm. From this folder:
+1. Create a Supabase project. In Authentication, disable public signup and anonymous sign-ins. Create an internal user with an email/password and confirmed email in the dashboard. Each account has its own isolated workspace; accounts do not share leads.
+2. Apply `supabase/migrations/202610180001_m2.sql` using the Supabase SQL editor, once, in a new project. Alternatively install the Supabase CLI, run `supabase init` if no CLI config exists, `supabase login`, `supabase link --project-ref YOUR_PROJECT_REF`, then `supabase db push`. Review the target project before applying migrations.
+3. Copy `.env.example` to `.env.local`. Set `VITE_SUPABASE_URL` to the project URL and `VITE_SUPABASE_PUBLISHABLE_KEY` to its publishable key (a legacy **anon** key also works). These values are included in the browser bundle. **Never put a service-role key, secret key, database password, or privileged token in any VITE variable.** Local environment files are ignored by Git.
+4. Use Node.js 22.12+ and run `npm install`, then `npm run dev`. Sign in with the internal account. Missing configuration shows setup instructions instead of silently falling back to browser persistence.
+5. The first database workspace is empty. Add a lead, explicitly import saved browser data, or confirm **Reset demo data** to load the eight fictional M1 leads and their tasks/history.
 
-```powershell
-npm install
-npm run dev
-```
+For local Supabase development, install Docker and the Supabase CLI, then run `supabase init`, `supabase start`, and `supabase db reset` in a disposable local project. `db reset` destroys the local database. Use the URL and anon/publishable key reported by the CLI in `.env.local`, and create a confirmed test account through the local Studio. The migration has no hosted-only dependencies. The CLI and Docker are not bundled with this repository.
 
-Open the Local URL printed by Vite (normally http://localhost:5173).
+## Persistence and access model
 
-```powershell
-npm run build
-npm run preview
-npm run lint
-npm test
-```
+- `leads`, `follow_up_tasks`, and `activity_history` use composite owner/record keys. Foreign keys prevent orphan records or cross-owner links. Checks enforce required fields, allowed statuses/sources/services, email/phone lengths and formats, calendar dates, finite timestamps, and note/message lengths. Indexes cover status/source, creation time, due dates, and lead history.
+- All five exposed tables (including `workspaces` and `workspace_requests`) have RLS enabled. Authenticated accounts can select only their own rows. Anonymous callers have no table privileges or RPC access. Direct insert/update/delete is revoked even for authenticated users.
+- `load_workspace` and `save_workspace` are narrowly scoped security-definer functions with an empty search path. They derive the owner exclusively from `auth.uid()`, reject absent identities and anonymous Auth sessions, and explicitly filter every read/write by owner. No client-supplied owner is accepted. Do not remove those checks: definer functions bypass RLS. Function execution is revoked from PUBLIC and anon, then granted to authenticated.
+- Each save atomically replaces the caller's three related collections, advances a revision, and records a request receipt. A locked workspace row serializes concurrent saves. Old revisions fail instead of overwriting newer edits. Retrying the same request ID and payload returns its original revision without repeating writes; using that ID with different data fails. Identical email addresses are allowed because separate inquiries can be legitimate.
+- The UI only displays saved changes and success after the database acknowledges them. On failure, the intended snapshot and request ID remain in memory for **Retry saving**. **Reload workspace and discard attempt** explicitly abandons that attempt and fetches current server data. A browser refresh loses an unacknowledged in-memory draft, but any committed database changes remain. Refresh also retrieves edits from other sessions; no Realtime subscription is used.
+- Supabase Auth manages its session tokens in browser storage. Leads/tasks/history are never automatically written to localStorage. Sign-out or an account change unmounts private workspace state.
 
-Browser tests use Microsoft Edge installed on the machine. To use Playwright Chromium instead, remove `channel: 'msedge'` in `playwright.config.ts` and run `npx playwright install chromium` once. Tests start a local Vite server automatically and use isolated browser contexts; they do not change your normal browser's data.
+This intentionally simple snapshot protocol is for small internal workspaces: maximum 5 MB per save, 5,000 leads, 10,000 tasks, and 20,000 history items. It is not a paginated large CRM. Activity history preserves M1 user-facing events and imports; it is **not an immutable security audit log**. Request receipts are retained for safe retries and grow with writes. No automatic deletion/retention job is installed.
 
-## M1 features
+The security approach follows Supabase's [RLS guidance](https://supabase.com/docs/guides/database/postgres/row-level-security) and [database-function guidance](https://supabase.com/docs/guides/database/functions).
 
-- Overview with actionable metric cards, interactive pipeline breakdown, five recent leads, and due follow-up summary.
-- Lead creation and full contact editing with shared validation. Open a lead and choose Edit lead; Cancel discards unsaved changes.
-- Search across name, company, email, and service; combined status/source filters and five editable lead statuses.
-- Lead details, follow-up scheduling, completion/reopening, and timestamped activity history.
-- Open/due/overdue/upcoming/completed/all task filters, due indicators, simulated in-app notifications.
-- Fictional initial data, confirmed reset, responsive navigation and forms.
-- Versioned localStorage persistence with schema checks and explicit failure messages.
+## Preserve and import M1 data
 
-## Structure
+M1 used `leadflow.demo.v1` in localStorage. M2 never changes or deletes that key. Open M2 on the **same browser and origin/port** used for M1 to see **Import browser data** when the database workspace is empty. Confirming copies validated leads, follow-ups, IDs, timestamps, and history in one transaction. A changed server revision rejects the import safely. Existing database records are never automatically merged or replaced by import.
 
-- `src/lib/model.ts`: domain types, validation, and immutable lead/task operations.
-- `src/lib/storage.ts`: centralized serialization, loading, schema checks, and storage errors.
-- `src/lib/dates.ts`: strict local calendar-date validation and shared due/state calculations.
-- `src/hooks/useLocalDay.ts`: local-midnight and tab-return refresh for date-based state.
-- `src/lib/seed.ts`: fictional sample records; task dates are relative to the local day.
-- `src/components/`: reusable Sidebar, MetricCard, DashboardOverview, LeadTable, TaskList, ActivityTimeline, LeadForm, NotificationCenter, Icon, and accessible Modal components.
-- `src/App.tsx`: workspace state, view composition, forms, and action handlers.
-- `src/App.css`: responsive design system and component styles.
-- `tests/leadflow.spec.ts`: end-to-end browser regression tests.
+Invalid browser data produces an explicit message and remains untouched. If moving to another origin, export that key from the original browser first; this release has no file-upload import UI. Reset asks for confirmation and replaces only the signed-in account's database data with fictional samples; it cannot undo prior edits. It does not erase the M1 browser backup or another account's records.
 
-## Persistence and limits
+## M1 workflows retained
 
-Data uses the `leadflow.demo.v1` key and belongs to the current browser and origin (including port). Reset replaces that key only. Clearing browser data removes the demo. Invalid saved data is preserved until an explicit reset; changes made while recovery is blocked remain in memory. Storage write failures also leave the session usable with a visible warning.
+Overview metrics and pipeline shortcuts, lead creation/full editing, search and combined filters, all five statuses, lead details, follow-up scheduling/completion/reopening, local-calendar due indicators, history, responsive layouts, and simulated notifications remain. Follow-up dates stay `YYYY-MM-DD`; past dates are permitted. The shared day hook updates due states at midnight and on tab return. Notifications are session-only; no messages are sent. Reset is a transactional database operation. Individual lead deletion was not an M1 UI feature; removing records is supported by the database snapshot operation and tested through reset.
 
-This is a single-browser demonstration, not a production CRM. There is no authentication, server, cross-device synchronization, email delivery, external integration, background reminder service, or multi-tab conflict resolution. Notifications are simulated and session-only. Contact editing preserves the lead ID, creation date, linked tasks, and previous activity. Lead deletion is outside this implementation. Avoid entering sensitive real customer information in a shared browser.
+There was no public inquiry page in M1. M2's capture form is **private and authenticated**. No public ingestion endpoint or Edge Function is exposed, so anonymous visitors cannot use dashboard CRUD. If public inquiries are added later, implement a separate Edge Function with server-side validation, CAPTCHA/rate limiting, an explicit destination workspace, and idempotency; never relax these RLS policies to enable a public form.
 
-## Testing
-
-`npm test` covers lead validation, creation, full editing, cancel behavior, automatic dashboard counts, search/filtering, status changes, refresh persistence, task creation/completion and history, reset/cancel, corrupt storage recovery, failed writes, empty results, mobile overflow, and browser runtime errors. Responsive interaction tests cover 360px, 768px, and 1440px viewports, including mobile lead cards and dashboard shortcuts. Screenshots are saved under ignored `test-results/`.
-
-
-
-## Follow-up dates and history
-
-Follow-ups store due dates as local calendar dates (`YYYY-MM-DD`), without converting them into UTC timestamps. A task is due if it is incomplete and its date is today or earlier. It becomes overdue on the following local calendar day. Completed tasks are excluded from due and overdue totals; reopening restores the appropriate state. Past dates are allowed, while impossible calendar dates, empty notes, and notes longer than 2,000 characters are rejected.
-
-The dashboard, task filters, and task badges share the same date rules. They refresh at local midnight and when the browser tab regains focus or visibility. Activity timestamps are stored as ISO timestamps and displayed in the viewer's local time. Lead creation, edits, status changes, task scheduling, completion, and reopening appear newest first in both workspace and lead timelines.
-
-`tests/followups.spec.ts` verifies leap years, invalid dates, task validation, completion/reopening, persisted history, and a browser-clock test crossing local midnight in Asia/Karachi.
-
-## Notifications and UI feedback
-
-The notification bell opens a keyboard-accessible dialog containing recent lead/task actions and current due/overdue reminders. View follow-up opens the associated lead. Dismiss and Clear all remove notifications for the current session without completing tasks. Reminders can return on the next local day or refresh; completing a task removes its reminder. Reset replaces old event notifications and clears reminder dismissals. No email, push, or messaging integration is used.
-
-Dialogs have accessible names, contain keyboard focus, close with Escape, and restore focus to their opener. Search results are announced, forms validate required fields, and mobile controls use larger touch targets. Clear filters recovers from empty searches. Failed writes show Retry saving without discarding in-memory changes; unreadable saved data remains protected until confirmed reset. Reset cancellation leaves data untouched and confirmation only replaces LeadFlow's own storage key.
-
-`tests/polish.spec.ts` exercises notification actions, keyboard focus, all metric/pipeline shortcuts, mobile notification layout, empty workspace actions, reset cancellation/confirmation, unrelated storage preservation, and recovery from failed writes. Existing suites cover lead creation/editing, forms, status controls, task actions, timelines, persistence, and calendar boundaries. Accessibility checks cover these keyboard and semantic behaviors; they are not a formal WCAG audit.
-
-## M1 audit — 18 October 2026
-
-Implemented audit fixes:
-- Saved-data validation now rejects duplicate/empty IDs, invalid lead fields, missing task/activity lead references, invalid timestamps, and empty task notes. Invalid stored data is preserved for recovery.
-- Visible dates include the year to distinguish follow-ups across calendar years.
-- Added audit regression coverage and a production-preview test configuration.
-
-Verified on this machine (Microsoft Edge, Windows):
-- `npm run build`: passed (TypeScript and Vite production build).
-- `npm run lint`: passed without findings.
-- `npm test`: 23 tests passed against Vite development server.
-- `npm run test:production`: the same 23 tests passed against built `dist` assets served by Vite preview.
-- Browser tests cover lead creation/editing/cancel, validation, all five statuses and live metrics, combined search/filters, refresh persistence, follow-up creation/completion/reopening, local midnight and leap-year rules, activity history, simulated notifications, reset/cancel, unrelated storage preservation, malformed data, quota failure/retry, keyboard focus, navigation, and empty states.
-- Responsive checks cover 320, 360, 390, 768, and 1440 pixel widths, including a 320×568 viewport with maximum-length contact/message fields. Desktop and small-screen screenshots were visually inspected.
-
-Reproduce production verification after any source changes:
+## Run checks
 
 ```powershell
 npm run build
 npm run lint
+npm run test:db
 npm test
 npm run test:production
 ```
 
-Not tested: Safari/Firefox, physical mobile devices, screen-reader software, a formal WCAG audit, large-data performance, multi-tab concurrency, daylight-saving transitions, or real email/phone handler launches (link targets were checked only). No external messaging or backend exists. Multi-tab conflict resolution is not supported. Notifications and reminder dismissals remain session-only by design; leads, tasks, and activity persist in localStorage. Test servers are automatically stopped by Playwright after the runs.
+Browser tests use installed Microsoft Edge. To use Chromium instead, change the channel in `playwright.config.ts` and install it using `npx playwright install chromium`.
+
+`test:db` executes the actual migration in embedded PostgreSQL (PGlite), with test implementations of `auth.uid()`/`auth.jwt()`. It exercises constraints, transactions, CRUD/reset, follow-ups, duplicate requests, conflicts, grants, and RLS under anon and two authenticated identities. This is actual SQL execution, not a mocked database.
+
+`tests/m2.spec.ts` drives the real UI and Supabase JS client against that migration in PGlite. Only the Auth service and HTTP transport are simulated. It covers login/logout, empty workspace, sample reset/cancel, CRUD/filtering, follow-ups/history, refresh and new-login persistence, explicit legacy import, lost-response retries, conflict recovery, load failure, and mobile layout. Test configuration uses a fake key and loopback URL; it never connects to your real project. Production tests build using `.env.test` before preview. Run `npm run build` again before deployment to replace that test build with your configured production build.
+
+The original four M1 test files remain as historical regression references, but are excluded from the M2 test command: their direct localStorage writes and automatic demo seeding assumptions are obsolete. M2 test results must not be described as passing the old 23-test suite.
+
+## Required live-project verification before release
+
+Embedded tests do not verify Supabase's hosted Auth, JWT verification, PostgREST deployment, network configuration, or your actual project policies. After applying the migration to a disposable Supabase project:
+
+1. Create two confirmed internal accounts A and B, disable signup and anonymous login, and sign in as A. Import or create data, edit contact/status, schedule and complete/reopen a task, then reload and restart Vite. Verify the same records and history remain.
+2. Sign out. The dashboard must be inaccessible. Sign in as B; no A records should be visible. Create B data and reset A; B data must remain.
+3. Using the project's public key with no user bearer token, call REST endpoints for every table and both RPCs. Expect permission errors and no data. With A's user token, table selects must expose only A rows; direct inserts/updates/deletes must fail. Repeat using B's token and A record IDs.
+4. Open A in two tabs. Save in tab 1 and attempt an edit in stale tab 2. Expect a conflict and explicit reload recovery. Use network tooling to repeat the exact `save_workspace` payload/request ID; verify one revision advance and no duplicate lead/history. Reuse that ID with changed data; expect rejection.
+5. Disconnect the network while saving. No false success should appear. Reconnect and retry; verify saved data after reload. Verify invalid inputs and orphan relationships are rejected through the API, not just in the UI.
+
+No live Supabase project was configured during implementation. Deployment and the live checks above are required to complete the hosted definition of done.
+
+## Main implementation files
+
+- `src/lib/backend.ts`, `src/lib/supabase.ts`: configured client and RPC persistence.
+- `src/components/AuthGate.tsx`: internal email/password sign-in and session changes.
+- `src/App.tsx`: asynchronous workspace workflows, import, retry, conflict recovery.
+- `src/lib/model.ts`, `dates.ts`, `seed.ts`: retained M1 domain operations, dates, and fictional records.
+- `src/lib/storage.ts`: retained legacy validator/helpers; automatic storage persistence is no longer used by the application.
+- `supabase/migrations/202610180001_m2.sql`: schema, indexes, RLS, grants, transactional functions.
+- `scripts/test-db.mjs`, `tests/m2.spec.ts`: database and browser verification.
+
+## Verification performed — 18 October 2026
+
+- TypeScript/production build and lint passed.
+- Actual migration checks passed in PGlite, including reloading a saved database image in a new engine, validation/rollback, access grants, owner isolation, and retry/conflict behavior.
+- Five M2 browser tests passed against Vite development; the same five passed against built production assets.
+- Supabase Auth and HTTP transport were simulated in browser tests. Hosted Auth/API/RLS deployment and real project restart persistence remain unverified.

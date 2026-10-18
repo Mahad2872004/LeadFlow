@@ -26,3 +26,8 @@ dist-ssr
 # Browser test artifacts
 test-results/
 playwright-report/
+
+.env
+.env.*
+!.env.example
+!.env.test
