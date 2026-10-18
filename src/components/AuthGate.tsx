@@ -18,7 +18,7 @@ export function AuthGate({children}: {children: ReactNode}) {
   if (!supabase) return <main className="auth-panel"><h1>Connect LeadFlow to Supabase</h1><p>Set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY in .env.local, apply the database migration, and restart Vite. See README for setup.</p><p>Your existing browser demo records have not been changed.</p></main>
   if (loading) return <div className="loading" role="status">Restoring your session…</div>
   if (user) return <div key={user}>{children}</div>
-  return <main className="auth-panel"><h1>Sign in to LeadFlow</h1><p>Use the internal account provided by your administrator.</p><form onSubmit={async event => {
+  return <main className="auth-panel"><a href="/" className="text-button">← Back to LeadFlow</a><h1>Sign in to LeadFlow</h1><p>Use the internal account provided by your administrator.</p><form onSubmit={async event => {
     event.preventDefault(); if (busy) return
     const fields = new FormData(event.currentTarget); setBusy(true); setError('')
     try { const {error} = await supabase!.auth.signInWithPassword({email: String(fields.get('email')), password: String(fields.get('password'))}); if(error) setError(error.message) }

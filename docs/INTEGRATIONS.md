@@ -99,3 +99,5 @@ Before releasing, on a disposable hosted project:
 6. Enable one chosen automation only after verifying its actual platform execution, persistent requestId, credential protection, and error handling.
 
 No live migration, deployment, platform connection, real CAPTCHA validation, or external email delivery is established by the local automated checks. The application has no automatic receipt cleanup, outbound CRM sync, or native OAuth. Monitor private queue/receipt growth and failed deliveries operationally.
+
+For a per-card walkthrough, expected results, retry tests, and the latest live-check notes, use [Test every integration manually](INTEGRATIONS-MANUAL-TESTS.md).

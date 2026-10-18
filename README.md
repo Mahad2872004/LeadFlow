@@ -100,3 +100,7 @@ M3 verification on 18 October 2026: build, lint, Edge TypeScript checks, M2 data
 Build, lint, Edge TypeScript, M2 database, M3 handler/database, and Integrations handler/database checks passed. All 12 browser tests passed in development and all 12 passed against production assets; the production run also checked the embedded form preview. Desktop, tablet, and mobile directory layouts plus the mobile installation guide were inspected. Tests cover scoped metadata/receipts, revocation/rotation, duplicate prevention, quota enforcement, separate workspace notification destinations, and retaining leads during delivery failure.
 
 Provider transport and hosted Auth/API transport were simulated. The new migration/function have not been deployed by this implementation, and real automation execution, CAPTCHA validation, and external inbox delivery remain unverified. Follow [Integrations setup](docs/INTEGRATIONS.md) before enabling live intake.
+
+## Manual integration walkthroughs
+
+See [the manual test guide](docs/INTEGRATIONS-MANUAL-TESTS.md) for steps covering all 13 cards, prerequisites, expected results, and the 19 October live hosted-form check. `node scripts/check-live-integrations.mjs` repeats six malformed/anonymous live endpoint checks without creating valid inquiries or printing secrets. Successful external automation execution and actual inbox delivery are tracked separately from local simulation and provider acceptance.

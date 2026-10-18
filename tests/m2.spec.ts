@@ -41,7 +41,7 @@ test.beforeEach(async({page})=>{
 })
 test.afterEach(async()=>{await db.close()})
 async function login(page:Page){
- await page.goto('/');await expect(page.getByRole('heading',{name:'Sign in to LeadFlow'})).toBeVisible()
+ await page.goto('/app');await expect(page.getByRole('heading',{name:'Sign in to LeadFlow'})).toBeVisible()
  await page.getByLabel('Email',{exact:true}).fill('test@example.com');await page.getByLabel('Password').fill('test-password');await page.getByRole('button',{name:'Sign in',exact:true}).click()
 }
 async function seed(page:Page){await page.getByRole('button',{name:'Reset demo data'}).first().click();await page.getByRole('dialog').getByRole('button',{name:'Reset demo data',exact:true}).click();await expect(page.getByLabel('Status for Olivia Bennett')).toBeVisible()}

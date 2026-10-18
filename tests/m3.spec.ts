@@ -30,7 +30,7 @@ test('public form through Edge handler to database, private dashboard and refres
  await page.goto('/inquiry');await expect(page.getByRole('heading',{name:'A good project starts with a conversation.'})).toBeVisible();await expect(page.getByRole('button',{name:'Sign out'})).toHaveCount(0)
  await fill(page);await page.getByRole('button',{name:'Send inquiry'}).click();await expect(page.getByRole('heading',{name:'Thanks for reaching out.'})).toBeVisible()
  const leads=await h.db.query<{email:string;source:string}>('select email,source from public.leads');expect(leads.rows).toEqual([{email:'public@example.com',source:'Website'}]);expect(h.state.accepted.size).toBe(1)
- await page.goto('/');await expect(page.getByRole('heading',{name:'Sign in to LeadFlow'})).toBeVisible();await expect(page.getByLabel('Search leads')).toHaveCount(0)
+ await page.goto('/app');await expect(page.getByRole('heading',{name:'Sign in to LeadFlow'})).toBeVisible();await expect(page.getByLabel('Search leads')).toHaveCount(0)
  await page.getByLabel('Email',{exact:true}).fill('owner@example.com');await page.getByLabel('Password').fill('test-password');await page.getByRole('button',{name:'Sign in',exact:true}).click()
  await expect(page.getByLabel('Status for Website Prospect')).toHaveValue('New');await page.reload();await expect(page.getByLabel('Status for Website Prospect')).toHaveValue('New')
  await page.getByLabel('View Website Prospect').click();await expect(page.getByRole('dialog')).toContainText('Website inquiry received (example-website)');await expect(page.getByRole('dialog')).toContainText('A fictional website inquiry')

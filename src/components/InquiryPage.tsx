@@ -5,7 +5,7 @@ import './InquiryPage.css'
 const empty:Inquiry={name:'',email:'',phone:'',company:'',service:'',message:''}
 const receiptKey='leadflow.inquiry.receipt.v1'
 export default function InquiryPage(){
-  const [form,setForm]=useState(empty),[token,setToken]=useState(''),[busy,setBusy]=useState(false),[error,setError]=useState(''),[reference,setReference]=useState(''),[verificationVersion,setVerificationVersion]=useState(0)
+  const [form,setForm]=useState(()=>new URLSearchParams(window.location.search).get('topic')==='leadflow-access'?{...empty,service:'Consulting',message:'I would like to request access to LeadFlow. My workflow is: '}:empty),[token,setToken]=useState(''),[busy,setBusy]=useState(false),[error,setError]=useState(''),[reference,setReference]=useState(''),[verificationVersion,setVerificationVersion]=useState(0)
   const lock=useRef(false),receipt=useRef<{hash:string;id:string}|null>(null)
   const endpoint=import.meta.env.VITE_SUPABASE_URL,siteKey=import.meta.env.VITE_TURNSTILE_SITE_KEY
   const configured=!!endpoint?.trim()&&!!siteKey?.trim()
