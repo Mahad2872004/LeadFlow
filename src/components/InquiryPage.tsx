@@ -8,7 +8,7 @@ export default function InquiryPage(){
   const [form,setForm]=useState(empty),[token,setToken]=useState(''),[busy,setBusy]=useState(false),[error,setError]=useState(''),[reference,setReference]=useState(''),[verificationVersion,setVerificationVersion]=useState(0)
   const lock=useRef(false),receipt=useRef<{hash:string;id:string}|null>(null)
   const endpoint=import.meta.env.VITE_SUPABASE_URL,siteKey=import.meta.env.VITE_TURNSTILE_SITE_KEY
-  const configured=!!endpoint&&!!siteKey
+  const configured=!!endpoint?.trim()&&!!siteKey?.trim()
   async function submit(event:React.SubmitEvent<HTMLFormElement>){
     event.preventDefault();if(lock.current)return
     let inquiry:Inquiry

@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.retry-notifications]
 verify_jwt = false
+
+[functions.inbound-lead]
+verify_jwt = false

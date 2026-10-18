@@ -1,11 +1,11 @@
-# LeadFlow — M3
+# LeadFlow — M3 + Integrations Hub
 
 LeadFlow is a React + TypeScript + Vite dashboard backed by Supabase PostgreSQL and Supabase Auth. It uses the Supabase Data API and database functions directly; no Express server, paid messaging service, or CRM integration is needed.
 
 ## Set up a Supabase project
 
 1. Create a Supabase project. In Authentication, disable public signup and anonymous sign-ins. Create an internal user with an email/password and confirmed email in the dashboard. Each account has its own isolated workspace; accounts do not share leads.
-2. Apply the SQL files in `supabase/migrations/` in filename order, once, in a new project. If M2 is already applied, apply only the new M3 migration. Alternatively install the Supabase CLI, `supabase login`, `supabase link --project-ref YOUR_PROJECT_REF`, then `supabase db push`. Review the target project before applying migrations.
+2. Apply the SQL files in `supabase/migrations/` in filename order, once, in a new project. For an existing project, apply only migrations not already applied, including `202610180003_integrations.sql` for the hub. Alternatively install the Supabase CLI, `supabase login`, `supabase link --project-ref YOUR_PROJECT_REF`, then `supabase db push`. Review the target project before applying migrations.
 3. Copy `.env.example` to `.env.local`. Set `VITE_SUPABASE_URL` to the project URL and `VITE_SUPABASE_PUBLISHABLE_KEY` to its publishable key (a legacy **anon** key also works). These values are included in the browser bundle. **Never put a service-role key, secret key, database password, or privileged token in any VITE variable.** Local environment files are ignored by Git.
 4. Use Node.js 22.12+ and run `npm install`, then `npm run dev`. Sign in with the internal account. Missing configuration shows setup instructions instead of silently falling back to browser persistence.
 5. The first database workspace is empty. Add a lead, explicitly import saved browser data, or confirm **Reset demo data** to load the eight fictional M1 leads and their tasks/history.
@@ -44,6 +44,7 @@ npm run build
 npm run lint
 npm run test:db
 npm run test:m3
+npm run test:integrations
 npm run check:edge
 npm test
 npm run test:production
@@ -88,6 +89,14 @@ The local repository includes project configuration, but this implementation did
 
 ## M3 setup and verification
 
+The new **Integrations** sidebar page includes searchable guides, real hosted/embed examples, workspace receipt verification, safe credential metadata/revocation, and notification queue evidence. A separate token-authenticated `inbound-lead` function supports server automations. See [Integrations setup and verification](docs/INTEGRATIONS.md) for its migration/deployment, administrator credential provisioning and rotation, platform guides, and limitations. Native automation OAuth and CRM sync are not implemented.
+
 Start with [docs/M3-SETUP.md](docs/M3-SETUP.md): destination account, migration, Turnstile keys, Resend verified sender/recipient, server secrets, function deployment, embedding, retry worker, operational inspection, and live verification. No provider secrets are bundled and no external email was sent during implementation.
 
 M3 verification on 18 October 2026: build, lint, Edge TypeScript checks, M2 database tests against both migrations, and M3 handler/database tests passed. Nine browser tests passed in development and the same nine passed against production assets. Desktop and 360px public-form screenshots were visually inspected. Provider transport was simulated; hosted deployment, real Turnstile validation, scheduled retries, and external inbox delivery remain unverified.
+
+## Integrations Hub verification — 18 October 2026
+
+Build, lint, Edge TypeScript, M2 database, M3 handler/database, and Integrations handler/database checks passed. All 12 browser tests passed in development and all 12 passed against production assets; the production run also checked the embedded form preview. Desktop, tablet, and mobile directory layouts plus the mobile installation guide were inspected. Tests cover scoped metadata/receipts, revocation/rotation, duplicate prevention, quota enforcement, separate workspace notification destinations, and retaining leads during delivery failure.
+
+Provider transport and hosted Auth/API transport were simulated. The new migration/function have not been deployed by this implementation, and real automation execution, CAPTCHA validation, and external inbox delivery remain unverified. Follow [Integrations setup](docs/INTEGRATIONS.md) before enabling live intake.

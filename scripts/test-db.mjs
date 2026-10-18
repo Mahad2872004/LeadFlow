@@ -11,6 +11,7 @@ grant execute on all functions in schema auth to anon,authenticated;
 insert into auth.users values ('11111111-1111-4111-8111-111111111111'),('22222222-2222-4222-8222-222222222222');`)
 await db.exec(readFileSync('supabase/migrations/202610180001_m2.sql','utf8'))
 await db.exec(readFileSync('supabase/migrations/202610180002_m3.sql','utf8'))
+ await db.exec(readFileSync('supabase/migrations/202610180003_integrations.sql','utf8'))
 const userA='11111111-1111-4111-8111-111111111111', userB='22222222-2222-4222-8222-222222222222'
 async function asUser(id,role='authenticated') { await db.exec(`reset role; set role ${role}; select set_config('request.jwt.claim.sub','${id}',false); select set_config('request.jwt.claims','{}',false);`) }
 const empty={version:1,leads:[],tasks:[],activities:[]}

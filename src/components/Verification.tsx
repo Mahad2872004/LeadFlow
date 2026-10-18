@@ -21,7 +21,7 @@ export function Verification({siteKey,onToken,resetVersion}:{siteKey:string;onTo
     let stopped=false,id:string|undefined,api:Turnstile|undefined
     loadTurnstile().then(service=>{
       if(stopped||!container.current)return
-      api=service;id=service.render(container.current,{sitekey:siteKey,action:'inquiry',size:'flexible',callback:(token:string)=>{setError('');onToken(token)},'expired-callback':()=>onToken(''),'error-callback':()=>{onToken('');setError('Verification failed. Please reload verification and try again.')}})
+      api=service;id=service.render(container.current,{sitekey:siteKey,action:'inquiry',size:'flexible',callback:(token:string)=>{setError('');onToken(token)},'expired-callback':()=>onToken(''),'error-callback':(code:string)=>{onToken('');const hint=code==='110200'?'This hostname is not authorized for the verification widget. Contact the site administrator.':code==='110100'||code==='110110'?'The verification site key is invalid. Contact the site administrator.':code==='200500'?'The verification frame could not load. Check whether your browser or network blocks challenges.cloudflare.com.':'Unable to complete verification. Try reloading, another browser, or another network.';setError(`${hint} (Cloudflare code: ${code || 'unavailable'})`)}})
     }).catch(cause=>{if(!stopped)setError(cause.message)})
     return()=>{stopped=true;if(id)api?.remove(id)}
   },[siteKey,onToken,resetVersion])

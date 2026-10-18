@@ -1,18 +1,7 @@
+import { boundedJson } from '../_shared/request.ts'
 import { normalizeInquiry } from '../_shared/inquiry.ts'
 import { deliverOne, rpc, RpcError, type Runtime } from '../_shared/runtime.ts'
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
-async function boundedJson(request: Request): Promise<Record<string, unknown>> {
-  if (!request.headers.get('content-type')?.toLowerCase().startsWith('application/json')) throw new Error('Use JSON')
-  const reader = request.body?.getReader(); if (!reader) throw new Error('Missing body')
-  const chunks: Uint8Array[] = []; let length = 0
-  try { while (true) { const {done,value} = await reader.read(); if(done) break; length += value.length; if(length > 16384) { await reader.cancel(); throw new Error('Too large') }; chunks.push(value) } }
-  finally { reader.releaseLock() }
-  const bytes = new Uint8Array(length); let offset = 0
-  for(const chunk of chunks) { bytes.set(chunk,offset); offset += chunk.length }
-  const parsed: unknown = JSON.parse(new TextDecoder().decode(bytes))
-  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('Invalid body')
-  return parsed as Record<string,unknown>
-}
 export function createInquiryHandler(runtime: Runtime) {
   return async (request: Request): Promise<Response> => {
     const origin = request.headers.get('Origin') ?? ''

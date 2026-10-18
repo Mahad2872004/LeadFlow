@@ -13,7 +13,8 @@
     "test:production": "vite build --mode test && playwright test --config playwright.production.config.ts",
     "test:db": "node scripts/test-db.mjs",
     "test:m3": "node scripts/test-m3.mjs",
-    "check:edge": "tsc -p tsconfig.edge.json"
+    "check:edge": "tsc -p tsconfig.edge.json",
+    "test:integrations": "node scripts/test-integrations.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.118.0",

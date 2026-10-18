@@ -16,6 +16,7 @@ test.beforeEach(async({page})=>{
  insert into auth.users values('${actor}');`)
  await db.exec(readFileSync('supabase/migrations/202610180001_m2.sql','utf8'))
  await db.exec(readFileSync('supabase/migrations/202610180002_m3.sql','utf8'))
+ await db.exec(readFileSync('supabase/migrations/202610180003_integrations.sql','utf8'))
  await db.exec('set role authenticated')
  await page.route('http://127.0.0.1:54329/**',async route=>{
   const url=route.request().url()
