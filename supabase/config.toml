@@ -1,0 +1,7 @@
+project_id = "leadflow"
+
+[functions.submit-inquiry]
+verify_jwt = false
+
+[functions.retry-notifications]
+verify_jwt = false

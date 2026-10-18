@@ -10,11 +10,12 @@ const jwt=[{alg:'HS256',typ:'JWT'},{sub:actor,role:'authenticated',exp:Math.floo
 const user={id:actor,email:'test@example.com',aud:'authenticated',role:'authenticated',app_metadata:{provider:'email'},user_metadata:{},created_at:new Date().toISOString()}
 test.beforeEach(async({page})=>{
  db=new PGlite();loseResponse=false;failLoad=false
- await db.exec(`create role anon;create role authenticated;create schema auth;create table auth.users(id uuid primary key);
+ await db.exec(`create role anon;create role authenticated;create role service_role;create schema auth;create table auth.users(id uuid primary key);
  create function auth.uid() returns uuid language sql stable as $$ select '${actor}'::uuid $$;
  create function auth.jwt() returns jsonb language sql stable as $$ select '{}'::jsonb $$;
  insert into auth.users values('${actor}');`)
  await db.exec(readFileSync('supabase/migrations/202610180001_m2.sql','utf8'))
+ await db.exec(readFileSync('supabase/migrations/202610180002_m3.sql','utf8'))
  await db.exec('set role authenticated')
  await page.route('http://127.0.0.1:54329/**',async route=>{
   const url=route.request().url()

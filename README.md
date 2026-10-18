@@ -1,16 +1,16 @@
-# LeadFlow — M2
+# LeadFlow — M3
 
 LeadFlow is a React + TypeScript + Vite dashboard backed by Supabase PostgreSQL and Supabase Auth. It uses the Supabase Data API and database functions directly; no Express server, paid messaging service, or CRM integration is needed.
 
 ## Set up a Supabase project
 
 1. Create a Supabase project. In Authentication, disable public signup and anonymous sign-ins. Create an internal user with an email/password and confirmed email in the dashboard. Each account has its own isolated workspace; accounts do not share leads.
-2. Apply `supabase/migrations/202610180001_m2.sql` using the Supabase SQL editor, once, in a new project. Alternatively install the Supabase CLI, run `supabase init` if no CLI config exists, `supabase login`, `supabase link --project-ref YOUR_PROJECT_REF`, then `supabase db push`. Review the target project before applying migrations.
+2. Apply the SQL files in `supabase/migrations/` in filename order, once, in a new project. If M2 is already applied, apply only the new M3 migration. Alternatively install the Supabase CLI, `supabase login`, `supabase link --project-ref YOUR_PROJECT_REF`, then `supabase db push`. Review the target project before applying migrations.
 3. Copy `.env.example` to `.env.local`. Set `VITE_SUPABASE_URL` to the project URL and `VITE_SUPABASE_PUBLISHABLE_KEY` to its publishable key (a legacy **anon** key also works). These values are included in the browser bundle. **Never put a service-role key, secret key, database password, or privileged token in any VITE variable.** Local environment files are ignored by Git.
 4. Use Node.js 22.12+ and run `npm install`, then `npm run dev`. Sign in with the internal account. Missing configuration shows setup instructions instead of silently falling back to browser persistence.
 5. The first database workspace is empty. Add a lead, explicitly import saved browser data, or confirm **Reset demo data** to load the eight fictional M1 leads and their tasks/history.
 
-For local Supabase development, install Docker and the Supabase CLI, then run `supabase init`, `supabase start`, and `supabase db reset` in a disposable local project. `db reset` destroys the local database. Use the URL and anon/publishable key reported by the CLI in `.env.local`, and create a confirmed test account through the local Studio. The migration has no hosted-only dependencies. The CLI and Docker are not bundled with this repository.
+For local Supabase development, install Docker and the Supabase CLI, then run `supabase start` and `supabase db reset` in a disposable local project. `db reset` destroys the local database. Use the URL and anon/publishable key reported by the CLI in `.env.local`, and create a confirmed test account through the local Studio. The migration has no hosted-only dependencies. The CLI and Docker are not bundled with this repository.
 
 ## Persistence and access model
 
@@ -33,9 +33,9 @@ Invalid browser data produces an explicit message and remains untouched. If movi
 
 ## M1 workflows retained
 
-Overview metrics and pipeline shortcuts, lead creation/full editing, search and combined filters, all five statuses, lead details, follow-up scheduling/completion/reopening, local-calendar due indicators, history, responsive layouts, and simulated notifications remain. Follow-up dates stay `YYYY-MM-DD`; past dates are permitted. The shared day hook updates due states at midnight and on tab return. Notifications are session-only; no messages are sent. Reset is a transactional database operation. Individual lead deletion was not an M1 UI feature; removing records is supported by the database snapshot operation and tested through reset.
+Overview metrics and pipeline shortcuts, lead creation/full editing, search and combined filters, all five statuses, lead details, follow-up scheduling/completion/reopening, local-calendar due indicators, history, responsive layouts, and simulated notifications remain. Follow-up dates stay `YYYY-MM-DD`; past dates are permitted. The shared day hook updates due states at midnight and on tab return. Dashboard bell notifications are session-only. Website inquiry emails use the separate M3 queue. Reset is a transactional database operation. Individual lead deletion was not an M1 UI feature; removing records is supported by the database snapshot operation and tested through reset.
 
-There was no public inquiry page in M1. M2's capture form is **private and authenticated**. No public ingestion endpoint or Edge Function is exposed, so anonymous visitors cannot use dashboard CRUD. If public inquiries are added later, implement a separate Edge Function with server-side validation, CAPTCHA/rate limiting, an explicit destination workspace, and idempotency; never relax these RLS policies to enable a public form.
+M3 adds an independent public `/inquiry` page, protected by Cloudflare Turnstile and durable quotas, and Resend notifications through a private outbox. The dashboard capture form remains authenticated. Public visitors cannot read leads or invoke dashboard CRUD. Follow the [M3 setup guide](docs/M3-SETUP.md) to configure and deploy the new migration and Edge Functions.
 
 ## Run checks
 
@@ -43,6 +43,8 @@ There was no public inquiry page in M1. M2's capture form is **private and authe
 npm run build
 npm run lint
 npm run test:db
+npm run test:m3
+npm run check:edge
 npm test
 npm run test:production
 ```
@@ -65,7 +67,7 @@ Embedded tests do not verify Supabase's hosted Auth, JWT verification, PostgREST
 4. Open A in two tabs. Save in tab 1 and attempt an edit in stale tab 2. Expect a conflict and explicit reload recovery. Use network tooling to repeat the exact `save_workspace` payload/request ID; verify one revision advance and no duplicate lead/history. Reuse that ID with changed data; expect rejection.
 5. Disconnect the network while saving. No false success should appear. Reconnect and retry; verify saved data after reload. Verify invalid inputs and orphan relationships are rejected through the API, not just in the UI.
 
-No live Supabase project was configured during implementation. Deployment and the live checks above are required to complete the hosted definition of done.
+The local repository includes project configuration, but this implementation did not deploy or verify changes against the live project. Deployment and the live checks above remain required.
 
 ## Main implementation files
 
@@ -77,9 +79,15 @@ No live Supabase project was configured during implementation. Deployment and th
 - `supabase/migrations/202610180001_m2.sql`: schema, indexes, RLS, grants, transactional functions.
 - `scripts/test-db.mjs`, `tests/m2.spec.ts`: database and browser verification.
 
-## Verification performed — 18 October 2026
+## M2 verification performed — 18 October 2026
 
 - TypeScript/production build and lint passed.
 - Actual migration checks passed in PGlite, including reloading a saved database image in a new engine, validation/rollback, access grants, owner isolation, and retry/conflict behavior.
 - Five M2 browser tests passed against Vite development; the same five passed against built production assets.
 - Supabase Auth and HTTP transport were simulated in browser tests. Hosted Auth/API/RLS deployment and real project restart persistence remain unverified.
+
+## M3 setup and verification
+
+Start with [docs/M3-SETUP.md](docs/M3-SETUP.md): destination account, migration, Turnstile keys, Resend verified sender/recipient, server secrets, function deployment, embedding, retry worker, operational inspection, and live verification. No provider secrets are bundled and no external email was sent during implementation.
+
+M3 verification on 18 October 2026: build, lint, Edge TypeScript checks, M2 database tests against both migrations, and M3 handler/database tests passed. Nine browser tests passed in development and the same nine passed against production assets. Desktop and 360px public-form screenshots were visually inspected. Provider transport was simulated; hosted deployment, real Turnstile validation, scheduled retries, and external inbox delivery remain unverified.
