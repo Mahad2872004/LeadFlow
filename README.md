@@ -1,6 +1,12 @@
-# LeadFlow — M3 + Integrations Hub
+# LeadFlow — Marketing Website + M3 + Integrations Hub
 
 LeadFlow is a React + TypeScript + Vite dashboard backed by Supabase PostgreSQL and Supabase Auth. It uses the Supabase Data API and database functions directly; no Express server, paid messaging service, or CRM integration is needed.
+
+The public website starts at `/`. The protected dashboard now lives at `/app`, with `/login` as its sign-in entry point. `/signup` explains invitation-based access and links to the existing inquiry form; it does not create accounts. See the [marketing website guide](docs/MARKETING.md) for routes, verification, and deployment limitations.
+
+## Product direction and M5 research
+
+See the [product overview](PRODUCT_OVERVIEW.md), [architecture](ARCHITECTURE.md), [development roadmap](DEVELOPMENT_ROADMAP.md), [M5 repository audit](docs/M5-AUDIT.md), and [market research and scoring](docs/M5-RESEARCH.md). M5 recommends investigating a narrow website kickoff-readiness workflow, while retaining LeadFlow as a Promptly implementation demonstration. Demand and willingness to pay are not validated; M6 is not approved or implemented. Earlier dated verification notes below remain historical; the M5 audit consolidates current local checks and the limited subsequent live evidence.
 
 ## Set up a Supabase project
 

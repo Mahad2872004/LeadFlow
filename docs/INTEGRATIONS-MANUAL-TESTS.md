@@ -4,7 +4,7 @@ Use this guide with the Integrations page. “Available” means a guide is avai
 
 ## Start here
 
-1. Open https://leadflow-tau-five.vercel.app and sign in to your internal workspace.
+1. Open https://leadflow-tau-five.vercel.app/login and sign in to your internal workspace. The public root is now the marketing website; `/app` is the protected workspace entry.
 2. Keep a second tab open on Leads. Use Refresh after each submission, then reload the browser to check persistence.
 3. Use fictional contact data. Name each test `QA - METHOD - DATE`, service `Consulting`, message `Fictional manual integration test`. Use different example.com email addresses for distinct tests to avoid the five-inquiries/email/hour quota.
 4. Successful submissions can send a real notification to the configured business recipient. Plan a small number of tests. Do not reset demo data to clean up: reset replaces workspace records.
