@@ -1,24 +1,18 @@
 import { test, expect, type Page } from '@playwright/test'
 import { createHarness, actor } from './support/m3'
+import { apiOrigin, mockSupabase } from './support/supabase'
 let h:Awaited<ReturnType<typeof createHarness>>
 let loseResponse=false
-const jwt=[{alg:'HS256',typ:'JWT'},{sub:actor,role:'authenticated',exp:Math.floor(Date.now()/1000)+3600},'test'].map(x=>Buffer.from(typeof x==='string'?x:JSON.stringify(x)).toString('base64url')).join('.')
-const user={id:actor,email:'owner@example.com',aud:'authenticated',role:'authenticated',app_metadata:{provider:'email'},user_metadata:{},created_at:new Date().toISOString()}
 test.beforeEach(async({page})=>{
  h=await createHarness();loseResponse=false
  // Only the external CAPTCHA UI/service and email service are simulated.
  await page.route('https://challenges.cloudflare.com/turnstile/v0/api.js*',route=>route.fulfill({contentType:'application/javascript',body:`window.turnstile={render(el,options){el.innerHTML='<span>Test verification complete</span>';setTimeout(()=>options.callback('test-token'),0);return 'widget'},remove(){},reset(){}};`}))
- await page.route('http://127.0.0.1:54329/**',async route=>{
+ await mockSupabase(page,h.db,{users:[{id:actor,email:'owner@example.com',password:'test-password'}]})
+ await page.route(`${apiOrigin}/functions/v1/**`,async route=>{
   const req=route.request(),url=req.url()
-  if(url.includes('/functions/v1/submit-inquiry')){
-   const response=await h.handler(new Request(url,{method:req.method(),headers:req.headers(),body:req.method()==='POST'?req.postData():undefined}))
-   if(loseResponse&&response.ok&&req.method()==='POST'){loseResponse=false;return route.abort('failed')}
-   return route.fulfill({status:response.status,headers:Object.fromEntries(response.headers),body:await response.text()})
-  }
-  if(url.includes('/auth/v1/token'))return route.fulfill({json:{access_token:jwt,refresh_token:'test-refresh',token_type:'bearer',expires_in:3600,user}})
-  if(url.includes('/auth/v1/user'))return route.fulfill({json:user})
-  if(url.endsWith('/rpc/load_workspace'))return route.fulfill({json:(await h.db.query<{snapshot:unknown}>('select public.load_workspace() as snapshot')).rows[0].snapshot})
-  return route.fulfill({status:404,json:{error:'Unexpected endpoint'}})
+  const response=await h.handler(new Request(url,{method:req.method(),headers:req.headers(),body:req.method()==='POST'?req.postData():undefined}))
+  if(loseResponse&&response.ok&&req.method()==='POST'){loseResponse=false;return route.abort('failed')}
+  return route.fulfill({status:response.status,headers:Object.fromEntries(response.headers),body:await response.text()})
  })
 })
 test.afterEach(async()=>{await h.db.close()})

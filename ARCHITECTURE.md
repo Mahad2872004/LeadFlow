@@ -35,6 +35,13 @@ The diagram describes logical flow, not a deployed scheduler guarantee. Public v
 - `load_workspace` returns the entire caller snapshot plus revision. `save_workspace` locks the workspace row, validates size/shape, rejects stale revisions, and replaces lead/task/history data atomically. A request ID + payload/revision fingerprint prevents retry duplicates. UI retains an unacknowledged attempt in memory for retry; refresh can lose the draft. No Realtime subscription.
 - Migration `202610180002_m3.sql`: private inquiry receipts, email outbox and quotas. Intake inserts the lead/history/outbox in one transaction and advances dashboard revision. The request identity detects repeats; same ID with different content is rejected. Distinct legitimate inquiries can share an email address.
 - Migration `202610180003_integrations.sql`: private integration keys contain SHA-256 hashes, owner and notification destinations. Safe metadata/receipt/revocation RPCs enforce Auth identity. Inbound tokens authorize lead creation only and are not third-party API credentials.
+- Migration `202610200001_multi_tenant_foundation.sql` (20 October 2026):
+  - Adds profiles, workspace memberships (owner/admin/member) and workspace settings.
+  - Renames every `owner_id` above to `workspace_id`, keeping its value. Each former per-user workspace is that user's personal workspace.
+  - RLS reads are membership-based. Every write function checks membership and role in the database. Intake takes the workspace from server configuration or the credential.
+  - The dashboard still uses the personal workspace; there is no switcher or member UI yet.
+  
+  Details, role matrix and runbook: [docs/MULTI-TENANCY.md](docs/MULTI-TENANCY.md).
 
 ## Current ingress and delivery
 

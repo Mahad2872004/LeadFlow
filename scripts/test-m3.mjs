@@ -68,8 +68,30 @@ await h.db.query("select public.finish_notification($1,$2,'accepted','stale',nul
 assert.equal((await h.db.query('select status from leadflow_private.notification_outbox where request_id=$1',[pendingId])).rows[0].status,'sending')
 await h.db.query("select public.finish_notification($1,$2,'accepted','current',null)",[pendingId,leaseTwo.lease_id])
 // A separate website's 24-hour quota is independent of per-email quota.
-await h.db.query("insert into leadflow_private.inquiries(request_id,owner_id,website,payload_hash,email_hash) select gen_random_uuid(),$1,'quota-test','fixture','fixture' from generate_series(1,50)",[actor])
+await h.db.query("insert into leadflow_private.inquiries(request_id,workspace_id,website,payload_hash,email_hash) select gen_random_uuid(),$1,'quota-test','fixture','fixture' from generate_series(1,50)",[actor])
 h.config.WEBSITE_ID='quota-test'
 assert.equal((await h.handler(request(crypto.randomUUID(),{...input,email:'new@example.com'}))).status,429)
+// WEBSITE_WORKSPACE_ID routes the form to a shared workspace and overrides the legacy WEBSITE_OWNER_ID.
+await h.db.exec('set role authenticated');const team=(await h.db.query("select public.create_workspace('Agency team') as id")).rows[0].id;await h.db.exec('reset role')
+h.config.WEBSITE_WORKSPACE_ID=team;h.config.WEBSITE_ID='team-website'
+const teamId=crypto.randomUUID();assert.equal((await h.handler(request(teamId,{...input,email:'team@example.com'}))).status,200)
+assert.equal((await h.db.query('select workspace_id from public.leads where id=$1',[teamId])).rows[0].workspace_id,team)
+assert.equal((await h.db.query('select count(*)::int as n from public.leads where workspace_id=$1',[team])).rows[0].n,1)
+h.config.WEBSITE_WORKSPACE_ID=crypto.randomUUID();assert.equal((await h.handler(request(crypto.randomUUID(),{...input,email:'nowhere@example.com'}))).status,503)
+h.config.WEBSITE_WORKSPACE_ID='not-a-workspace';assert.equal((await h.handler(request())).status,503)
+// Workspace form links: the key picks the workspace and its recipient; the legacy settings play no part.
+const formOf=async workspace=>(await h.db.query('select id from leadflow_private.inquiry_forms where workspace_id=$1',[workspace])).rows[0].id
+const [personalKey,teamKey]=[await formOf(actor),await formOf(team)]
+await h.db.exec('set role authenticated');await h.db.query("select public.update_inquiry_form($1,null,'team-inbox@example.com')",[team]);await h.db.exec('reset role')
+const outbox=async id=>(await h.db.query('select l.workspace_id,o.email from public.leads l join leadflow_private.notification_outbox o on o.request_id::text=l.id where l.id=$1',[id])).rows[0]
+const personalId=crypto.randomUUID(),teamFormId=crypto.randomUUID()
+assert.equal((await h.handler(request(personalId,{...input,email:'form-personal@example.com'},{form:personalKey}))).status,200)
+assert.equal((await h.handler(request(teamFormId,{...input,email:'form-team@example.com'},{form:teamKey.toUpperCase()}))).status,200)
+const [personalRow,teamRow]=[await outbox(personalId),await outbox(teamFormId)]
+assert.equal(personalRow.workspace_id,actor);assert.deepEqual(personalRow.email.to,['owner@example.com']);assert.equal(personalRow.email.from,h.config.NOTIFICATION_FROM)
+assert.equal(teamRow.workspace_id,team);assert.deepEqual(teamRow.email.to,['team-inbox@example.com']);assert.match(teamRow.email.text,/Workspace: Agency team/)
+assert.equal(JSON.stringify([personalRow,teamRow]).includes(h.config.NOTIFICATION_TO),false,'Form notifications never use the deployment-wide inbox.')
+assert.equal((await h.handler(request(teamFormId,{...input,email:'form-team@example.com'},{form:teamKey}))).status,200,'A retry through the same form is idempotent.')
+for(const form of ['not-a-key',crypto.randomUUID(),actor,team])assert.equal((await h.handler(request(crypto.randomUUID(),{...input,email:'stray@example.com'},{form}))).status,404,`form ${form}`)
 await h.db.close()
-console.log('PASS M3: real SQL + Edge handlers, normalization, persistence, dashboard revision protection, idempotency, CAPTCHA/origin/body validation, quotas, privileged RPC isolation, provider failure/retry, duplicate email suppression, expired retry window. External providers simulated; no email sent.')
+console.log('PASS M3: real SQL + Edge handlers, normalization, persistence, dashboard revision protection, idempotency, CAPTCHA/origin/body validation, quotas, privileged RPC isolation, provider failure/retry, duplicate email suppression, expired retry window, server-configured workspace routing, workspace form keys with per-workspace recipients. External providers simulated; no email sent.')

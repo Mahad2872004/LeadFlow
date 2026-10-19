@@ -2,7 +2,7 @@
 
 LeadFlow is a React + TypeScript + Vite dashboard backed by Supabase PostgreSQL and Supabase Auth. It uses the Supabase Data API and database functions directly; no Express server, paid messaging service, or CRM integration is needed.
 
-The public website starts at `/`. The protected dashboard now lives at `/app`, with `/login` as its sign-in entry point. `/signup` explains invitation-based access and links to the existing inquiry form; it does not create accounts. See the [marketing website guide](docs/MARKETING.md) for routes, verification, and deployment limitations.
+The public website starts at `/`. The protected dashboard lives at `/app`, with `/login` as its sign-in entry point. `/signup` creates accounts when public sign-up is enabled in Supabase Auth; otherwise it explains invitation-based access and links to the inquiry form. After sign-in, users without a workspace create one, and they can switch between workspaces from the sidebar ([details](docs/MULTI-TENANCY.md#onboarding-and-workspace-management)). See the [marketing website guide](docs/MARKETING.md) for routes, verification, and deployment limitations.
 
 ## Product direction and M5 research
 
@@ -10,8 +10,8 @@ See the [product overview](PRODUCT_OVERVIEW.md), [architecture](ARCHITECTURE.md)
 
 ## Set up a Supabase project
 
-1. Create a Supabase project. In Authentication, disable public signup and anonymous sign-ins. Create an internal user with an email/password and confirmed email in the dashboard. Each account has its own isolated workspace; accounts do not share leads.
-2. Apply the SQL files in `supabase/migrations/` in filename order, once, in a new project. For an existing project, apply only migrations not already applied, including `202610180003_integrations.sql` for the hub. Alternatively install the Supabase CLI, `supabase login`, `supabase link --project-ref YOUR_PROJECT_REF`, then `supabase db push`. Review the target project before applying migrations.
+1. Create a Supabase project. In Authentication, disable anonymous sign-ins. Either keep public sign-up disabled and create users with a confirmed email in the dashboard, or enable it after following the [sign-up checklist](docs/MULTI-TENANCY.md#onboarding-and-workspace-management) (redirect URLs, SMTP, password length). Each account gets its own personal workspace. Accounts share data only through explicit workspace membership (see [multi-tenancy](docs/MULTI-TENANCY.md)).
+2. Apply the SQL files in `supabase/migrations/` in filename order, once, in a new project. For an existing project, apply only migrations not already applied, including `202610180003_integrations.sql` for the hub and `202610200001_multi_tenant_foundation.sql` for workspaces. Follow the [multi-tenancy runbook](docs/MULTI-TENANCY.md#migration-runbook) before applying the latter to existing data. Alternatively install the Supabase CLI, `supabase login`, `supabase link --project-ref YOUR_PROJECT_REF`, then `supabase db push`. Review the target project before applying migrations.
 3. Copy `.env.example` to `.env.local`. Set `VITE_SUPABASE_URL` to the project URL and `VITE_SUPABASE_PUBLISHABLE_KEY` to its publishable key (a legacy **anon** key also works). These values are included in the browser bundle. **Never put a service-role key, secret key, database password, or privileged token in any VITE variable.** Local environment files are ignored by Git.
 4. Use Node.js 22.12+ and run `npm install`, then `npm run dev`. Sign in with the internal account. Missing configuration shows setup instructions instead of silently falling back to browser persistence.
 5. The first database workspace is empty. Add a lead, explicitly import saved browser data, or confirm **Reset demo data** to load the eight fictional M1 leads and their tasks/history.
@@ -20,10 +20,10 @@ For local Supabase development, install Docker and the Supabase CLI, then run `s
 
 ## Persistence and access model
 
-- `leads`, `follow_up_tasks`, and `activity_history` use composite owner/record keys. Foreign keys prevent orphan records or cross-owner links. Checks enforce required fields, allowed statuses/sources/services, email/phone lengths and formats, calendar dates, finite timestamps, and note/message lengths. Indexes cover status/source, creation time, due dates, and lead history.
-- All five exposed tables (including `workspaces` and `workspace_requests`) have RLS enabled. Authenticated accounts can select only their own rows. Anonymous callers have no table privileges or RPC access. Direct insert/update/delete is revoked even for authenticated users.
-- `load_workspace` and `save_workspace` are narrowly scoped security-definer functions with an empty search path. They derive the owner exclusively from `auth.uid()`, reject absent identities and anonymous Auth sessions, and explicitly filter every read/write by owner. No client-supplied owner is accepted. Do not remove those checks: definer functions bypass RLS. Function execution is revoked from PUBLIC and anon, then granted to authenticated.
-- Each save atomically replaces the caller's three related collections, advances a revision, and records a request receipt. A locked workspace row serializes concurrent saves. Old revisions fail instead of overwriting newer edits. Retrying the same request ID and payload returns its original revision without repeating writes; using that ID with different data fails. Identical email addresses are allowed because separate inquiries can be legitimate.
+- Users can own several workspaces and be an owner, admin or member of others. `leads`, `follow_up_tasks`, and `activity_history` use composite workspace/record keys. Foreign keys prevent orphan records or cross-workspace links. Checks enforce required fields, allowed statuses/sources/services, email/phone lengths and formats, calendar dates, finite timestamps, and note/message lengths. Indexes cover status/source, creation time, due dates, and lead history.
+- All eight exposed tables (including `profiles`, `workspaces`, `workspace_memberships`, `workspace_settings`, and `workspace_requests`) have RLS enabled. Authenticated accounts can select only rows of workspaces they belong to. Anonymous callers have no table privileges or RPC access. Direct insert/update/delete is revoked even for authenticated users.
+- Workspace functions are narrowly scoped security-definer functions with an empty search path. They take the caller only from `auth.uid()` and reject absent identities and anonymous Auth sessions. They check the caller's membership and role in the database on every call, and filter every read and write by the authorized workspace. A workspace ID from the browser selects a workspace but never authorizes anything. Do not remove those checks: definer functions bypass RLS. The dashboard's `load_workspace` and `save_workspace` operate on the caller's personal workspace. Roles, functions, and the migration and rollback steps are in [docs/MULTI-TENANCY.md](docs/MULTI-TENANCY.md).
+- Each save atomically replaces the workspace's three related collections, advances a revision, and records a request receipt. A locked workspace row serializes concurrent saves. Old revisions fail instead of overwriting newer edits. Retrying the same request ID and payload returns its original revision without repeating writes; using that ID with different data fails. Identical email addresses are allowed because separate inquiries can be legitimate.
 - The UI only displays saved changes and success after the database acknowledges them. On failure, the intended snapshot and request ID remain in memory for **Retry saving**. **Reload workspace and discard attempt** explicitly abandons that attempt and fetches current server data. A browser refresh loses an unacknowledged in-memory draft, but any committed database changes remain. Refresh also retrieves edits from other sessions; no Realtime subscription is used.
 - Supabase Auth manages its session tokens in browser storage. Leads/tasks/history are never automatically written to localStorage. Sign-out or an account change unmounts private workspace state.
 
@@ -51,6 +51,7 @@ npm run lint
 npm run test:db
 npm run test:m3
 npm run test:integrations
+npm run test:tenancy
 npm run check:edge
 npm test
 npm run test:production
@@ -58,7 +59,7 @@ npm run test:production
 
 Browser tests use installed Microsoft Edge. To use Chromium instead, change the channel in `playwright.config.ts` and install it using `npx playwright install chromium`.
 
-`test:db` executes the actual migration in embedded PostgreSQL (PGlite), with test implementations of `auth.uid()`/`auth.jwt()`. It exercises constraints, transactions, CRUD/reset, follow-ups, duplicate requests, conflicts, grants, and RLS under anon and two authenticated identities. This is actual SQL execution, not a mocked database.
+`test:db` executes the actual migrations in embedded PostgreSQL (PGlite), with test implementations of `auth.uid()`/`auth.jwt()` and Supabase's default grants on new public tables and functions ([tests/support/database.ts](tests/support/database.ts)). It exercises constraints, transactions, CRUD/reset, follow-ups, duplicate requests, conflicts, grants, and RLS under anon and two authenticated identities. This is actual SQL execution, not a mocked database. `test:tenancy` covers workspace roles, cross-workspace denial, migration of existing data, and rollback; see [docs/MULTI-TENANCY.md](docs/MULTI-TENANCY.md#verification-performed-local-20-october-2026).
 
 `tests/m2.spec.ts` drives the real UI and Supabase JS client against that migration in PGlite. Only the Auth service and HTTP transport are simulated. It covers login/logout, empty workspace, sample reset/cancel, CRUD/filtering, follow-ups/history, refresh and new-login persistence, explicit legacy import, lost-response retries, conflict recovery, load failure, and mobile layout. Test configuration uses a fake key and loopback URL; it never connects to your real project. Production tests build using `.env.test` before preview. Run `npm run build` again before deployment to replace that test build with your configured production build.
 
@@ -79,12 +80,14 @@ The local repository includes project configuration, but this implementation did
 ## Main implementation files
 
 - `src/lib/backend.ts`, `src/lib/supabase.ts`: configured client and RPC persistence.
-- `src/components/AuthGate.tsx`: internal email/password sign-in and session changes.
-- `src/App.tsx`: asynchronous workspace workflows, import, retry, conflict recovery.
+- `src/components/AuthGate.tsx`, `AuthScreen.tsx`: session restoration, route protection, sign-in, sign-up and email confirmation.
+- `src/components/WorkspaceShell.tsx`, `WorkspaceSwitcher.tsx`, `WorkspaceForm.tsx`, `WorkspaceSettings.tsx`: onboarding, switching, creation and settings.
+- `src/App.tsx`: one workspace's dashboard: asynchronous workflows, import, retry, conflict recovery.
 - `src/lib/model.ts`, `dates.ts`, `seed.ts`: retained M1 domain operations, dates, and fictional records.
 - `src/lib/storage.ts`: retained legacy validator/helpers; automatic storage persistence is no longer used by the application.
 - `supabase/migrations/202610180001_m2.sql`: schema, indexes, RLS, grants, transactional functions.
-- `scripts/test-db.mjs`, `tests/m2.spec.ts`: database and browser verification.
+- `supabase/migrations/202610200001_multi_tenant_foundation.sql`, `supabase/rollbacks/`: profiles, workspaces, memberships, settings, role-checked functions, and the guarded rollback.
+- `scripts/test-db.mjs`, `scripts/test-tenancy.mjs`, `tests/*.spec.ts`: database, tenancy and browser verification. Browser tests use `tests/support/supabase.ts`, which simulates Auth and runs every RPC's real SQL as the requesting user.
 
 ## M2 verification performed — 18 October 2026
 

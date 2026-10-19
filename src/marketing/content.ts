@@ -1,3 +1,4 @@
+import { signupOpen } from './access'
 export const marketingPages = {
  '/': { title: 'LeadFlow — Good conversations deserve a follow-up.', description: 'Capture website inquiries, organize your leads, and keep the next follow-up in sight. A focused workspace for service businesses.' },
  '/features': { title: 'Features — LeadFlow', description: 'Lead records, pipeline statuses, follow-up tasks, and activity history for service businesses.' },
@@ -7,12 +8,11 @@ export const marketingPages = {
  '/resources': { title: 'Resources — LeadFlow', description: 'Practical guides to capturing inquiries, keeping a useful pipeline, and following up.' },
  '/faq': { title: 'Frequently asked questions — LeadFlow', description: 'Answers about features, access, integrations, notifications, and planned capabilities.' },
  '/security': { title: 'Security — LeadFlow', description: 'Understand current authentication, account isolation, protected intake, and security limitations.' },
- '/signup': { title: 'Request access — LeadFlow', description: 'Accounts are administrator-provisioned. Request access or sign in to an existing workspace.' },
 } as const
 export type MarketingPath = keyof typeof marketingPages
 export const faqs = [
  ['What does LeadFlow do?', 'LeadFlow brings inquiries, lead details, pipeline status, follow-up tasks, and activity history into one focused workspace. It is built for the work between a first hello and a client decision.'],
- ['Can I sign up and start immediately?', 'Not yet. Accounts are currently provisioned by an administrator. Request access through our inquiry form; submitting a request does not create an account or guarantee availability. Existing users can sign in.'],
+ ['Can I sign up and start immediately?', signupOpen ? 'Yes. Create an account with your email address, confirm it if asked, and name your first workspace. Existing users can sign in.' : 'Not yet. Accounts are currently provisioned by an administrator. Request access through our inquiry form; submitting a request does not create an account or guarantee availability. Existing users can sign in.'],
  ['Can I use my existing website?', 'Yes. Share the hosted inquiry page or embed it with an iframe. The Integrations hub includes HTML, WordPress, and React instructions. Your website must permit the embed, and the form host needs the correct security configuration.'],
  ['Are Zapier, Make, and n8n connected natively?', 'They are documented HTTP workflows, not native connectors or OAuth integrations. An administrator must configure a workspace-scoped API credential, and the workflow must be tested in your platform. Platform plans and limits may apply.'],
  ['Can my team share a workspace?', 'Shared workspaces, team invitations, and role-based collaboration are planned. Today each signed-in account has its own isolated records. Do not share account credentials as a substitute for team access.'],

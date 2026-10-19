@@ -5,7 +5,7 @@ test('all public pages, metadata and internal destinations work without authenti
  const errors:string[]=[],privateRequests:string[]=[]
  page.on('pageerror',error=>errors.push(error.message))
  await page.route('**/rest/v1/**',route=>{privateRequests.push(route.request().url());return route.abort()})
- const allowed=new Set([...routes,'/app','/login','/inquiry'])
+ const allowed=new Set([...routes,'/app','/login','/signup','/inquiry'])
  for(const path of routes){
   await page.goto(path)
   await expect(page.locator('main h1')).toHaveCount(1)
@@ -19,6 +19,8 @@ test('all public pages, metadata and internal destinations work without authenti
  expect(privateRequests).toEqual([]);expect(errors).toEqual([])
 })
 test('navigation, preview, FAQs, access request and protected entry points',async({page})=>{
+ // The hosted project currently has sign-up disabled; /signup then offers the access request.
+ await page.route('http://127.0.0.1:54329/auth/v1/settings',route=>route.fulfill({json:{disable_signup:true,mailer_autoconfirm:false}}))
  await page.goto('/')
  await page.getByRole('link',{name:'Take a closer look'}).click();await expect(page).toHaveURL(/#product-preview$/)
  await page.getByRole('button',{name:'Follow-ups preview'}).click();await expect(page.getByText('Check in on the website brief')).toBeVisible()

@@ -207,13 +207,13 @@ This is needed only for server/automation intake. The hosted form does not need 
 3. Open your Supabase project → SQL Editor. Find the existing row without revealing secrets:
 
 ```sql
-select id, owner_id, label, provider, revoked_at, last_used_at
+select id, workspace_id, label, provider, revoked_at, last_used_at
 from leadflow_private.integration_keys
 where label = 'Website automation';
 ```
 
-4. Identify the row belonging to your account. If there are multiple rows, compare `owner_id` with your user UUID under Supabase Authentication → Users. Copy that row's `id`.
-5. In a new query replace BOTH placeholders below: the new `tokenHash` from step 1 and the exact credential row ID from step 4. Paste the hash, not the raw `lf_...` token. Keep the existing owner/sender/recipient unchanged.
+4. Identify the row belonging to your workspace. If there are multiple rows, compare `workspace_id` with your workspace ID; for a personal workspace this is your user UUID under Supabase Authentication → Users. Copy that row's `id`. (Before the multi-tenant migration this column was named `owner_id`.)
+5. In a new query replace BOTH placeholders below: the new `tokenHash` from step 1 and the exact credential row ID from step 4. Paste the hash, not the raw `lf_...` token. Keep the existing workspace/sender/recipient unchanged.
 
 ```sql
 update leadflow_private.integration_keys

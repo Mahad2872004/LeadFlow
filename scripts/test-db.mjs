@@ -1,18 +1,10 @@
 import { PGlite } from '@electric-sql/pglite'
-import { readFileSync } from 'node:fs'
 import assert from 'node:assert/strict'
-let db = new PGlite()
-await db.exec(`create role anon; create role authenticated; create role service_role; create schema auth;
-create table auth.users(id uuid primary key);
-create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
-create function auth.jwt() returns jsonb language sql stable as $$ select coalesce(nullif(current_setting('request.jwt.claims',true),''),'{}')::jsonb $$;
-grant usage on schema public,auth to anon,authenticated;
-grant execute on all functions in schema auth to anon,authenticated;
-insert into auth.users values ('11111111-1111-4111-8111-111111111111'),('22222222-2222-4222-8222-222222222222');`)
-await db.exec(readFileSync('supabase/migrations/202610180001_m2.sql','utf8'))
-await db.exec(readFileSync('supabase/migrations/202610180002_m3.sql','utf8'))
- await db.exec(readFileSync('supabase/migrations/202610180003_integrations.sql','utf8'))
+import { createDatabase } from '../tests/support/database.ts'
 const userA='11111111-1111-4111-8111-111111111111', userB='22222222-2222-4222-8222-222222222222'
+let db = await createDatabase([userA,userB])
+// The column that ties each client-visible table to an account or workspace.
+const tenantColumn={workspaces:'owner_id',leads:'workspace_id',follow_up_tasks:'workspace_id',activity_history:'workspace_id',workspace_requests:'workspace_id',workspace_memberships:'user_id',workspace_settings:'workspace_id',profiles:'id'}
 async function asUser(id,role='authenticated') { await db.exec(`reset role; set role ${role}; select set_config('request.jwt.claim.sub','${id}',false); select set_config('request.jwt.claims','{}',false);`) }
 const empty={version:1,leads:[],tasks:[],activities:[]}
 const lead={id:'legacy-lead',name:'Test Lead',email:'test@example.com',phone:'',company:'',service:'Other',source:'Website',message:'',status:'New',createdAt:'2026-10-18T00:00:00.000Z'}
@@ -21,7 +13,7 @@ async function save(payload,revision,id=crypto.randomUUID()){return (await db.qu
 async function load(){return (await db.query('select public.load_workspace() as snapshot')).rows[0].snapshot}
 async function denied(operation,pattern){await assert.rejects(operation,pattern)}
 await asUser('', 'anon')
-for(const table of ['leads','follow_up_tasks','activity_history','workspaces','workspace_requests']) await denied(()=>db.query(`select * from public.${table}`),/permission denied/)
+for(const table of Object.keys(tenantColumn)) await denied(()=>db.query(`select * from public.${table}`),/permission denied/)
 await denied(load,/permission denied/)
 await denied(()=>save(data,0),/permission denied/)
 await asUser(userA)
@@ -32,14 +24,15 @@ assert.equal(await save(data,0,request),1)
 assert.deepEqual(await load(),{revision:1,data})
 await denied(()=>save(empty,0,request),/different data/)
 await denied(()=>save(empty,0),/another session/)
-for(const table of ['leads','follow_up_tasks','activity_history','workspaces','workspace_requests']) {
+for(const [table,column] of Object.entries(tenantColumn)) {
  await denied(()=>db.query(`delete from public.${table}`),/permission denied/)
- await denied(()=>db.query(`update public.${table} set owner_id='${userB}'`),/permission denied/)
- await denied(()=>db.query(`insert into public.${table}(owner_id) values ('${userB}')`),/permission denied/)
+ await denied(()=>db.query(`update public.${table} set ${column}='${userB}'`),/permission denied/)
+ await denied(()=>db.query(`insert into public.${table}(${column}) values ('${userB}')`),/permission denied/)
 }
 await asUser(userB)
 assert.deepEqual(await load(),{revision:0,data:empty})
-for(const table of ['leads','follow_up_tasks','activity_history','workspaces','workspace_requests']) assert.equal((await db.query(`select * from public.${table}`)).rows.length,0)
+for(const [table,column] of Object.entries(tenantColumn)) assert.equal((await db.query(`select * from public.${table} where ${column}='${userA}'`)).rows.length,0)
+assert.deepEqual((await db.query('select id from public.workspaces')).rows,[{id:userB}])
 await save({...empty,leads:[{...lead,name:'Other owner'}]},0)
 await asUser(userA)
 assert.equal((await load()).data.leads[0].name,'Test Lead')
@@ -68,4 +61,4 @@ db=new PGlite({loadDataDir:persisted})
 await asUser(userB)
 assert.equal((await load()).data.leads[0].name,'Other owner')
 await db.close()
-console.log('PASS: migration, database restart from saved image, round trips, edits, follow-ups, deletion/reset, idempotency, conflict detection, transaction rollback, validation, grants, RLS owner isolation, and unauthenticated RPC rejection.')
+console.log('PASS: all migrations, database restart from saved image, round trips, edits, follow-ups, deletion/reset, idempotency, conflict detection, transaction rollback, validation, grants, RLS owner isolation, and unauthenticated RPC rejection.')

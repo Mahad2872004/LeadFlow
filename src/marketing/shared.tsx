@@ -1,11 +1,12 @@
 import { useState, type ReactNode } from 'react'
 import { Icon } from '../components/Icon'
 import { faqs, featureCards } from './content'
+import { signupOpen } from './access'
 export function Brand(){return <a className="mk-brand" href="/" aria-label="LeadFlow home"><span><Icon name="arrow" size={24}/></span>LeadFlow<span className="mk-brand-dot">.</span></a>}
-export function CTA({children='Request access',href='/signup',secondary=false}:{children?:ReactNode;href?:string;secondary?:boolean}){return <a className={`mk-button${secondary?' mk-button-secondary':''}`} href={href}>{children}<Icon name="arrow" size={16}/></a>}
+export function CTA({children=signupOpen?'Create your account':'Request access',href='/signup',secondary=false}:{children?:ReactNode;href?:string;secondary?:boolean}){return <a className={`mk-button${secondary?' mk-button-secondary':''}`} href={href}>{children}<Icon name="arrow" size={16}/></a>}
 export function Eyebrow({children}:{children:ReactNode}){return <p className="mk-eyebrow">{children}</p>}
 export function Intro({eyebrow,title,text}:{eyebrow:string;title:ReactNode;text:string}){return <div className="mk-intro"><Eyebrow>{eyebrow}</Eyebrow><h1>{title}</h1><p>{text}</p></div>}
-export function FinalCTA(){return <section className="mk-final mk-wrap"><div><Eyebrow>MAKE ROOM FOR THE NEXT CONVERSATION</Eyebrow><h2>A little more clarity.<br/><em>A better follow-up.</em></h2><p>See whether LeadFlow fits the way your business works.</p></div><div><CTA/><p className="mk-fine">Access by invitation. No checkout required.</p></div></section>}
+export function FinalCTA(){return <section className="mk-final mk-wrap"><div><Eyebrow>MAKE ROOM FOR THE NEXT CONVERSATION</Eyebrow><h2>A little more clarity.<br/><em>A better follow-up.</em></h2><p>See whether LeadFlow fits the way your business works.</p></div><div><CTA/><p className="mk-fine">{signupOpen?'No checkout required.':'Access by invitation. No checkout required.'}</p></div></section>}
 export function FAQs({short=false}:{short?:boolean}){return <div className="mk-faq-list">{(short?faqs.slice(0,5):faqs).map(([q,a])=><details key={q}><summary>{q}<span aria-hidden="true">+</span></summary><p>{a}</p></details>)}</div>}
 export function FeatureGrid(){return <div className="mk-feature-grid">{featureCards.map(f=><article className="mk-feature" key={f.title}><span className="mk-icon"><Icon name={f.icon}/></span><h3>{f.title}</h3><p>{f.text}</p></article>)}</div>}
 export function ProductPreview(){

@@ -14,7 +14,7 @@ The hub cannot inspect server secrets. An Available guide is not proof of a conf
 
 ## Provision a workspace credential (administrator)
 
-Create a separate credential per automation. Obtain the intended internal account UUID from Supabase Authentication. Confirm the sender and recipient; they are configured per credential so one account's submissions cannot be sent to another account's global recipient.
+Create a separate credential per automation. Find the destination workspace ID with `select id, name, owner_id from public.workspaces;` in the SQL editor. A user's personal workspace ID is their Auth user UUID. Confirm the sender and recipient; they are configured per credential, so one workspace's submissions cannot be sent to another workspace's recipient.
 
 Run locally in a private terminal:
 
@@ -26,9 +26,9 @@ Store the generated `token` only in the automation platform's restricted credent
 
 ```sql
 insert into leadflow_private.integration_keys
-  (owner_id, label, provider, token_hash, notification_from, notification_to)
+  (workspace_id, label, provider, token_hash, notification_from, notification_to)
 values
-  ('YOUR_INTERNAL_ACCOUNT_UUID', 'Website automation', 'webhook',
+  ('YOUR_WORKSPACE_ID', 'Website automation', 'webhook',
    'GENERATED_TOKEN_HASH', 'LeadFlow <inquiries@YOUR_VERIFIED_DOMAIN>',
    'YOUR_BUSINESS_EMAIL')
 returning id;
@@ -41,14 +41,14 @@ To rotate: generate a fresh token/hash, update the same credential ID using this
 ```sql
 update leadflow_private.integration_keys
 set token_hash = 'NEW_GENERATED_TOKEN_HASH', revoked_at = null, last_used_at = null
-where id = 'EXISTING_CREDENTIAL_UUID' and owner_id = 'YOUR_INTERNAL_ACCOUNT_UUID';
+where id = 'EXISTING_CREDENTIAL_UUID' and workspace_id = 'YOUR_WORKSPACE_ID';
 ```
 
-Revoke from the hub with its confirmation step, or set `revoked_at=now()` using an administrator connection. A signed-in user can revoke only their own credentials. Do not delete a credential with retained receipts. Already queued notifications remain immutable and may still be delivered after revocation; revocation blocks new/repeated inbound requests, not the queue worker.
+Revoke from the hub with its confirmation step, or set `revoked_at=now()` using an administrator connection. Only a workspace's owner or admins can revoke its credentials (the hub currently shows the personal workspace). Before the multi-tenant migration, the `workspace_id` column was named `owner_id`. Do not delete a credential with retained receipts. Already queued notifications remain immutable and may still be delivered after revocation; revocation blocks new/repeated inbound requests, not the queue worker.
 
 ## Website installation
 
-In Integrations, open Hosted inquiry form, Embeddable website form, WordPress, or Custom website. Copy the actual deployed URL or HTML/React iframe snippet. In WordPress use a Custom HTML block or a page builder HTML widget. Administrators may need to permit trusted iframes; do not disable general site security.
+In Integrations, open Hosted inquiry form, Embeddable website form, WordPress, or Custom website. Copy the actual deployed URL or HTML/React iframe snippet. The link includes this workspace's form key (`/inquiry?form=…`), so submissions are saved in this workspace and notify its owner or the recipient set under "This workspace's form". Owners and admins can turn the form off or create a new key, which disables old links and embeds. In WordPress use a Custom HTML block or a page builder HTML widget. Administrators may need to permit trusted iframes; do not disable general site security.
 
 The iframe runs the existing real form, including CAPTCHA. Allow the **form origin**, not merely the parent website, in `INQUIRY_ALLOWED_ORIGINS`; register the form hostname in Turnstile. Configure any CSP `frame-ancestors` restrictions to permit intended parent sites. Do not sandbox the iframe into a null origin. The preview can create a real lead/email; use fictional data. Test mobile height/scrolling on the actual parent site.
 

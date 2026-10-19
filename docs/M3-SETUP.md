@@ -43,7 +43,8 @@ The notification is plain text. It includes name, email, company, service, websi
 
 Copy `supabase/.env.example` to ignored `supabase/.env.local` and fill all values. For values containing spaces, use dotenv quotes, e.g. `NOTIFICATION_FROM="LeadFlow <inquiries@mail.example.com>"`.
 
-- `WEBSITE_OWNER_ID`: internal account UUID from step 1.
+- Every workspace also has its own form link, `/inquiry?form=KEY`, shown in its Integrations hub. That link needs none of the destination settings below: the database routes it to its workspace and notifies that workspace's owner or chosen recipient. The settings below apply only to the shared `/inquiry` link without a key. See [MULTI-TENANCY.md](MULTI-TENANCY.md#workspace-forms-notifications-and-role-limits).
+- `WEBSITE_WORKSPACE_ID`: destination workspace ID for the shared link. For a personal workspace this is the internal account UUID from step 1; list workspaces with `select id, name, owner_id from public.workspaces;`. Deployments made before the multi-tenant migration use `WEBSITE_OWNER_ID` with the same value; it keeps working, and `WEBSITE_WORKSPACE_ID` takes precedence when both are set. See [MULTI-TENANCY.md](MULTI-TENANCY.md).
 - `WEBSITE_ID`: stable lowercase identifier, e.g. `main-website` (letters, numbers, hyphens, up to 64 characters).
 - `INQUIRY_ALLOWED_ORIGINS`: exact comma-separated origins, including protocol and port, with **no trailing slash**, e.g. `https://forms.example.com,http://localhost:5173`.
 - `TURNSTILE_HOSTNAMES`: hostnames allowed by the widget, without protocol or port.

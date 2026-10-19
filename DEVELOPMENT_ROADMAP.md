@@ -53,6 +53,29 @@ Validate deployed Auth/RLS/RPC/client-token boundaries with two accounts and dis
 
 Use consented, bounded beta accounts with a named operator and support channel. Measure touch time, completion/abandonment, errors, support effort and repeat use separately. The proposed paid-continuation gate is evidence to collect later, not a billing implementation mandate. Do not claim production readiness, compliance certification, product-market fit or recurring revenue without corresponding evidence.
 
+## Multi-tenant workspace foundation — backend
+
+**Status: implemented, locally verified, and applied to the hosted project 20 October 2026 (schema and grants verified there); hosted two-account checks pending; no UI.**
+
+- Users can own several workspaces and be an owner, admin or member of others.
+- Membership-based RLS and role-checked database functions.
+- Lossless, guarded migration of existing per-user data, with a tested rollback.
+- The unsafe, unapplied draft `202610190001` was superseded.
+- The dashboard keeps using each user's personal workspace.
+
+**Onboarding and workspace management: implemented and locally verified 20 October 2026; migration `202610200002` not yet applied to the hosted project.**
+
+- Sign-up that follows the hosted Auth configuration (currently closed), sign-in, route protection and session restoration.
+- First-workspace onboarding, a workspace switcher, and workspace settings with read-only members.
+
+**Product features integrated with workspaces: implemented and locally verified 20 October 2026; migration `202610200003` and the `submit-inquiry` update not yet deployed.**
+
+- Each workspace has its own public form link and notification recipient.
+- Members can't remove records or rewrite history; the database enforces this.
+- Isolation tests cover two accounts and three workspaces.
+
+Next steps: apply `202610200002` and `202610200003`, deploy `submit-inquiry`, then the frontend; hosted two-account verification; a decision on opening public sign-up; then invitations and member management. See [docs/MULTI-TENANCY.md](docs/MULTI-TENANCY.md).
+
 ## Current verification ledger
 
 M5: build, lint, Edge TypeScript, database, M3 handler/SQL and integration handler/SQL checks passed; 17/17 browser tests passed. External services simulated in automated checks; no live write performed. Prior user-confirmed inbox receipt is recorded separately in the manual integration guide. Full details and limitations are in [M5 audit](docs/M5-AUDIT.md#verification-performed-in-m5).
