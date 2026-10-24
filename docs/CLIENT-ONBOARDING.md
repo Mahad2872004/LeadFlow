@@ -245,7 +245,9 @@ Project `fzgxpwmqzmvgmijviaar`, Supabase CLI 2.122.0.
 
 **Not done:**
 - **Frontend.** The GitHub repository has no Vercel deployments, so pushes don't deploy; the site was deployed another way. Deploying needs a Vercel login on this machine.
-- **Scheduler.** Not configured.
+- **Scheduler: configured, not fully verified.** See [Reminder scheduler](#reminder-scheduler). Both worker functions answered direct calls made with the new secret (200, nothing to send).
+  - The watcher saw `leadflow-onboarding-reminders` fire once and record one HTTP response. That response's status and body were not inspected.
+  - `leadflow-retry-notifications` hadn't run yet when checking stopped.
 - **End-to-end checks.** No end-to-end hosted onboarding has been run, and no reminder email has been sent.
 
 ## Deploying (reference; steps 1–4 were done on 25 October, see above)
@@ -307,7 +309,7 @@ The browser tests cover:
 
 ## Limitations
 
-- **No scheduler,** so no automatic reminders until one is configured and verified.
+- **Reminders not proven end to end.** Supabase Cron is configured (25 October), but the scheduled runs' results and an actual reminder email haven't been checked.
 - **The client link is shown once.** If it's lost, replace it. LeadFlow doesn't email the first link.
 - **No file uploads:** external links only. LeadFlow doesn't fetch or check them, and the agency must open them.
 - **No platform integrations.** Access is confirmed by a person, never verified by LeadFlow.

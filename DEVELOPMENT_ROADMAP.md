@@ -50,7 +50,7 @@ Exit evidence: isolated positive/negative end-to-end tests; revoked/expired clie
 **Status: implemented and verified locally, 25 October 2026.**
 - **Database and Edge Functions:** applied and deployed to the hosted project the same day. Schema, grants and anonymous denial were verified there ([hosted rollout](docs/CLIENT-ONBOARDING.md#hosted-rollout-25-october-2026)).
 - **Frontend:** not deployed.
-- **Reminders:** need a scheduler that isn't configured.
+- **Reminders:** Supabase Cron was configured on 25 October; the scheduled runs' outcomes are not yet verified.
 
 The owner asked for this build. The M6 entry requirements and the [research gates](docs/AGENCY-ONBOARDING-RESEARCH.md#12-validation-plan-and-go-no-go-gates-no-interviews-required-to-start) remain unmet, so this is a capability, not evidence of demand.
 
