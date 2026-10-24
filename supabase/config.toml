@@ -8,3 +8,9 @@ verify_jwt = false
 
 [functions.inbound-lead]
 verify_jwt = false
+
+[functions.client-portal]
+verify_jwt = false
+
+[functions.onboarding-reminders]
+verify_jwt = false

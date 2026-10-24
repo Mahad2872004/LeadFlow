@@ -311,6 +311,16 @@ Added 20 October 2026: [`202610200003_workspace_forms.sql`](../supabase/migratio
 
 Deliberately broken versions of the member limit, the turned-off-form check and the remount-on-switch were each caught by these tests.
 
+## Client onboarding (M6A)
+
+[`202610250001_client_onboarding.sql`](../supabase/migrations/202610250001_client_onboarding.sql) adds onboarding on top of these roles. It is local only.
+- **Tables.** Its tables are private, so the client table-privilege allowlist is unchanged.
+- **Functions.** It adds 15 signed-in functions, all checked with `require_role`, and four service-role functions for the client portal and the reminder worker.
+- **Roles.** Members can run onboarding requests. Only owners and admins manage templates and cancel requests.
+- **Clients.** They reach a single request through a hashed, expiring link via an Edge Function, never through a workspace ID.
+
+See [CLIENT-ONBOARDING.md](CLIENT-ONBOARDING.md#security-model).
+
 ## Known limitations and next steps
 
 - **Snapshot protocol:** saves still send the whole workspace. Since `202610200003`, the database refuses a member's save that removes leads or follow-ups or changes existing history. Members can still edit any field of existing leads and follow-ups, and history text is written by the browser, so it is a working record, not an audit log. Save receipts record who saved.

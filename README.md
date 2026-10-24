@@ -6,7 +6,17 @@ The public website starts at `/`. The protected dashboard lives at `/app`, with 
 
 ## Product direction and M5 research
 
-See the [product overview](PRODUCT_OVERVIEW.md), [architecture](ARCHITECTURE.md), [development roadmap](DEVELOPMENT_ROADMAP.md), [M5 repository audit](docs/M5-AUDIT.md), and [market research and scoring](docs/M5-RESEARCH.md). M5 recommends investigating a narrow website kickoff-readiness workflow, while retaining LeadFlow as a Promptly implementation demonstration. Demand and willingness to pay are not validated; M6 is not approved or implemented. Earlier dated verification notes below remain historical; the M5 audit consolidates current local checks and the limited subsequent live evidence.
+See the [product overview](PRODUCT_OVERVIEW.md), [architecture](ARCHITECTURE.md), [development roadmap](DEVELOPMENT_ROADMAP.md), [M5 repository audit](docs/M5-AUDIT.md), and [market research and scoring](docs/M5-RESEARCH.md). M5 recommends investigating a narrow website kickoff-readiness workflow, while retaining LeadFlow as a Promptly implementation demonstration. Demand and willingness to pay are not validated. The owner has since asked for M6A, client onboarding for marketing agencies; it is implemented locally (see below), which is not evidence of demand. Earlier dated verification notes below remain historical; the M5 audit consolidates current local checks and the limited subsequent live evidence.
+
+## Client onboarding (M6A)
+
+The **Onboarding** section helps a marketing agency onboard a new client:
+- service templates for paid advertising, SEO, social media management and email marketing;
+- per-client checklists and one private, expiring, revocable client link (`/client-portal`);
+- review, with requests for changes;
+- deterministic readiness, an auditable handoff, and bounded reminders.
+
+It is implemented and verified locally only. It is not deployed, and reminders need a scheduler that isn't configured. See [docs/CLIENT-ONBOARDING.md](docs/CLIENT-ONBOARDING.md) for the user journey, security model, deployment order and limitations.
 
 ## Set up a Supabase project
 
@@ -52,6 +62,7 @@ npm run test:db
 npm run test:m3
 npm run test:integrations
 npm run test:tenancy
+npm run test:onboarding
 npm run check:edge
 npm test
 npm run test:production

@@ -35,7 +35,7 @@ No application features, migrations, live configuration or production data chang
 
 ## M6 — One narrowly scoped workflow, conditional
 
-**Status: not started; blocked by product decision gate, not by a technical failure.**
+**Status: the planned narrow workflow was superseded by M6A (below), which the owner requested on 25 October 2026.** The evidence gates described here were not met; they remain the way to judge whether the workflow is worth taking further.
 
 Entry requirements: explicit owner approval of one workflow; concrete target-agency examples and measurable baseline; documented residual gap against existing tools; agreed single-account/client permission model; realistic support/economic assumptions. The [research gates](docs/M5-RESEARCH.md#evidence-gates-and-next-decision) propose minimum evidence, not completed validation.
 
@@ -44,6 +44,39 @@ If kickoff readiness is approved, implement only: manual commercial-confirmation
 No file hosting, AI, arbitrary workflow builder, cross-tool connector catalog, payments/contracts, sales outreach, reporting suite or shared-organization rewrite. An external PM adapter is deferred unless evidence shows it is necessary and repeatable. If configured existing tools win the comparison, choose a Promptly implementation offering instead of building a redundant SaaS.
 
 Exit evidence: isolated positive/negative end-to-end tests; revoked/expired client links denied; other-owner reads/writes denied; replay/lost response cannot duplicate handoff/reminders; paused/cancelled requests stop future effects; partial failures visible and recoverable; existing M1–M4 regressions pass; measured workflow outcome from any separately authorized controlled tests. No public launch from a local test result alone.
+
+## M6A — Marketing-agency client onboarding and campaign readiness
+
+**Status: implemented and verified locally, 25 October 2026.**
+- **Database and Edge Functions:** applied and deployed to the hosted project the same day. Schema, grants and anonymous denial were verified there ([hosted rollout](docs/CLIENT-ONBOARDING.md#hosted-rollout-25-october-2026)).
+- **Frontend:** not deployed.
+- **Reminders:** need a scheduler that isn't configured.
+
+The owner asked for this build. The M6 entry requirements and the [research gates](docs/AGENCY-ONBOARDING-RESEARCH.md#12-validation-plan-and-go-no-go-gates-no-interviews-required-to-start) remain unmet, so this is a capability, not evidence of demand.
+
+**Delivered:**
+- **Agency side:** an Onboarding section with a readiness dashboard, filtered request list and request detail. It includes:
+  - four editable starter templates (paid advertising, SEO, social media management, email marketing);
+  - per-client customisation that never changes the template;
+  - item review (accept, request changes, mark not required);
+  - deterministic readiness with a blocker list and an explanation;
+  - one auditable handoff record;
+  - an activity timeline.
+- **Client side:** a portal at `/client-portal#token`, opened by a hashed, expiring, revocable link scoped to one request.
+- **Reminders:** a bounded, idempotent reminder outbox and worker.
+- **Data:** migration `202610250001` with a rollback, and the `client-portal` and `onboarding-reminders` Edge Functions.
+
+Details, security model and deployment order: [docs/CLIENT-ONBOARDING.md](docs/CLIENT-ONBOARDING.md).
+
+**Not built (deliberately):** project management (scope, deliverables, timelines, tasks), file uploads, platform integrations or access verification, automatic campaign actions, team invitations, and escalation emails.
+
+The handoff ID is the attachment point for a later project record.
+
+**Next steps:**
+1. Repair the CLI migration history and apply `202610250001`.
+2. Deploy the two functions and the frontend.
+3. Configure and verify a reminder scheduler.
+4. Run the hosted two-account and client-link checks in the onboarding guide.
 
 ## M7 — Production readiness and controlled beta
 
@@ -77,5 +110,22 @@ Use consented, bounded beta accounts with a named operator and support channel. 
 Next steps: apply `202610200002` and `202610200003`, deploy `submit-inquiry`, then the frontend; hosted two-account verification; a decision on opening public sign-up; then invitations and member management. See [docs/MULTI-TENANCY.md](docs/MULTI-TENANCY.md).
 
 ## Current verification ledger
+
+**M6A, 25 October 2026 (local).** These all passed:
+- `npm run lint` (no warnings);
+- `npm run check:edge`;
+- `npm run test:db`, `test:m3`, `test:integrations`, `test:tenancy` and the new `test:onboarding`;
+- `npm run build`;
+- `npx playwright test`: 31/31 in development, including the 3 new onboarding tests;
+- `npm run test:production`: 31/31 against the production build.
+
+Four deliberate faults injected into the onboarding migration were each caught by `test:onboarding`.
+
+**How it was tested:**
+- Databases ran in PGlite (PostgreSQL 18).
+- In browser tests, Auth and HTTP transport were simulated, and every RPC ran the real SQL.
+- The Edge handlers ran in Node with the email provider simulated.
+
+**Not verified:** any hosted behaviour, real email, or a scheduler.
 
 M5: build, lint, Edge TypeScript, database, M3 handler/SQL and integration handler/SQL checks passed; 17/17 browser tests passed. External services simulated in automated checks; no live write performed. Prior user-confirmed inbox receipt is recorded separately in the manual integration guide. Full details and limitations are in [M5 audit](docs/M5-AUDIT.md#verification-performed-in-m5).

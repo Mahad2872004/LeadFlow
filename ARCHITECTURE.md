@@ -43,6 +43,31 @@ The diagram describes logical flow, not a deployed scheduler guarantee. Public v
   
   Details, role matrix and runbook: [docs/MULTI-TENANCY.md](docs/MULTI-TENANCY.md).
 
+- Migration `202610250001_client_onboarding.sql` (25 October 2026, M6A, local only):
+  - Adds onboarding templates, requests and checklist items, hashed client links, a reminder outbox, activity events and handoffs.
+  - Every table is in `leadflow_private` with no client privileges. Members use 15 role-checked definer functions; the client portal and reminder worker use service-role functions through two new Edge Functions.
+  - Requests reference leads by ID without a foreign key, so snapshot saves and resets never touch onboarding records.
+
+  Details: [docs/CLIENT-ONBOARDING.md](docs/CLIENT-ONBOARDING.md).
+
+## Client onboarding (M6A, implemented locally)
+
+```mermaid
+flowchart LR
+  Member[Workspace member] --> Dash[Onboarding UI]
+  Dash --> RPCs[Role-checked onboarding RPCs]
+  RPCs --> Private[(leadflow_private onboarding tables)]
+  Client[Client with link] --> Portal[/client-portal#token/]
+  Portal --> PortalFn[client-portal Edge Function: hashes token]
+  PortalFn --> PortalRPC[Service-role portal RPCs]
+  PortalRPC --> Private
+  Scheduler[Scheduler: not configured] -.-> Worker[onboarding-reminders]
+  Worker --> Private
+  Worker --> Email[Resend]
+```
+
+Readiness is computed in the database from item states, and the handoff is a single recorded event with no external effects. The design notes below were written before approval; M6A implemented the subset that was asked for, with a fixed state machine and no workflow engine.
+
 ## Current ingress and delivery
 
 Public intake validates origin, normalized fields, payload size, request UUID, honeypot, Turnstile success/action/hostname and durable quotas. The destination is deployment-secret configuration, not a client-selected owner. Inbound automation rejects browser-Origin requests and validates its bearer credential; the database derives the owner from the credential. Origin rejection alone is not authentication.
@@ -51,9 +76,15 @@ Functions have gateway JWT checks disabled because they use different guards. Th
 
 Notification sending happens after storage. The outbox uses row locking/leases, attempt state, bounded backoff and a provider idempotency key. `accepted` is not confirmed inbox delivery. Permanent errors remain visible; aged ambiguous sends become `uncertain` after the 23-hour retry window. A scheduler must invoke the worker; no cron installation is present. There are no delivery/bounce webhook handlers or general execution histories.
 
-## Additive design under investigation — not approved
+## Additive design under investigation (pre-M6A notes, kept for history)
 
-Only if M6 is approved, implement one fixed kickoff-readiness workflow on this stack. Use ordinary PostgreSQL state and narrow Edge Functions/RPCs. Do not add an automation DSL, user-defined code, generic trigger/action catalog, Redis, orchestration cluster, or another web server.
+M6A (above) has since been implemented locally at the owner's request. Differences from these notes:
+- Snapshot compatibility was resolved by linking leads by ID with no foreign key.
+- Requests start as drafts and are opened explicitly; there is no separate "commercial confirmation" step.
+- Waived required items are "marked not required" with an agency-only reason.
+- Reminder execution history lives in `onboarding_reminders`, separate from the inquiry outbox.
+
+Original notes: only if M6 is approved, implement one fixed kickoff-readiness workflow on this stack. Use ordinary PostgreSQL state and narrow Edge Functions/RPCs. Do not add an automation DSL, user-defined code, generic trigger/action catalog, Redis, orchestration cluster, or another web server.
 
 ### Necessary product changes and reuse
 
@@ -100,4 +131,4 @@ M6 must include essential authorization, scoped token lifetime/revocation, trans
 
 M7 should verify hosted two-owner/client access boundaries, scheduler recovery, provider limits and delivery/bounce evidence, secret rotation, backup restore, data retention/deletion, abuse controls, safe logs, alerts and runbooks. Shared teams require a separately approved membership design; never simulate roles by sharing credentials. Use controlled beta accounts and disposable test data, not destructive production migrations.
 
-The [research](docs/M5-RESEARCH.md#technical-feasibility-sources) links official Google Drive/ClickUp API documentation as future feasibility evidence only. No connector, client portal, workflow schema, or runner has been implemented by M5.
+The [research](docs/M5-RESEARCH.md#technical-feasibility-sources) links official Google Drive/ClickUp API documentation as future feasibility evidence only. M5 implemented no connector, client portal, workflow schema or runner. M6A later added the client portal and a fixed onboarding schema; it still adds no connector or generic runner.

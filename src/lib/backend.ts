@@ -9,7 +9,7 @@ export interface WorkspaceMember { userId: string; role: WorkspaceRole; displayN
 /** An error with the database's code, e.g. 42501 when the caller may not access the workspace. */
 export class RequestError extends Error { code: string; constructor(message: string, code = '') { super(message); this.code = code } }
 // Database messages are written for people; only transport failures need rewording.
-function failure(error: { message: string; code?: string }) {
+export function failure(error: { message: string; code?: string }) {
   return new RequestError(/failed to fetch|networkerror|load failed|fetch failed/i.test(error.message) ? 'We couldn’t reach LeadFlow. Check your connection and try again.' : error.message, error.code)
 }
 export const accessDenied = (cause: unknown) => cause instanceof RequestError && cause.code === '42501'

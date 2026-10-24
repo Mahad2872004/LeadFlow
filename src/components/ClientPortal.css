@@ -1,0 +1,68 @@
+/* Client onboarding portal. Shares the public inquiry page's palette; no dashboard styles are loaded here. */
+.portal-page{box-sizing:border-box;min-height:100vh;background:#f5f7f3;color:#22372d;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;padding:40px clamp(16px,4vw,48px) 24px}
+.portal-page *{box-sizing:border-box}
+.portal-shell{max-width:820px;margin:0 auto}
+.portal-head{margin-bottom:22px}
+.portal-eyebrow{font-size:11px;font-weight:750;letter-spacing:1.6px;color:#587460;margin:0 0 14px;overflow-wrap:anywhere}
+.portal-head h1{font-size:clamp(28px,4vw,40px);line-height:1.15;letter-spacing:-1.2px;font-weight:650;margin:0 0 12px;overflow-wrap:anywhere}
+.portal-head p{font-size:15px;line-height:1.7;color:#5f6f65;margin:0;max-width:680px}
+.portal-card{background:#fff;border:1px solid #e1e7de;border-radius:16px;padding:22px 24px;margin-bottom:16px;box-shadow:0 8px 30px #1b3d270b}
+.portal-card h1{font-size:24px;margin:0 0 10px}.portal-card h2{font-size:17px;margin:0 0 8px}
+.portal-center{text-align:center;padding:48px 24px;display:grid;justify-items:center;gap:10px;font-size:14px;line-height:1.6}
+.portal-center p{margin:0;max-width:480px;color:#5f6f65}
+.portal-spinner{width:28px;height:28px;border-radius:50%;border:3px solid #d8e6dd;border-top-color:#28573e;animation:portal-spin .8s linear infinite}
+@keyframes portal-spin{to{transform:rotate(360deg)}}
+.portal-banner{border-radius:12px;padding:14px 16px;margin-bottom:16px;font-size:14px;line-height:1.6}
+.portal-banner p{margin:4px 0 0}
+.portal-info{background:#fff6e6;border:1px solid #f0dfbd;color:#6c4c16}
+.portal-done{background:#e8f3eb;border:1px solid #cfe5d6;color:#24563a}
+.portal-progress{display:grid;gap:8px;font-size:13px;color:#3f5a48}
+.portal-progress>div{height:10px;border-radius:999px;background:#edf2ee;overflow:hidden}
+.portal-progress i{display:block;height:100%;background:#3f8a60;border-radius:inherit}
+.portal-counts{list-style:none;display:flex;flex-wrap:wrap;gap:8px 18px;padding:0;margin:14px 0 0;font-size:13px;color:#5f6f65}
+.portal-counts strong{color:#22372d;font-size:16px;margin-right:3px}
+.portal-next{margin:14px 0 0;font-size:14px;line-height:1.6}.portal-next a{color:#28573e;font-weight:600}
+.portal-text{font-size:14px;line-height:1.7;color:#3e5145;white-space:pre-wrap;overflow-wrap:anywhere;margin:0 0 12px}
+.portal-safety{font-size:13px;line-height:1.65;color:#6a4c1c;background:#fff8ec;border:1px solid #f1e2c6;border-radius:12px;padding:12px 14px;margin:0 0 20px}
+.portal-section h2{font-size:12px;letter-spacing:1.4px;text-transform:uppercase;color:#587460;margin:26px 0 10px}
+.portal-item{background:#fff;border:1px solid #e1e7de;border-radius:14px;padding:18px 20px;margin-bottom:12px;scroll-margin-top:24px}
+.portal-item:target{outline:2px solid #6aa883;outline-offset:2px}
+.portal-item-changes_requested{border-left:4px solid #e0a54f}.portal-item-accepted{border-left:4px solid #5c9f76}.portal-item-submitted{border-left:4px solid #7f9fcb}
+.portal-item-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.portal-item-head h3{font-size:16px;margin:0;line-height:1.4;overflow-wrap:anywhere}
+.portal-state{font-size:11px;font-weight:650;border-radius:999px;padding:4px 10px;white-space:nowrap;background:#eef1ef;color:#4f6457}
+.portal-state-changes_requested{background:#fff1dc;color:#845414}.portal-state-submitted{background:#e6edf7;color:#355782}.portal-state-accepted{background:#dcebe0;color:#24603d}
+.portal-meta{font-size:12px;color:#6f7d74;margin:6px 0 10px}
+.portal-feedback{font-size:13px;line-height:1.6;background:#fff4e2;color:#6c4c16;border-radius:9px;padding:10px 12px;margin:0 0 12px;overflow-wrap:anywhere}
+.portal-feedback-ok{background:#ecf5ee;color:#24563a}
+.portal-page fieldset{border:0;padding:0;margin:0;min-width:0}
+.portal-page label{display:flex;flex-direction:column;gap:7px;margin:0 0 14px;font-size:13px;font-weight:600;color:#35483c}
+.portal-page input[type=url],.portal-page textarea{width:100%;font:inherit;font-size:15px;font-weight:400;padding:11px 12px;border:1px solid #d5ddd5;border-radius:9px;background:#fdfefd;color:#283e30;min-height:46px}
+.portal-page textarea{resize:vertical;line-height:1.6}
+.portal-page :focus-visible{outline:2px solid #387351;outline-offset:2px}
+.portal-page fieldset:disabled input,.portal-page fieldset:disabled textarea{background:#f5f7f4;color:#4a5d50}
+.portal-choices{display:grid;gap:8px;margin-bottom:14px}
+.portal-page .portal-choice{flex-direction:row;align-items:center;gap:10px;font-weight:500;margin:0;min-height:44px;padding:8px 12px;border:1px solid #e1e7de;border-radius:9px}
+.portal-choice input{width:18px;height:18px;accent-color:#28573e;flex-shrink:0}
+.portal-page .portal-access{margin-bottom:14px}
+.portal-links{display:grid;gap:4px;margin-bottom:14px}
+.portal-link-row{display:flex;gap:10px;align-items:flex-end}.portal-link-row label{flex:1}.portal-link-row .portal-text-button{margin-bottom:22px}
+.portal-actions{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:10px}
+.portal-page button{cursor:pointer;font:inherit;border-radius:9px;min-height:44px}
+.portal-page button:disabled{opacity:.5;cursor:not-allowed}
+.portal-primary{border:0;background:#28573e;color:#fff;font-size:14px;font-weight:650;padding:11px 18px}
+.portal-primary:hover:not(:disabled){background:#1c442e}
+.portal-secondary{border:1px solid #cdd9cf;background:#fff;color:#2f4d3a;font-size:14px;font-weight:600;padding:10px 16px}
+.portal-text-button{border:0;background:none;color:#28573e;font-size:13px;font-weight:600;padding:0 4px;text-decoration:underline;text-underline-offset:3px;justify-self:start}
+.portal-saved{font-size:13px;color:#24563a;margin:10px 0 0}
+.portal-error{font-size:13px;line-height:1.6;color:#9f352a;background:#fff1ee;border-radius:8px;padding:10px 12px;margin:10px 0 0}
+.portal-small{font-size:12px;color:#6f7d74;line-height:1.6;margin:8px 0 0}
+.portal-footer{max-width:820px;margin:32px auto 0;display:flex;justify-content:space-between;gap:16px;color:#7c887f;font-size:11px}
+@media(max-width:580px){
+  .portal-page{padding:24px 12px 20px}
+  .portal-card,.portal-item{padding:16px}
+  .portal-item-head{flex-direction:column;gap:8px}
+  .portal-actions button{flex:1}
+  .portal-footer{flex-direction:column;gap:6px}
+}
+@media(prefers-reduced-motion:reduce){.portal-spinner{animation:none}}

@@ -3,10 +3,10 @@ import { WorkspaceSwitcher } from './WorkspaceSwitcher'
 import { initials } from '../lib/format'
 import { roleLabels, type WorkspaceRole } from '../lib/workspaceOptions'
 
-export type Page = 'Overview' | 'Leads' | 'Follow-ups' | 'Activity' | 'Integrations' | 'Settings'
+export type Page = 'Overview' | 'Leads' | 'Follow-ups' | 'Onboarding' | 'Activity' | 'Integrations' | 'Settings'
 const navigation: {page: Page; icon: IconName}[] = [
   {page:'Overview',icon:'grid'}, {page:'Leads',icon:'users'},
-  {page:'Follow-ups',icon:'calendar'}, {page:'Activity',icon:'clock'}, {page:'Integrations',icon:'spark'}, {page:'Settings',icon:'gear'},
+  {page:'Follow-ups',icon:'calendar'}, {page:'Onboarding',icon:'clipboard'}, {page:'Activity',icon:'clock'}, {page:'Integrations',icon:'spark'}, {page:'Settings',icon:'gear'},
 ]
 interface SidebarProps { page: Page; dueCount: number; email: string; role: WorkspaceRole; onNavigate:(page:Page)=>void; onReset?:()=>void }
 export function Sidebar({page,dueCount,email,role,onNavigate,onReset}:SidebarProps) {
