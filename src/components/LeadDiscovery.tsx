@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { WorkspaceSummary } from '../lib/backend'
-import { criteriaSummary, discoveryHistory, discoveryStatus, failureLabels, filterLabels, leadOrigins, type HistoryItem, type LeadOrigin, type ProviderStatus, type SearchCriteria } from '../lib/discovery'
+import { criteriaSummary, discoveryHistory, searchEnabled, discoveryStatus, failureLabels, filterLabels, leadOrigins, type HistoryItem, type LeadOrigin, type ProviderStatus, type SearchCriteria } from '../lib/discovery'
 import { dateLabel } from '../lib/format'
 import type { Lead } from '../lib/model'
 import { CsvImport } from './CsvImport'
@@ -20,11 +20,13 @@ interface DiscoveryProps {
 }
 /** Lead discovery: find businesses through a configured provider, import a CSV file, and review past searches. */
 export function LeadDiscovery({workspace,leads,blocked,onImported,onAddLead}:DiscoveryProps){
-  const [tab,setTab]=useState<Tab>('find')
+  // While business search is "coming soon", the page opens on CSV import; manual entry is always available.
+  const [tab,setTab]=useState<Tab>(searchEnabled?'find':'csv')
   const [status,setStatus]=useState<Status>({state:'loading'}),[attempt,setAttempt]=useState(0)
   const [origins,setOrigins]=useState<LeadOrigin[]>([]),[history,setHistory]=useState<HistoryItem[]|null>(null),[historyError,setHistoryError]=useState('')
   const [reopened,setReopened]=useState<{key:number;provider:string;criteria:SearchCriteria}|null>(null)
   useEffect(()=>{
+    if(!searchEnabled)return
     let active=true
     discoveryStatus().then(providers=>{if(active)setStatus({state:'ready',providers})}).catch(cause=>{if(active)setStatus({state:'error',message:cause instanceof Error?cause.message:'Lead discovery is not available right now.'})})
     return()=>{active=false}
@@ -47,14 +49,15 @@ export function LeadDiscovery({workspace,leads,blocked,onImported,onAddLead}:Dis
   const providers=status.state==='ready'?status.providers:[]
   const configured=providers.filter(provider=>provider.configured)
   const providerFor=(id:string)=>providers.find(provider=>provider.id===id)
-  const tabs:[Tab,string][]=[['find','Find businesses'],['csv','Import CSV'],['history','Search history']]
+  const tabs:[Tab,string][]=searchEnabled?[['find','Find businesses'],['csv','Import CSV'],['history','Search history']]:[['csv','Import CSV'],['find','Find businesses']]
   return <div className="dv">
     <div className="dv-toolbar">
-      <div className="dv-tabs" role="tablist" aria-label="Lead discovery views">{tabs.map(([id,label])=><button key={id} role="tab" id={`dv-tab-${id}`} aria-selected={tab===id} aria-controls={`dv-panel-${id}`} className={tab===id?'active':''} onClick={()=>setTab(id)}>{label}</button>)}</div>
+      <div className="dv-tabs" role="tablist" aria-label="Lead discovery views">{tabs.map(([id,label])=><button key={id} role="tab" id={`dv-tab-${id}`} aria-selected={tab===id} aria-controls={`dv-panel-${id}`} className={tab===id?'active':''} onClick={()=>setTab(id)}>{label}{!searchEnabled&&id==='find'&&<span className="dv-soon">Coming soon</span>}</button>)}</div>
       <button className="secondary" onClick={onAddLead}><Icon name="plus" size={15}/> Add a business manually</button>
     </div>
     <div role="tabpanel" id={`dv-panel-${tab}`} aria-labelledby={`dv-tab-${tab}`}>
-      {tab==='find'&&(status.state==='loading'?<div className="content-skeleton" role="status"><span className="sr-only">Loading lead discovery…</span><i className="skeleton skeleton-panel"/></div>
+      {tab==='find'&&!searchEnabled&&<ComingSoon onCsv={()=>setTab('csv')} onAddLead={onAddLead}/>}
+      {tab==='find'&&searchEnabled&&(status.state==='loading'?<div className="content-skeleton" role="status"><span className="sr-only">Loading lead discovery…</span><i className="skeleton skeleton-panel"/></div>
         :status.state==='error'?<div className="error-banner load-error" role="alert"><p><strong>We couldn’t load lead discovery.</strong> {status.message}</p><button className="secondary" onClick={()=>{setStatus({state:'loading'});setAttempt(value=>value+1)}}>Try again</button></div>
         :configured.length===0?<NotConfigured providers={providers} canManage={workspace.role!=='member'} onCsv={()=>setTab('csv')} onAddLead={onAddLead}/>
         :<DiscoverySearch key={reopened?.key??0} workspace={workspace} providers={providers} leads={leads} origins={origins} blocked={blocked} initial={reopened} onSearched={()=>setHistory(null)} onImported={onImported}/>)}
@@ -73,6 +76,17 @@ export function LeadDiscovery({workspace,leads,blocked,onImported,onAddLead}:Dis
       </section>}
     </div>
   </div>
+}
+function ComingSoon({onCsv,onAddLead}:{onCsv:()=>void;onAddLead:()=>void}){
+  return <section className="panel dv-setup" aria-labelledby="dv-soon-title">
+    <div className="dv-setup-copy">
+      <p className="eyebrow">COMING SOON</p>
+      <h2 id="dv-soon-title">Find businesses by industry and location</h2>
+      <p>Soon you’ll be able to search for businesses that match your ideal client, such as dental clinics in Austin, check whether they’re already in LeadFlow, and add the right ones in one step.</p>
+      <p>Until then, import a list from a spreadsheet or add businesses yourself. Duplicate checks work the same way.</p>
+      <div className="welcome-actions"><button className="primary" onClick={onCsv}>Import a CSV file</button><button className="secondary" onClick={onAddLead}>Add a business manually</button></div>
+    </div>
+  </section>
 }
 function NotConfigured({providers,canManage,onCsv,onAddLead}:{providers:ProviderStatus[];canManage:boolean;onCsv:()=>void;onAddLead:()=>void}){
   return <section className="panel dv-setup" aria-labelledby="dv-setup-title">

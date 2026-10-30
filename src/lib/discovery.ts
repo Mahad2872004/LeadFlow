@@ -4,6 +4,8 @@ import { countries, type Lead } from './model'
 import { domainOf, phoneKey, placeKeys } from './leadKeys'
 export { domainOf } from './leadKeys'
 
+/** Business search is shown as "coming soon" unless the build sets VITE_DISCOVERY_SEARCH=on. CSV import and manual entry are always on. */
+export const searchEnabled = import.meta.env.VITE_DISCOVERY_SEARCH === 'on'
 export type ContactFilter = 'website' | 'phone' | 'email'
 export interface Capabilities {
   countries: string[]; categories: { id: string; label: string }[]; customKeyword: boolean; filters: ContactFilter[]

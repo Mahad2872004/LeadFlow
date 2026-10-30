@@ -142,3 +142,4 @@
   .dv-detail dl,.lead-business{grid-template-columns:1fr;gap:2px}.dv-detail dd,.lead-business dd{margin-bottom:10px}
 }
 @media(prefers-reduced-motion:reduce){.dv-spinner,.dv-progress-bar{animation:none}.dv-actionbar{transition:none}}
+.dv-soon{margin-left:8px;font-size:10px;font-weight:650;letter-spacing:.3px;padding:2px 7px;border-radius:999px;background:#f6efdb;color:#7a6220}

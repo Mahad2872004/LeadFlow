@@ -21,14 +21,14 @@ import { IntegrationsHub } from './components/IntegrationsHub'
 import { ClientOnboarding } from './components/ClientOnboarding'
 import { LeadDiscovery } from './components/LeadDiscovery'
 import { LeadProvenance } from './components/LeadProvenance'
-import { duplicateIndex, forgetOrigins, reasonLabels } from './lib/discovery'
+import { duplicateIndex, forgetOrigins, reasonLabels, searchEnabled } from './lib/discovery'
 
 
 const blank:LeadInput={name:'',email:'',phone:'',company:'',service:'',source:'',message:''}
 const headings:Record<Page,[string,string]>={
  Overview:['A clear view. A better follow-up.','Keep good conversations moving. Here’s where things stand.'],
  Leads:['Leads','Every opportunity, organized and ready for the next step.'],
- Discovery:['Lead discovery','Find businesses that match your ideal client, then add the right ones to your pipeline.'],
+ Discovery:['Lead discovery',searchEnabled?'Find businesses that match your ideal client, then add the right ones to your pipeline.':'Import a list or add businesses yourself. Business search is coming soon.'],
  'Follow-ups':['Follow-ups','Make the next conversation happen.'],
  Onboarding:['Client onboarding','Collect what each new client needs to provide, review it, and know exactly when they’re ready for delivery.'],
  Activity:['Activity','A running history of your workspace.'],

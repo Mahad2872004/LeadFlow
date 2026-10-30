@@ -36,6 +36,10 @@ Added 31 October 2026 as the first milestone of the expanded vision. **Status: i
 | Provenance on each imported lead (method, provider, record, search, freshness, source link) | Implemented |
 | A live provider returning real businesses | **Awaiting configuration.** The code path is tested against a simulated directory only. |
 
+## Business search is "coming soon" by default
+
+Since 31 October 2026, the Discovery page shows **Find businesses** as *Coming soon*. It opens on **Import CSV**, and **Add a business manually** stays available. To switch the search on, build the frontend with `VITE_DISCOVERY_SEARCH=on` (for example in Vercel's environment variables) and redeploy. Automated tests build with it on, so the search code stays covered.
+
 ## Overture directory (default provider since 31 October 2026)
 
 The free OpenStreetMap servers failed in live use:
