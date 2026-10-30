@@ -28,12 +28,25 @@ export function createDiscoveryHandler(runtime: Runtime, providers: DiscoveryPro
     let body: Record<string, unknown>
     try { body = await boundedJson(request) } catch { return respond(400, { error: 'Send a search of less than 16 KB.' }) }
 
-    // Which providers exist, whether each is configured, and what each can do. Names of missing settings, never values.
+    const context: ProviderContext = {
+      env: runtime.env, fetch: runtime.fetch, sleep,
+      rpc: (name, args) => rpc(runtime, name, args),
+      rateSlot: bucket => rpc<boolean>(runtime, 'inquiry_rate_limit', { bucket_key: bucket }),
+      cachedPlace: key => rpc<Record<string, unknown> | null>(runtime, 'discovery_place', { query_key: key }),
+      rememberPlace: async (key, place) => { await rpc(runtime, 'remember_discovery_place', { query_key: key, place }) },
+    }
+    // Names of missing settings or data, never values. A failed readiness check counts as not ready.
+    const missingFor = async (provider: DiscoveryProvider) => {
+      const missing = provider.missingConfiguration(runtime.env)
+      if (missing.length || !provider.checkReady) return missing
+      try { return await provider.checkReady(context) } catch { return ['a reachable directory'] }
+    }
+    // Which providers exist, whether each is ready, and what each can do.
     if (body.action === 'status') {
-      return respond(200, { providers: providers.map(provider => {
-        const missing = provider.missingConfiguration(runtime.env)
+      return respond(200, { providers: await Promise.all(providers.map(async provider => {
+        const missing = await missingFor(provider)
         return { id: provider.id, label: provider.label, configured: missing.length === 0, missing, capabilities: provider.capabilities }
-      }) })
+      })) })
     }
     if (body.action !== 'search') return respond(400, { error: 'Unknown action.' })
     if (typeof body.workspaceId !== 'string' || !uuid.test(body.workspaceId) || typeof body.searchId !== 'string' || !uuid.test(body.searchId))
@@ -45,7 +58,7 @@ export function createDiscoveryHandler(runtime: Runtime, providers: DiscoveryPro
       if (error instanceof CriteriaError) return respond(422, { error: error.message })
       throw error
     }
-    if (provider.missingConfiguration(runtime.env).length) return respond(503, { error: `${provider.label} discovery has not been set up for this LeadFlow deployment yet. Ask your administrator to configure it.`, code: 'not_configured' })
+    if ((await missingFor(provider)).length) return respond(503, { error: `${provider.label} discovery has not been set up for this LeadFlow deployment yet. Ask your administrator to configure it.`, code: 'not_configured' })
     if (body.cursor !== undefined && body.cursor !== null && (typeof body.cursor !== 'string' || body.cursor.length > 500 || provider.capabilities.pagination === 'none'))
       return respond(400, { error: 'This source has no further pages.' })
     const searchId = body.searchId.toLowerCase()
@@ -62,12 +75,6 @@ export function createDiscoveryHandler(runtime: Runtime, providers: DiscoveryPro
       return respond(503, { error: 'We couldn’t start the search. Check your connection and try again.' })
     }
 
-    const context: ProviderContext = {
-      env: runtime.env, fetch: runtime.fetch, sleep,
-      rateSlot: bucket => rpc<boolean>(runtime, 'inquiry_rate_limit', { bucket_key: bucket }),
-      cachedPlace: key => rpc<Record<string, unknown> | null>(runtime, 'discovery_place', { query_key: key }),
-      rememberPlace: async (key, place) => { await rpc(runtime, 'remember_discovery_place', { query_key: key, place }) },
-    }
     const finish = (outcome: 'completed' | 'failed', count: number | null, truncated: boolean, failure: string | null) =>
       rpc(runtime, 'finish_discovery_search', { search_id: searchId, outcome, result_count: count, truncated, failure }).catch(() => { /* History shows it as interrupted. */ })
     try {

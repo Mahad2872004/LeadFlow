@@ -180,7 +180,8 @@ assert.deepEqual(history.slice(0,6).map(item=>[item.status,item.failure]),[['com
 // Missing configuration: honest status, no upstream calls.
 const unconfigured=createDiscoveryHarness(db,{OSM_OVERPASS_URL:undefined,OSM_USER_AGENT:'curl'})
 const status=await (await unconfigured.handler(discoveryRequest({action:'status'},tokenFor({id:owner,email:'o@example.com'})))).json()
-assert.deepEqual([status.providers[0].configured,status.providers[0].missing],[false,['OSM_OVERPASS_URL','OSM_USER_AGENT']])
+const osmStatus=status.providers.find(provider=>provider.id==='openstreetmap')
+assert.deepEqual([osmStatus.configured,osmStatus.missing],[false,['OSM_OVERPASS_URL','OSM_USER_AGENT']])
 response=await unconfigured.handler(discoveryRequest({action:'search',workspaceId:W,searchId:crypto.randomUUID(),provider:'openstreetmap',criteria},tokenFor({id:owner,email:'o@example.com'})))
 assert.equal(response.status,503);assert.equal((await response.json()).code,'not_configured')
 assert.equal(unconfigured.state.geocoderCalls.length+unconfigured.state.directoryQueries.length,0)
@@ -220,6 +221,50 @@ result=await importRows(owner,{...discovered,searchId:response.body.searchId,row
 assert.equal(result.imported.length,1,'A removed lead can be discovered and imported again.')
 
 
+
+// 5b. The Overture provider: a directory loaded into Postgres and searched there, with no outside calls.
+let overtureStatus=(await call({action:'status'})).body.providers.find(provider=>provider.id==='overture')
+assert.deepEqual([overtureStatus.configured,overtureStatus.missing],[false,['directory data (run npm run directory:load)']],'An empty directory is reported as not set up.')
+assert.equal((await search({provider:'overture'})).body.code,'not_configured')
+for(const role of ['anon','authenticated']){await actAs(db,role==='anon'?null:owner,role);await assert.rejects(()=>db.query("select public.directory_load('2026-10-21.0','[]')"),/permission denied/);await assert.rejects(()=>db.query('select * from leadflow_private.directory_places'),/permission denied/)}
+const place=(id,fields)=>({id,category:'dental',taxonomy:'dental_clinic',name:id,website:'',phone:'',email:'',address:'',city:'Austin',region:'TX',postcode:'78701',country:'US',lat:30.27,lon:-97.74,confidence:0.9,source_updated_at:'2026-10-12T00:00:00Z',...fields})
+await actAs(db,null,'service_role')
+assert.equal(await one('select public.directory_load($1,$2)',['2026-09-23.0',JSON.stringify([place('old-record',{name:'Closed Long Ago Dental'})])]),1)
+assert.equal(await one('select public.directory_load($1,$2)',['2026-10-21.0',JSON.stringify([
+  place('ov-1',{name:'Congress Avenue Dental',website:'https://congress-dental.example',phone:'+15125550111',email:'hi@congress-dental.example',address:'500 Congress Ave'}),
+  place('ov-2',{name:'Barton Springs Smiles',phone:'(512) 555-0112',postcode:'78704',lat:30.25,lon:-97.77}),
+  place('ov-3',{name:'Round Rock Dental',city:'Round Rock',postcode:'78664',lat:30.51,lon:-97.68}),
+  place('ov-4',{name:'Austin Law Group',category:'legal',taxonomy:'attorney_or_law_firm'}),
+  place('ov-5',{name:'Leeds Dental Studio',city:'Leeds',region:'',postcode:'LS1 4AP',country:'GB',lat:53.8,lon:-1.55}),
+])]),5)
+assert.equal(await one("select public.directory_finish_load('2026-10-21.0',array['US'])"),1,'A finished load removes the countries’ rows from earlier releases.')
+await assert.rejects(()=>db.query("select public.directory_load('latest','[]')"),/release identifier/)
+overtureStatus=(await call({action:'status'})).body.providers.find(provider=>provider.id==='overture')
+assert.deepEqual([overtureStatus.configured,overtureStatus.capabilities.fields.includes('sourceUrl')],[true,false])
+const overtureSearch=extra=>search({provider:'overture',criteria:{...criteria,...extra}})
+const directoryCalls=h.state.directoryQueries.length+h.state.geocoderCalls.length
+response=await overtureSearch({locations:[{country:'US',region:'Texas',city:'austin'}]})
+assert.equal(response.status,200,JSON.stringify(response.body))
+assert.deepEqual(response.body.results.map(result=>result.name),['Barton Springs Smiles','Congress Avenue Dental'],'A city matches the address town and region (full state names work); other cities and categories are excluded.')
+const congress=response.body.results.find(result=>result.name==='Congress Avenue Dental')
+assert.deepEqual([congress.provider,congress.providerRef,congress.category,congress.website,congress.phone,congress.email,congress.address,congress.sourceUrl,congress.sourceUpdatedAt],
+  ['overture','ov-1','Dental clinics','https://congress-dental.example/','+15125550111','hi@congress-dental.example','500 Congress Ave','','2026-10-12T00:00:00.000Z'])
+assert.match(response.body.attribution.text,/Overture Maps Foundation/)
+assert.equal(h.state.directoryQueries.length+h.state.geocoderCalls.length,directoryCalls,'Overture searches call no outside service.')
+assert.deepEqual((await overtureSearch({locations:[{country:'US',city:'Austin'}],require:['website']})).body.results.map(result=>result.name),['Congress Avenue Dental'])
+assert.deepEqual((await overtureSearch({locations:[{country:'US',postcode:'78701'}],radiusKm:50})).body.results.map(result=>result.name),['Barton Springs Smiles','Congress Avenue Dental','Round Rock Dental'],'A postcode searches a radius.')
+assert.deepEqual((await overtureSearch({locations:[{country:'US',postcode:'78701'}],radiusKm:1})).body.results.map(result=>result.name),['Congress Avenue Dental'],'Places outside the radius are excluded.')
+assert.deepEqual((await overtureSearch({category:'custom',keyword:'Law',locations:[{country:'US',city:'Austin'}]})).body.results.map(result=>result.name),['Austin Law Group'])
+assert.deepEqual((await overtureSearch({category:'custom',keyword:'Dental',locations:[{country:'GB',region:'West Yorkshire',city:'Leeds'}]})).body.results.map(result=>result.name),['Leeds Dental Studio'],'UK searches ignore the region.')
+response=await overtureSearch({locations:[{country:'US',city:'Austin'}],limit:10})
+assert.equal(response.body.truncated,false)
+response=await overtureSearch({locations:[{country:'US',city:'Atlantis'}]})
+assert.equal(response.status,422);assert.match(response.body.error,/loaded directory/)
+response=await overtureSearch({locations:[{country:'US',region:'TX',city:'Austin'}]})
+result=await importRows(member,{method:'discovery',provider:'overture',searchId:response.body.searchId,rows:response.body.results.map(business=>toRow(business))})
+assert.equal(result.imported.length,2)
+const overtureOrigin=(await as(member,'select public.lead_origins_for($1)',[W])).find(origin=>origin.providerRef==='ov-1')
+assert.deepEqual([overtureOrigin.provider,overtureOrigin.sourceUrl],['overture',null])
 
 // 6. Browser-side rules: duplicate keys match the SQL that enforces them, and CSV parsing, mapping, validation and export.
 // The app's modules use extensionless imports, as Vite allows; resolve them for Node.

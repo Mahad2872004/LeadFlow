@@ -68,6 +68,8 @@ export interface ProviderContext {
   cachedPlace: (key: string) => Promise<Record<string, unknown> | null>
   rememberPlace: (key: string, place: Record<string, unknown>) => Promise<void>
   sleep: (ms: number) => Promise<void>
+  /** A LeadFlow database function, called with the service role (for providers that keep their data in Postgres). */
+  rpc: <T>(name: string, args: Record<string, unknown>) => Promise<T>
 }
 export interface SearchOutcome { results: DiscoveredBusiness[]; truncated: boolean; nextCursor: string | null; warnings: string[] }
 export interface DiscoveryProvider {
@@ -76,6 +78,8 @@ export interface DiscoveryProvider {
   capabilities: ProviderCapabilities
   /** Names of required settings that are missing. Empty when the provider can be used. Never values. */
   missingConfiguration: (env: (name: string) => string | undefined) => string[]
+  /** Optional check that needs the database, e.g. that directory data has been loaded. Returns what is missing, in plain words. */
+  checkReady?: (context: ProviderContext) => Promise<string[]>
   search: (context: ProviderContext, criteria: DiscoveryCriteria, cursor: string | null) => Promise<SearchOutcome>
 }
 

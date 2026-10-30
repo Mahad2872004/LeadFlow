@@ -100,6 +100,9 @@ The handoff ID is the attachment point for a later project record.
 
 Details, setup and limitations: [docs/LEAD-DISCOVERY.md](docs/LEAD-DISCOVERY.md).
 
+**Provider change, 31 October 2026:** the public OpenStreetMap servers failed in live use (Overpass overloaded; Nominatim refused Supabase with 403). Discovery now searches an Overture Maps places directory loaded into Postgres (migration `202610310002`, `npm run directory:load`). The migration was applied and the function redeployed the same day. Texas was loaded as the starter data set; other states and countries load on demand. See [docs/LEAD-DISCOVERY.md](docs/LEAD-DISCOVERY.md#overture-directory-default-provider-since-31-october-2026).
+
+
 **Not done:**
 - live provider configuration and a real search;
 - legal review of ODbL share-alike for stored records;

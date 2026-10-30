@@ -80,7 +80,7 @@ function NotConfigured({providers,canManage,onCsv,onAddLead}:{providers:Provider
       <p className="eyebrow">NOT SWITCHED ON YET</p>
       <h2 id="dv-setup-title">Business search hasn’t been set up for this LeadFlow deployment</h2>
       <p>Searching for businesses uses an external directory, which an administrator connects on the server. Until then, you can still build your list: add businesses yourself or import a CSV file.</p>
-      {canManage&&providers.map(provider=><p key={provider.id} className="dv-setup-detail"><strong>{provider.label}:</strong> set {provider.missing.join(', ')} for the <code>discover-leads</code> function. See the lead discovery setup guide.</p>)}
+      {canManage&&providers.map(provider=><p key={provider.id} className="dv-setup-detail"><strong>{provider.label}:</strong> needs {provider.missing.join(', ')}. See the lead discovery setup guide (docs/LEAD-DISCOVERY.md).</p>)}
       <div className="welcome-actions"><button className="primary" onClick={onCsv}>Import a CSV file</button><button className="secondary" onClick={onAddLead}>Add a business manually</button></div>
     </div>
   </section>

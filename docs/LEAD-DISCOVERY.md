@@ -36,7 +36,40 @@ Added 31 October 2026 as the first milestone of the expanded vision. **Status: i
 | Provenance on each imported lead (method, provider, record, search, freshness, source link) | Implemented |
 | A live provider returning real businesses | **Awaiting configuration.** The code path is tested against a simulated directory only. |
 
-## Provider decision
+## Overture directory (default provider since 31 October 2026)
+
+The free OpenStreetMap servers failed in live use:
+- Overpass was overloaded: a 3-result query took 39 seconds, and a city query timed out.
+- Nominatim answered 403 to requests from Supabase.
+
+LeadFlow therefore searches its own copy of **Overture Maps places**, loaded into `leadflow_private.directory_places` (migration `202610310002`). Searches run in Postgres through `directory_search`, with no outside call and no rate limit.
+
+**Licence and attribution:**
+- The data is CDLA Permissive 2.0, or Apache 2.0 for Foursquare-sourced records. It has no share-alike obligation and may be stored.
+- Results credit "Overture Maps Foundation" and link to its attribution page.
+
+**Categories:** each LeadFlow category maps to Overture taxonomy IDs found in the data, for example `dental_clinic`, `attorney_or_law_firm`, `marketing_agency`, `contractor` and `gym`. The list is `overtureCategories` in [`overture.ts`](../supabase/functions/_shared/discovery/overture.ts).
+
+**Loading:** `npm run directory:load` ([`scripts/load-overture.mjs`](../scripts/load-overture.mjs)).
+- It reads Overture's public S3 data with DuckDB.
+- It keeps records with confidence ≥ 0.5 that are not permanently closed.
+- It removes duplicates from different sources by name and postcode, normalizes values, and uploads them in batches with the service-role key.
+- It then deletes the loaded countries' rows from older releases.
+- Options: `--countries US,GB,AU`, `--regions TX,CA`, `--categories dental,legal` and `--dry-run` (prints counts and an estimated size; writes nothing).
+- It needs `SUPABASE_SERVICE_ROLE_KEY` in the environment.
+- Overture keeps a release for only 60 days, so re-run it monthly.
+
+**Measured on 31 October 2026:** a Texas dry run for dentists found 15,737 businesses after duplicates were removed (about 5 MB). It took 13 minutes, mostly scanning Overture's US files. Loading all three countries with every category may need more space than a free Supabase plan's 500 MB, so check with `--dry-run` first.
+
+**Search behaviour:**
+- A city matches the address town, and the state when given (full US and Australian state names are accepted). Nearby suburbs are separate towns.
+- A postcode searches the chosen radius around the average position of businesses with that postcode.
+- UK searches ignore the region.
+- Records have no public page, so provenance keeps the Overture ID and the source's update date.
+
+The OpenStreetMap provider below is still in the code. It appears only if its `OSM_*` settings are present.
+
+## Provider decision (original, OpenStreetMap)
 
 Checked on 31 October 2026 against the official pages. This is not legal advice.
 
