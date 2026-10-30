@@ -77,8 +77,8 @@ export function createDiscoveryHandler(runtime: Runtime, providers: DiscoveryPro
     } catch (error) {
       const failure = error instanceof ProviderError ? error.kind : 'internal'
       await finish('failed', null, false, failure)
-      // Logs carry the failure type and search ID only: no criteria, results, tokens or provider settings.
-      console.error(`discover-leads ${searchId} failed: ${failure}`)
+      // Logs carry the search ID, failure type and the provider message (service and HTTP status): no criteria, results, tokens or settings.
+      console.error(`discover-leads ${searchId} failed: ${failure}${error instanceof ProviderError ? ` (${error.message})` : ""}`)
       if (error instanceof ProviderError) {
         if (error.kind === 'location_not_found') return respond(422, { error: error.message, searchId })
         if (error.kind === 'rate_limited') return respond(429, { error: error.message, retryAfter: error.retryAfter ?? 60, searchId })

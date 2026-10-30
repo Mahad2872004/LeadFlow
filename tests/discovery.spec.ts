@@ -19,7 +19,7 @@ async function start(page:Page,overrides:Record<string,string|undefined>={},user
  await rpc(owner.id,'select public.load_workspace()')
  await mockSupabase(page,db,{users})
  const harness=createDiscoveryHarness(db,overrides)
- harness.state.places.austin={osm_type:'relation',osm_id:113314,lat:'30.27',lon:'-97.74'}
+ harness.state.places.austin={osm_type:'relation',osm_id:113314,lat:'30.27',lon:'-97.74',boundingbox:['30.0986648','30.5168629','-97.9383829','-97.5684083']}
  harness.state.elements=austinDirectory()
  await page.route(`${apiOrigin}/functions/v1/discover-leads`,async route=>{
   const request=route.request()

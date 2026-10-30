@@ -23,8 +23,12 @@ const categories: { id: string; label: string; tags: Tag[] }[] = [
 // Keys that mark a place as a business, for custom niches matched by name.
 const businessKeys = 'shop|office|amenity|craft|healthcare|leisure'
 const contactKeys = { website: 'website|contact:website', phone: 'phone|contact:phone', email: 'email|contact:email' } as const
-/** A boundary to search inside, or a point to search around. A city mapped only as a point gets at least 10 km. */
-type Place = { kind: 'area'; areaId: number } | { kind: 'point'; lat: number; lon: number; city: boolean }
+/**
+ * A city's bounding box, or a point to search around (a postcode, or a city mapped only as a point, which gets at least
+ * 10 km). Boxes, not exact boundaries: on the public servers a boundary search for a large city runs out of time, while
+ * the box query answers. A box can include some places just outside the city; their addresses show where they are.
+ */
+type Place = { kind: 'box'; south: number; west: number; north: number; east: number } | { kind: 'point'; lat: number; lon: number; city: boolean }
 interface OsmElement { type: string; id: number; timestamp?: string; tags?: Record<string, string> }
 
 function endpoint(env: ProviderContext['env'], name: string) {
@@ -35,30 +39,34 @@ function endpoint(env: ProviderContext['env'], name: string) {
 }
 const userAgent = (env: ProviderContext['env']) => (env('OSM_USER_AGENT') ?? '').trim()
 
-/** One upstream call. Overloaded-server answers and network errors are retried once; rate limits are not. */
-async function call(context: ProviderContext, bucket: string, url: URL, init: RequestInit, timeoutMs: number): Promise<Response> {
+/**
+ * One upstream call. Overloaded-server answers and network errors are retried once; rate limits are not. Messages name
+ * the service and HTTP status (never its address), so an administrator can tell which server needs attention.
+ */
+async function call(context: ProviderContext, bucket: string, service: string, url: URL, init: RequestInit, timeoutMs: number): Promise<Response> {
   for (let attempt = 1; ; attempt++) {
     if (!await context.rateSlot(bucket)) throw new ProviderError('rate_limited', 'LeadFlow is pacing requests to the business directory. Try again in a minute.', 60)
     let response: Response
     try {
       response = await context.fetch(url, { ...init, headers: { 'User-Agent': userAgent(context.env), Accept: 'application/json', ...init.headers }, signal: AbortSignal.timeout(timeoutMs) })
     } catch (error) {
-      if ((error as Error).name === 'TimeoutError') throw new ProviderError('timeout', 'The business directory took too long to answer. Try a smaller area or fewer locations.')
+      if ((error as Error).name === 'TimeoutError') throw new ProviderError('timeout', `The ${service} took too long to answer. Try a smaller area or fewer locations.`)
       if (attempt < 2) { await context.sleep(1000); continue }
-      throw new ProviderError('unavailable', 'The business directory could not be reached. Try again in a minute.')
+      throw new ProviderError('unavailable', `The ${service} could not be reached. Try again in a minute.`)
     }
-    if (response.status === 429) throw new ProviderError('rate_limited', 'The business directory is limiting requests right now. Try again in a minute.', 30)
+    // Overpass answers 406 as well as 429 when it wants clients to back off for about 30 seconds.
+    if (response.status === 429 || response.status === 406) throw new ProviderError('rate_limited', `The ${service} is limiting requests right now (HTTP ${response.status}). Try again in a minute.`, 30)
     if ([502, 503, 504].includes(response.status)) {
       if (attempt < 2) { await context.sleep(1000); continue }
-      throw new ProviderError('unavailable', 'The business directory is busy. Try again in a minute, or search a smaller area.')
+      throw new ProviderError('unavailable', `The ${service} is busy (HTTP ${response.status}). Try again in a minute, or search a smaller area.`)
     }
-    if (!response.ok) throw new ProviderError('bad_response', 'The business directory rejected the search. Please try again later.')
+    if (!response.ok) throw new ProviderError('bad_response', `The ${service} rejected the search (HTTP ${response.status}). If this continues, ask your administrator to check the discovery server settings.`)
     return response
   }
 }
 
 async function findPlace(context: ProviderContext, location: DiscoveryLocation): Promise<Place | null> {
-  const key = `osm:${[location.country, location.region, location.city, location.postcode].join('|').toLowerCase()}`
+  const key = `osm-box:${[location.country, location.region, location.city, location.postcode].join('|').toLowerCase()}`
   const cached = await context.cachedPlace(key)
   if (cached) return cached as unknown as Place
   const url = new URL('search', endpoint(context.env, 'OSM_NOMINATIM_URL')!.href.replace(/\/?$/, '/'))
@@ -67,15 +75,15 @@ async function findPlace(context: ProviderContext, location: DiscoveryLocation):
   if (location.postcode) params.postalcode = location.postcode
   else { params.city = location.city; if (location.region) params.state = location.region }
   for (const [name, value] of Object.entries(params)) url.searchParams.set(name, value)
-  const response = await call(context, 'discovery-geocoder', url, { method: 'GET', headers: { 'Accept-Language': 'en' } }, 8000)
+  const response = await call(context, 'discovery-geocoder', 'location service', url, { method: 'GET', headers: { 'Accept-Language': 'en' } }, 8000)
   const body = await response.json().catch(() => null)
   if (!Array.isArray(body)) throw new ProviderError('bad_response', 'The location service returned an unexpected answer. Please try again later.')
-  const match = body[0] as { osm_type?: string; osm_id?: number; lat?: string; lon?: string } | undefined
+  const match = body[0] as { osm_type?: string; lat?: string; lon?: string; boundingbox?: string[] } | undefined
   if (!match) return null
   let place: Place
-  // Overpass derives area IDs from boundary relations and closed ways.
-  if (!location.postcode && match.osm_type === 'relation' && Number.isSafeInteger(match.osm_id)) place = { kind: 'area', areaId: 3600000000 + match.osm_id! }
-  else if (!location.postcode && match.osm_type === 'way' && Number.isSafeInteger(match.osm_id)) place = { kind: 'area', areaId: 2400000000 + match.osm_id! }
+  // Nominatim's boundingbox is [south, north, west, east].
+  const [south, north, west, east] = (match.boundingbox ?? []).map(Number)
+  if (!location.postcode && match.osm_type !== 'node' && [south, north, west, east].every(Number.isFinite) && north > south && east > west) place = { kind: 'box', south, west, north, east }
   else {
     const lat = Number(match.lat), lon = Number(match.lon)
     if (!Number.isFinite(lat) || !Number.isFinite(lon)) throw new ProviderError('bad_response', 'The location service returned an unexpected answer. Please try again later.')
@@ -86,13 +94,13 @@ async function findPlace(context: ProviderContext, location: DiscoveryLocation):
 }
 
 export function overpassQuery(criteria: DiscoveryCriteria, place: Place) {
-  const scope = place.kind === 'area' ? '(area.searchArea)' : `(around:${(place.city ? Math.max(criteria.radiusKm, 10) : criteria.radiusKm) * 1000},${place.lat},${place.lon})`
+  const scope = place.kind === 'box' ? `(${place.south},${place.west},${place.north},${place.east})` : `(around:${(place.city ? Math.max(criteria.radiusKm, 10) : criteria.radiusKm) * 1000},${place.lat},${place.lon})`
   const required = criteria.require.map(filter => `[~"^(${contactKeys[filter]})$"~"."]`).join('')
   const selectors = criteria.category === 'custom'
     // Letters, numbers, spaces, &, ' and - only (checked by parseCriteria), so the keyword is safe in the expression.
     ? [`nwr["name"~"${criteria.keyword}",i][~"^(${businessKeys})$"~"."]${required}${scope};`]
     : categories.find(item => item.id === criteria.category)!.tags.map(([key, value]) => `nwr["${key}"="${value}"]["name"]${required}${scope};`)
-  return `[out:json][timeout:20];${place.kind === 'area' ? `area(id:${place.areaId})->.searchArea;` : ''}(${selectors.join('')});out meta center qt ${criteria.limit + 1};`
+  return `[out:json][timeout:40];(${selectors.join('')});out meta center qt ${criteria.limit + 1};`
 }
 
 function categoryOf(tags: Record<string, string>, criteria: DiscoveryCriteria) {
@@ -152,9 +160,9 @@ export const openStreetMap: DiscoveryProvider = {
       const place = await findPlace(context, location)
       if (!place) { warnings.push(`We couldn’t find ${locationLabel(location)}. Check the spelling, or try a postcode.`); continue }
       located++
-      const response = await call(context, 'discovery-directory', endpoint(context.env, 'OSM_OVERPASS_URL')!, {
+      const response = await call(context, 'discovery-directory', 'business directory', endpoint(context.env, 'OSM_OVERPASS_URL')!, {
         method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ data: overpassQuery(criteria, place) }).toString(),
-      }, 23000)
+      }, 45000)
       const body = await response.json().catch(() => null) as { elements?: unknown; remark?: unknown } | null
       if (!body || !Array.isArray(body.elements)) throw new ProviderError('bad_response', 'The business directory returned an unexpected answer. Please try again later.')
       // Overpass reports a query stopped by its time or memory limit in "remark", with partial results.

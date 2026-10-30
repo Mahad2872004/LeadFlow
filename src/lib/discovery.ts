@@ -72,7 +72,7 @@ async function invoke<T>(body: Record<string, unknown>, timeoutMs: number): Prom
 }
 export async function discoveryStatus(): Promise<ProviderStatus[]> { return (await invoke<{ providers: ProviderStatus[] }>({ action: 'status' }, 20000)).providers }
 export function runSearch(workspaceId: string, provider: string, criteria: SearchCriteria, searchId = crypto.randomUUID()) {
-  return invoke<SearchResult>({ action: 'search', workspaceId, searchId, provider, criteria }, 120000)
+  return invoke<SearchResult>({ action: 'search', workspaceId, searchId, provider, criteria }, 150000)
 }
 async function call<T>(name: string, args: Record<string, unknown>, check: (value: unknown) => boolean): Promise<T> {
   const { data, error } = await supabase!.rpc(name, args)

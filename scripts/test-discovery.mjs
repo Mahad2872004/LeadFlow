@@ -104,7 +104,7 @@ const criteria={category:'dental',locations:[{country:'US',region:'TX',city:'Aus
 // Earlier searches are aged past the per-minute quota, which has its own check below. Order is preserved.
 const age=()=>op("update leadflow_private.discovery_searches set created_at=created_at-interval '61 seconds'")
 const search=async(extra={},token,{throttle=true}={})=>{if(throttle)await age();return call({action:'search',workspaceId:W,searchId:crypto.randomUUID(),provider:'openstreetmap',criteria,...extra},token)}
-h.state.places.austin={osm_type:'relation',osm_id:113314,lat:'30.27',lon:'-97.74'}
+h.state.places.austin={osm_type:'relation',osm_id:113314,lat:'30.27',lon:'-97.74',boundingbox:['30.0986648','30.5168629','-97.9383829','-97.5684083']}
 h.state.places['78701']={osm_type:'node',osm_id:5,lat:'30.27',lon:'-97.74'}
 h.state.elements=austinDirectory()
 
@@ -137,7 +137,7 @@ assert.deepEqual([blue.website,blue.phone,blue.email,blue.address,blue.city,blue
 assert.deepEqual([star.website,star.phone,star.providerRef],['https://www.lonestarsmiles.example/','(512) 555-0102','way/202'],'contact:* tags are read too.')
 assert.deepEqual([bad.website,bad.phone,bad.email],['','',''],'Unusable values are dropped, not repaired.')
 assert.match(response.body.attribution.text,/OpenStreetMap contributors/);assert.equal(response.body.nextCursor,null);assert.equal(response.body.truncated,false)
-assert.match(h.state.directoryQueries[0],/area\(id:3600113314\)/);assert.match(h.state.directoryQueries[0],/nwr\["amenity"="dentist"\]\["name"\]\(area\.searchArea\);nwr\["healthcare"="dentist"\]/)
+assert.match(h.state.directoryQueries[0],/nwr\["amenity"="dentist"\]\["name"\]\(30\.0986648,-97\.9383829,30\.5168629,-97\.5684083\);nwr\["healthcare"="dentist"\]/,'A city is searched by its bounding box.')
 assert.ok(h.state.upstreamHeaders.every(headers=>headers.get('User-Agent')===h.config.OSM_USER_AGENT),'Every upstream request identifies the application.')
 assert.ok(!h.state.upstreamHeaders.some(headers=>headers.get('Authorization')||headers.get('apikey')),'No LeadFlow credential is sent to the provider.')
 let history=await as(member,'select public.discovery_history_for($1)',[W])
@@ -161,6 +161,10 @@ response=await search();assert.deepEqual([response.status,response.body.results]
 h.state.elements=austinDirectory()
 h.state.directoryFailures=[429];response=await search()
 assert.deepEqual([response.status,response.body.retryAfter],[429,30])
+h.state.directoryFailures=[406];response=await search()
+assert.deepEqual([response.status,response.body.retryAfter],[429,30]);assert.match(response.body.error,/business directory is limiting requests right now \(HTTP 406\)/)
+h.state.directoryFailures=[403];response=await search()
+assert.equal(response.status,502);assert.match(response.body.error,/business directory rejected the search \(HTTP 403\)/,'Errors name the service and status, never its address.');assert.ok(!response.body.error.includes('directory.test'))
 h.state.directoryFailures=[504];response=await search()
 assert.equal(response.status,200,'One overloaded answer is retried.')
 h.state.directoryFailures=[504,503];response=await search()
@@ -172,7 +176,7 @@ assert.equal(response.status,422);assert.match(response.body.error,/couldn’t f
 response=await search({criteria:{...criteria,locations:[{country:'US',city:'Atlantis'},{country:'US',region:'TX',city:'Austin'}]}})
 assert.equal(response.status,200);assert.match(response.body.warnings[0],/Atlantis/,'A missing location is a warning when others are found.')
 history=await as(owner,'select public.discovery_history_for($1)',[W])
-assert.deepEqual(history.slice(0,6).map(item=>[item.status,item.failure]),[['completed',null],['failed','location_not_found'],['failed','timeout'],['failed','unavailable'],['completed',null],['failed','rate_limited']])
+assert.deepEqual(history.slice(0,6).map(item=>[item.status,item.failure]),[['completed',null],['failed','location_not_found'],['failed','timeout'],['failed','unavailable'],['completed',null],['failed','bad_response']])
 // Missing configuration: honest status, no upstream calls.
 const unconfigured=createDiscoveryHarness(db,{OSM_OVERPASS_URL:undefined,OSM_USER_AGENT:'curl'})
 const status=await (await unconfigured.handler(discoveryRequest({action:'status'},tokenFor({id:owner,email:'o@example.com'})))).json()
