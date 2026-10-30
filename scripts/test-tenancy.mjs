@@ -12,6 +12,10 @@ const denied=/permission denied/, noAccess=/not found or access denied/, roleDen
 const empty={version:1,leads:[],tasks:[],activities:[]}
 const lead=(id,name='Test Lead')=>({id,name,email:`${id}@example.com`,phone:'',company:'',service:'Other',source:'Referral',message:'',status:'New',createdAt:'2026-10-18T00:00:00.000Z'})
 const snapshotWith=(...leads)=>({version:1,leads,tasks:leads.map(l=>({id:`task-${l.id}`,leadId:l.id,due:'2026-10-21',notes:'Call back',completed:false})),activities:leads.map(l=>({id:`event-${l.id}`,leadId:l.id,text:'Lead captured',at:l.createdAt}))})
+// Since 202610310001 every loaded lead also carries the optional business fields, empty unless set; its rollback removes them.
+const businessFields=['website','industry','address','city','region','postcode','country']
+const stored=snapshot=>({...snapshot,leads:snapshot.leads.map(l=>({...l,...Object.fromEntries(businessFields.map(key=>[key,'']))}))})
+const withoutBusinessFields=workspace=>({...workspace,data:{...workspace.data,leads:workspace.data.leads.map(l=>Object.fromEntries(Object.entries(l).filter(([key])=>!businessFields.includes(key))))}})
 const inquiry={name:'Website Person',email:'person@example.com',phone:'',company:'',service:'Consulting',message:'Fictional inquiry.'}
 let db
 const one=async(sql,params=[])=>Object.values((await db.query(sql,params)).rows[0]??{})[0]
@@ -37,7 +41,7 @@ assert.deepEqual(await rows("select id::text,owner_id::text,name from public.wor
 assert.deepEqual(await rows('select workspace_id::text,user_id::text,role from public.workspace_memberships order by user_id'),[owner,admin,member,outsider].map(id=>({workspace_id:id,user_id:id,role:'owner'})))
 assert.equal(await one('select count(*)::int from public.profiles'),4);assert.equal(await one('select count(*)::int from public.workspace_settings'),4)
 assert.equal(await one('select actor_id::text from public.workspace_requests where request_id=$1',[ownerRequest]),owner)
-await actAs(db,owner);assert.deepEqual(await one('select public.load_workspace()'),ownerSnapshot,'The dashboard RPC returns the same workspace after migration.')
+await actAs(db,owner);assert.deepEqual(withoutBusinessFields(await one('select public.load_workspace()')),ownerSnapshot,'The dashboard RPC returns the same workspace after migration, plus empty business fields.')
 assert.equal(await one('select public.save_workspace($1,0,$2)',[JSON.stringify(ownerData),ownerRequest]),1,'A pre-migration save retry stays idempotent.')
 await actAs(db,null,'service_role');assert.equal(await one("select public.receive_inquiry($1,'main-website',$2,$3,$4,'{}')",[owner,legacyInquiry,JSON.stringify(inquiry),'e'.repeat(64)]),legacyInquiry)
 await actAs(db,null,'postgres');assert.equal(await one('select count(*)::int from public.leads where workspace_id=$1',[owner]),2,'A pre-migration inquiry retry creates no second lead.')
@@ -55,7 +59,9 @@ const executable=async role=>(await rows("select p.oid::regprocedure::text as fn
 assert.deepEqual(await executable('anon'),[],'Anonymous callers cannot execute any function.')
 assert.deepEqual(await executable('authenticated'),['create_workspace(text,text,uuid)','inquiry_form_for(uuid)','integration_overview()','integration_overview_for(uuid)','leadflow_private.member_workspace_ids()','leadflow_private.visible_profile_ids()','leave_workspace(uuid)','list_workspace_members(uuid)','list_workspaces()','load_workspace()','load_workspace_for(uuid)','remove_workspace_member(uuid,uuid)','revoke_integration(uuid)','revoke_integration_for(uuid,uuid)','save_workspace(jsonb,bigint,uuid)','save_workspace_for(uuid,jsonb,bigint,uuid)','set_workspace_member(uuid,uuid,text)','update_inquiry_form(uuid,boolean,text,boolean)','update_profile(text)','update_workspace(uuid,text,text,text)','verify_integration_receipt(uuid)','verify_integration_receipt_for(uuid,uuid)',
  // Client onboarding (202610250001): role-checked like the rest; the portal and reminder functions are service-role only.
- 'onboarding_overview_for(uuid)','onboarding_request_for(uuid,uuid)','onboarding_template_for(uuid,uuid)','install_starter_templates(uuid)','save_onboarding_template(uuid,jsonb,integer,uuid)','set_onboarding_template_archived(uuid,uuid,boolean)','create_onboarding_request(uuid,jsonb,uuid)','update_onboarding_request(uuid,uuid,jsonb,integer)','save_onboarding_item(uuid,uuid,jsonb,integer)','remove_onboarding_item(uuid,uuid,uuid,integer)','set_onboarding_status(uuid,uuid,text,integer,text)','review_onboarding_item(uuid,uuid,uuid,text,text,integer)','issue_onboarding_link(uuid,uuid,integer,boolean)','revoke_onboarding_links(uuid,uuid,uuid)','hand_off_onboarding(uuid,uuid,text)'].sort(),'Signed-in users get exactly the dashboard functions.')
+ 'onboarding_overview_for(uuid)','onboarding_request_for(uuid,uuid)','onboarding_template_for(uuid,uuid)','install_starter_templates(uuid)','save_onboarding_template(uuid,jsonb,integer,uuid)','set_onboarding_template_archived(uuid,uuid,boolean)','create_onboarding_request(uuid,jsonb,uuid)','update_onboarding_request(uuid,uuid,jsonb,integer)','save_onboarding_item(uuid,uuid,jsonb,integer)','remove_onboarding_item(uuid,uuid,uuid,integer)','set_onboarding_status(uuid,uuid,text,integer,text)','review_onboarding_item(uuid,uuid,uuid,text,text,integer)','issue_onboarding_link(uuid,uuid,integer,boolean)','revoke_onboarding_links(uuid,uuid,uuid)','hand_off_onboarding(uuid,uuid,text)',
+ // Lead discovery (202610310001): imports, provenance and history; provider-side functions are service-role only.
+ 'import_leads(uuid,uuid,jsonb)','lead_origins_for(uuid)','start_discovery_search(uuid,uuid,text,jsonb)','discovery_history_for(uuid)'].sort(),'Signed-in users get exactly the dashboard functions.')
 for(const fn of ['portal_open(text)','portal_save_item(text,uuid,jsonb,boolean,integer)','claim_onboarding_reminder(text,text)','finish_onboarding_reminder(uuid,uuid,text,text,text)'])assert.ok((await executable('service_role')).includes(fn),fn)
 for(const fn of ['receive_workspace_inquiry(uuid,text,uuid,jsonb,text,jsonb)','receive_form_inquiry(uuid,uuid,jsonb,text,text)','receive_inquiry(uuid,text,uuid,jsonb,text,jsonb)','receive_webhook(text,uuid,jsonb,text)'])assert.ok((await executable('service_role')).includes(fn),fn)
 assert.deepEqual(await rows("select p.oid::regprocedure::text as fn from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname in ('public','leadflow_private') and p.prosecdef and not coalesce('search_path=\"\"'=any(p.proconfig),false)"),[],'Every security-definer function pins an empty search path.')
@@ -75,7 +81,7 @@ assert.deepEqual(await workspacesOf(outsider),[{id:outsider,role:'owner'}])
 // Members share one workspace's data; personal and team data stay separate.
 const teamData=snapshotWith(lead('team-lead','Team Prospect')),teamRequest=crypto.randomUUID()
 await actAs(db,member);assert.equal(await one('select public.save_workspace_for($1,$2,0,$3)',[team,JSON.stringify(teamData),teamRequest]),1)
-await actAs(db,admin);assert.deepEqual(await one('select public.load_workspace_for($1)',[team]),{revision:1,data:teamData})
+await actAs(db,admin);assert.deepEqual(await one('select public.load_workspace_for($1)',[team]),{revision:1,data:stored(teamData)})
 await assert.rejects(()=>db.query('select public.save_workspace_for($1,$2,0,$3)',[team,JSON.stringify(empty),crypto.randomUUID()]),/another session/,'A stale save from another member cannot overwrite newer data.')
 await actAs(db,owner);await db.query('select public.save_workspace($1,0,$2)',[JSON.stringify(snapshotWith(lead('personal-lead','Personal Prospect'))),crypto.randomUUID()])
 assert.deepEqual((await one('select public.load_workspace()')).data.leads.map(l=>l.name),['Personal Prospect'])
@@ -237,7 +243,7 @@ await actAs(db,null,'postgres');await db.query("insert into leadflow_private.int
 for(const name of later)await db.exec(migrationSql(name))
 await actAs(db,owner);await db.query('select public.save_workspace($1,2,$2)',[JSON.stringify(snapshotWith(lead('owner-lead'),lead('after-migration'))),crypto.randomUUID()])
 await db.query("select public.update_profile('Owner')")
-const beforeRollback={workspace:await one('select public.load_workspace()'),integrations:await one('select public.integration_overview()')}
+const beforeRollback={workspace:withoutBusinessFields(await one('select public.load_workspace()')),integrations:await one('select public.integration_overview()')}
 await actAs(db,null,'postgres');for(const sql of rollbacks)await db.exec(sql)
 assert.equal(await one("select to_regclass('public.profiles')"),null);assert.equal(await one("select to_regclass('public.workspace_memberships')"),null)
 assert.equal(await one('select count(*)::int from public.leads where owner_id=$1',[owner]),2)

@@ -14,3 +14,8 @@ verify_jwt = false
 
 [functions.onboarding-reminders]
 verify_jwt = false
+
+[functions.discover-leads]
+# The handler verifies the caller by passing their token to the database; gateway JWT checks would
+# also reject the browser's unauthenticated CORS preflight.
+verify_jwt = false

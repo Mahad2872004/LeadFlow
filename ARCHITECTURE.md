@@ -68,6 +68,17 @@ flowchart LR
 
 Readiness is computed in the database from item states, and the handoff is a single recorded event with no external effects. The design notes below were written before approval; M6A implemented the subset that was asked for, with a fixed state machine and no workflow engine.
 
+## Lead discovery (M6, implemented locally)
+
+Discovery reuses the existing leads table instead of adding a second lead store.
+
+- **Business fields:** optional fields travel through the snapshot save like the rest of a lead.
+- **Imports:** go through `import_leads`, an append-only, role-checked database function. It applies the duplicate rules in SQL, writes provenance to `leadflow_private.lead_origins`, and advances the workspace revision, so an open tab holding an older snapshot gets a conflict instead of erasing the new leads.
+- **Searches:** go through the `discover-leads` Edge Function. It passes the user's own token to the database, which checks membership and quotas and records criteria-only history. It then calls the configured provider through the `DiscoveryProvider` interface and returns normalized results without storing them.
+- **Provider code** knows nothing about leads or workspaces. Lead records, provenance and future analysis reports join on `(workspace_id, lead_id)` without foreign keys, as onboarding requests do.
+
+Details and the provider decision: [docs/LEAD-DISCOVERY.md](docs/LEAD-DISCOVERY.md).
+
 ## Current ingress and delivery
 
 Public intake validates origin, normalized fields, payload size, request UUID, honeypot, Turnstile success/action/hostname and durable quotas. The destination is deployment-secret configuration, not a client-selected owner. Inbound automation rejects browser-Origin requests and validates its bearer credential; the database derives the owner from the credential. Origin rejection alone is not authentication.

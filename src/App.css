@@ -95,3 +95,11 @@ form label{font-size:12px;color:#4e6955}.modal-intro{font-size:13px;color:#607a6
 body:has(dialog[open]) .skip-link{visibility:hidden}
 
 .auth-panel{max-width:520px;margin:10vh auto;padding:32px}.auth-panel label{display:grid;gap:8px;margin:18px 0}.auth-panel input{padding:12px;border:1px solid #ccc;border-radius:8px}button:disabled{opacity:.6;cursor:wait}
+/* Lead form business details, duplicate warning and lead detail business fields (M6). */
+.field-help{display:block;font-size:11px;line-height:1.5;color:var(--muted);margin:-8px 0 16px}
+.form-details{border:1px solid var(--line);border-radius:9px;padding:0 14px;margin:2px 0 18px;background:#fbfcfb}
+.form-details>summary{cursor:pointer;min-height:44px;display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--ink);list-style-position:inside}
+.form-details[open]>summary{border-bottom:1px solid var(--line);margin-bottom:14px}
+.duplicate-warning{background:#fff6e5;border:1px solid #f0dcb0;color:#7a5413;border-radius:8px;padding:11px 13px;font-size:13px;line-height:1.55;margin-top:4px}
+.lead-business{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;margin:16px 0 0;font-size:13px}.lead-business>div{display:contents}
+.lead-business dt{color:var(--muted)}.lead-business dd{margin:0;overflow-wrap:anywhere;color:var(--ink)}

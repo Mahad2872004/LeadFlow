@@ -44,7 +44,7 @@ test('agency builds a template, starts from a lead, collects, reviews and hands 
  await page.goto('/login');await signIn(page,owner.email)
  // A lead to start from.
  await page.getByRole('button',{name:'Add your first lead'}).click()
- await page.getByLabel('Full name').fill('Robin Vale');await page.getByLabel('Email *',{exact:true}).fill('robin@acme.example');await page.getByLabel('Company (optional)').fill('Acme Outdoor')
+ await page.getByLabel('Name *',{exact:true}).fill('Robin Vale');await page.getByLabel('Email (optional)').fill('robin@acme.example');await page.getByLabel('Company (optional)').fill('Acme Outdoor')
  await page.getByLabel('Service interest *').selectOption('Consulting');await page.getByLabel('Source *').selectOption('Referral');await page.getByRole('button',{name:'Create lead'}).click()
  await expect(page.getByLabel('Status for Robin Vale')).toBeVisible()
  // Empty state, then the starter templates and one custom template.

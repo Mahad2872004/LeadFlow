@@ -9,6 +9,8 @@ async function asUser(id,role='authenticated') { await db.exec(`reset role; set 
 const empty={version:1,leads:[],tasks:[],activities:[]}
 const lead={id:'legacy-lead',name:'Test Lead',email:'test@example.com',phone:'',company:'',service:'Other',source:'Website',message:'',status:'New',createdAt:'2026-10-18T00:00:00.000Z'}
 const data={version:1,leads:[lead],tasks:[{id:'task',leadId:lead.id,due:'2026-10-19',notes:'Call back',completed:false}],activities:[{id:'event',leadId:lead.id,text:'Lead captured',at:lead.createdAt}]}
+// Since 202610310001 every loaded lead also carries the optional business fields, empty unless set.
+const stored={...data,leads:data.leads.map(l=>({...l,website:'',industry:'',address:'',city:'',region:'',postcode:'',country:''}))}
 async function save(payload,revision,id=crypto.randomUUID()){return (await db.query('select public.save_workspace($1::jsonb,$2::bigint,$3::uuid) as revision',[JSON.stringify(payload),revision,id])).rows[0].revision}
 async function load(){return (await db.query('select public.load_workspace() as snapshot')).rows[0].snapshot}
 async function denied(operation,pattern){await assert.rejects(operation,pattern)}
@@ -21,7 +23,7 @@ assert.deepEqual(await load(),{revision:0,data:empty})
 const request=crypto.randomUUID()
 assert.equal(await save(data,0,request),1)
 assert.equal(await save(data,0,request),1)
-assert.deepEqual(await load(),{revision:1,data})
+assert.deepEqual(await load(),{revision:1,data:stored})
 await denied(()=>save(empty,0,request),/different data/)
 await denied(()=>save(empty,0),/another session/)
 for(const [table,column] of Object.entries(tenantColumn)) {
@@ -40,7 +42,7 @@ await denied(()=>save({...data,tasks:[{...data.tasks[0],leadId:'missing'}]},1),/
 await denied(()=>save({...data,leads:[{...lead,email:'invalid'}]},1),/check constraint/)
 await denied(()=>save({...data,leads:[lead,lead]},1),/unique constraint/)
 await denied(()=>save({...data,tasks:[{...data.tasks[0],due:'2026-02-30'}]},1),/date\/time|out of range/)
-assert.deepEqual(await load(),{revision:1,data})
+assert.deepEqual(await load(),{revision:1,data:stored})
 const edited={...data,leads:[{...lead,status:'Qualified',name:'Updated'}],tasks:[{...data.tasks[0],completed:true}],activities:[...data.activities,{id:'event-2',leadId:lead.id,text:'Follow-up completed',at:'2026-10-18T01:00:00.000Z'}]}
 await save(edited,1)
 assert.equal((await load()).data.tasks[0].completed,true)

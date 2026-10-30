@@ -120,6 +120,8 @@ main.auth-page,main.onboarding,main.shell-message{margin:0;width:100%}
 
 @media(max-width:1150px){.settings-grid{grid-template-columns:1fr}.skeleton-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:850px){
+  /* Eight sections no longer fit one row: the bar scrolls inside itself and the sidebar keeps the current section in view. */
+  .sidebar nav{overflow-x:auto;scrollbar-width:none}.sidebar nav::-webkit-scrollbar{display:none}.sidebar .nav-item{flex:0 0 auto}
   .auth-page{grid-template-columns:1fr}.auth-story{padding:18px 20px;gap:0}.auth-story>div,.auth-story>small{display:none}.auth-main{justify-content:flex-start;padding:22px 16px 40px}
   .onboarding-body{grid-template-columns:1fr;padding-top:28px;gap:28px}.onboarding-top{padding:14px 16px}.onboarding-email{display:none}
   .workspace-switcher{margin:14px 0 2px}

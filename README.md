@@ -18,6 +18,16 @@ The **Onboarding** section helps a marketing agency onboard a new client:
 
 It is implemented and verified locally only. It is not deployed, and reminders need a scheduler that isn't configured. See [docs/CLIENT-ONBOARDING.md](docs/CLIENT-ONBOARDING.md) for the user journey, security model, deployment order and limitations.
 
+## Lead discovery (M6)
+
+The **Discovery** section helps an agency build a prospect list:
+- search for businesses by industry or custom niche, up to three US, UK or Australian locations, and contact filters;
+- review results with data freshness, source attribution and duplicate status, then import the chosen ones;
+- add businesses manually (website, industry and address; email is now optional) or import a CSV file with column matching, row validation and duplicate review;
+- reopen past search criteria from history. Each imported lead records where it came from.
+
+Search uses OpenStreetMap data through Nominatim and Overpass servers that an operator configures. **It stays off until those are set up**; CSV import and manual entry work regardless. Google Places is not used for importing because its terms forbid storing its business details. Implemented and verified locally only, with a simulated directory. See [docs/LEAD-DISCOVERY.md](docs/LEAD-DISCOVERY.md) for the provider decision, setup, API, security and limitations.
+
 ## Set up a Supabase project
 
 1. Create a Supabase project. In Authentication, disable anonymous sign-ins. Either keep public sign-up disabled and create users with a confirmed email in the dashboard, or enable it after following the [sign-up checklist](docs/MULTI-TENANCY.md#onboarding-and-workspace-management) (redirect URLs, SMTP, password length). Each account gets its own personal workspace. Accounts share data only through explicit workspace membership (see [multi-tenancy](docs/MULTI-TENANCY.md)).
@@ -63,6 +73,7 @@ npm run test:m3
 npm run test:integrations
 npm run test:tenancy
 npm run test:onboarding
+npm run test:discovery
 npm run check:edge
 npm test
 npm run test:production

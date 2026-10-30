@@ -78,6 +78,41 @@ The handoff ID is the attachment point for a later project record.
 3. Configure and verify a reminder scheduler.
 4. Run the hosted two-account and client-link checks in the onboarding guide.
 
+## M6 — Lead discovery engine (expanded vision)
+
+**Status: implemented and verified locally, 31 October 2026. On the same day, migration `202610310001` was applied to the hosted project and `discover-leads` deployed; anonymous denial and the "not configured" answer were checked live. The frontend is not deployed, and no live provider has been configured or exercised.** The owner requested this as the first milestone of the expanded vision: helping agencies find prospective clients. It is separate from the narrow M6 workflow above, which M6A superseded.
+
+**Delivered:**
+- **Discovery section:**
+  - an ideal-customer search (industry or custom niche, up to three US/UK/AU locations, contact filters);
+  - results showing freshness, attribution and duplicate status, with filter, sort, exclude, details and copy;
+  - single and bulk import with review of possible duplicates;
+  - search history, with reopened criteria.
+- **Manual and CSV entry:**
+  - manual business entry with a duplicate warning; email is now optional;
+  - CSV import with column matching, per-row validation, duplicate review, idempotent batches and a file of rows not imported.
+- **Provider layer:** a provider interface (`supabase/functions/_shared/discovery`) and an OpenStreetMap provider (Nominatim + Overpass). It is off until an operator configures servers whose terms permit the use. Google Places was rejected for imports because its terms forbid storing business details.
+- **Data:**
+  - migration `202610310001` with a rollback;
+  - business fields on the existing leads table;
+  - private provenance, history, geocoder cache and import receipts;
+  - an append-only, role-checked, idempotent `import_leads` that enforces duplicate rules in SQL and advances the revision so stale snapshots cannot erase imports.
+
+Details, setup and limitations: [docs/LEAD-DISCOVERY.md](docs/LEAD-DISCOVERY.md).
+
+**Not done:**
+- live provider configuration and a real search;
+- legal review of ODbL share-alike for stored records;
+- hosted deployment and two-account checks;
+- further providers;
+- all analysis, enrichment and outreach, which are deferred to later milestones.
+
+**Next steps (after owner approval):**
+1. Choose and configure Nominatim/Overpass servers.
+2. Set the `OSM_*` and `DISCOVERY_ALLOWED_ORIGINS` secrets and deploy the frontend. The migration and function are already live.
+3. Run a real search per target country and record result quality.
+4. Get legal review of storage terms.
+
 ## M7 — Production readiness and controlled beta
 
 **Status: not started; contingent on M6 and evidence.**
@@ -110,6 +145,14 @@ Use consented, bounded beta accounts with a named operator and support channel. 
 Next steps: apply `202610200002` and `202610200003`, deploy `submit-inquiry`, then the frontend; hosted two-account verification; a decision on opening public sign-up; then invitations and member management. See [docs/MULTI-TENANCY.md](docs/MULTI-TENANCY.md).
 
 ## Current verification ledger
+
+**M6 lead discovery, 31 October 2026 (local).** All passed:
+- `npm run lint` (no warnings), `npx tsc -b`, `npm run check:edge` and `npm run build`;
+- `npm run test:db`, `test:m3`, `test:integrations`, `test:tenancy`, `test:onboarding` and the new `test:discovery`;
+- `npx playwright test`: 36/36 on the final two consecutive runs, including 5 new discovery tests. Two earlier full runs each had one intermittent failure in a pre-existing test (onboarding journey; integrations sign-in during a Vite dev-server "can't detect preamble" error), which passed on rerun;
+- `npm run test:production`: 36/36.
+
+The geocoder and directory were simulated; no external service was contacted.
 
 **M6A, 25 October 2026 (local).** These all passed:
 - `npm run lint` (no warnings);

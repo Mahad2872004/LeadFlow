@@ -16,6 +16,21 @@ export async function rpc<T>(runtime: Runtime, name: string, body: Record<string
   const text = await response.text()
   return (text ? JSON.parse(text) : null) as T
 }
+/**
+ * An RPC as the signed-in user whose access token the browser sent, so the database checks that user's
+ * workspace membership exactly as for direct calls. An invalid or expired token fails with code "401".
+ */
+export async function rpcAs<T>(runtime: Runtime, accessToken: string, name: string, body: Record<string, unknown>): Promise<T> {
+  const url = runtime.env('SUPABASE_URL'), key = runtime.env('SUPABASE_ANON_KEY') || runtime.env('SUPABASE_PUBLISHABLE_KEY')
+  if (!url || !key) throw new Error('Database configuration missing')
+  const response = await runtime.fetch(`${url}/rest/v1/rpc/${name}`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json', apikey: key, Authorization: `Bearer ${accessToken}` },
+    body: JSON.stringify(body), signal: AbortSignal.timeout(10000),
+  })
+  if (!response.ok) { const error = await response.json().catch(() => ({})); throw new RpcError(response.status === 401 ? '401' : error.code ?? 'unknown', typeof error.message === 'string' ? error.message : '') }
+  const text = await response.text()
+  return (text ? JSON.parse(text) : null) as T
+}
 export interface SendResult { outcome: 'accepted' | 'pending' | 'failed'; reference: string | null; failure: string | null }
 /** One Resend call. Retries must reuse the same key and body so the provider can suppress duplicates. */
 export async function sendEmail(runtime: Runtime, idempotencyKey: string, email: unknown): Promise<SendResult> {

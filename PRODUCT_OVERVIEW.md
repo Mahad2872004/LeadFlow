@@ -8,6 +8,13 @@ LeadFlow is a focused lead-management application with a public marketing websit
 
 The public website is `/`; private workspace entry is `/app` or `/login`. `/signup` is an invitation/access inquiry, not self-service account creation. `/inquiry` is a real configured form. The integrations directory provides shared form/embed methods, HTTP setup guides and receipt evidence, not 13 native connected applications.
 
+Since M6 (31 October 2026, implemented locally only), a **Discovery** section does three things:
+- searches a configured business directory (OpenStreetMap, off until an operator sets up servers) by industry and location, and imports chosen businesses with duplicate checks and provenance;
+- imports CSV files;
+- supports manual business entry.
+
+It does not enrich contacts, analyse websites or send outreach. See [lead discovery](docs/LEAD-DISCOVERY.md).
+
 Each account has isolated records. There are no shared agency memberships/roles, client portal, subscription billing, contract/payment lifecycle, asset collection or general automation engine. Follow-ups are tasks for a person; they are not automatic client messages. Activity history is not an immutable audit log. Current pricing page packaging is provisional. The [audit](docs/M5-AUDIT.md) records verified behavior and production limits.
 
 ## Two business goals, measured separately

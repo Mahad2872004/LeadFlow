@@ -1,5 +1,5 @@
 import { isCalendarDate } from './dates'
-import { statuses, validateLead, type Data, type LeadInput } from './model'
+import { businessFields, statuses, validateLead, type Data, type LeadInput } from './model'
 import { sampleData } from './seed'
 export const STORAGE_KEY = 'leadflow.demo.v1'
 type StoragePort = Pick<Storage, 'getItem' | 'setItem'>
@@ -27,7 +27,7 @@ export function isData(value: unknown): value is Data {
   const { leads, tasks, activities } = value
   if (![leads, tasks, activities].every(uniqueIds)) return false
   const fields = ['name', 'email', 'phone', 'company', 'service', 'source', 'message'] as const satisfies readonly (keyof LeadInput)[]
-  if (!leads.every(lead => record(lead) && strings(lead, [...fields, 'id', 'createdAt']) && validateLead(lead) === null && statuses.some(status => status === lead.status) && timestamp(lead.createdAt))) return false
+  if (!leads.every(lead => record(lead) && strings(lead, [...fields, 'id', 'createdAt']) && businessFields.every(key => lead[key] === undefined || typeof lead[key] === 'string') && validateLead(lead) === null && statuses.some(status => status === lead.status) && timestamp(lead.createdAt))) return false
   const leadIds = new Set(leads.map(lead => lead.id))
   return tasks.every(task => record(task) && strings(task, ['id', 'leadId', 'due', 'notes']) && isCalendarDate(task.due) && task.notes.trim().length > 0 && task.notes.length <= 2000 && typeof task.completed === 'boolean' && leadIds.has(task.leadId))
     && activities.every(event => record(event) && strings(event, ['id', 'leadId', 'text', 'at']) && event.text.trim().length > 0 && timestamp(event.at) && leadIds.has(event.leadId))

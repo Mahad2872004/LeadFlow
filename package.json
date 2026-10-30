@@ -16,7 +16,8 @@
     "check:edge": "tsc -p tsconfig.edge.json",
     "test:integrations": "node scripts/test-integrations.mjs",
     "test:tenancy": "node scripts/test-tenancy.mjs",
-    "test:onboarding": "node scripts/test-onboarding.mjs"
+    "test:onboarding": "node scripts/test-onboarding.mjs",
+    "test:discovery": "node scripts/test-discovery.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.118.0",

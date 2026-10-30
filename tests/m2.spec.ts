@@ -20,7 +20,7 @@ async function login(page:Page){
  await signIn(page,'test@example.com')
 }
 async function seed(page:Page){await page.getByRole('button',{name:'Reset demo data'}).first().click();await page.getByRole('dialog').getByRole('button',{name:'Reset demo data',exact:true}).click();await expect(page.getByLabel('Status for Olivia Bennett')).toBeVisible()}
-async function add(page:Page){await page.getByRole('button',{name:'Add lead'}).first().click();await page.getByLabel('Full name').fill('M2 Prospect');await page.getByLabel('Email *',{exact:true}).fill('m2@example.com');await page.getByLabel('Service interest *').selectOption('Consulting');await page.getByLabel('Source *').selectOption('Referral');await page.getByRole('button',{name:'Create lead',exact:true}).click()}
+async function add(page:Page){await page.getByRole('button',{name:'Add lead'}).first().click();await page.getByLabel('Name *',{exact:true}).fill('M2 Prospect');await page.getByLabel('Email (optional)').fill('m2@example.com');await page.getByLabel('Service interest *').selectOption('Consulting');await page.getByLabel('Source *').selectOption('Referral');await page.getByRole('button',{name:'Create lead',exact:true}).click()}
 test('private login, CRUD, filters, follow-ups, activity, refresh, reset and sign out',async({page})=>{
  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message))
  await login(page);await expect(page.getByText('Your database workspace is empty.',{exact:false})).toBeVisible()

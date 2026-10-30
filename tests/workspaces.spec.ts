@@ -16,7 +16,7 @@ const switcher=(page:Page)=>page.getByRole('button',{name:/^Switch workspace/})
 const noHorizontalScroll=(page:Page)=>page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)
 async function addLead(page:Page,name:string){
  await page.getByRole('button',{name:'Add lead'}).first().click()
- await page.getByLabel('Full name').fill(name);await page.getByLabel('Email *',{exact:true}).fill(`${name.toLowerCase().replace(/\W+/g,'.')}@example.com`)
+ await page.getByLabel('Name *',{exact:true}).fill(name);await page.getByLabel('Email (optional)').fill(`${name.toLowerCase().replace(/\W+/g,'.')}@example.com`)
  await page.getByLabel('Service interest *').selectOption('Consulting');await page.getByLabel('Source *').selectOption('Referral')
  await page.getByRole('button',{name:'Create lead',exact:true}).click();await expect(page.getByLabel(`Status for ${name}`)).toBeVisible()
 }
