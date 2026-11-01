@@ -28,6 +28,10 @@ The **Discovery** section helps an agency build a prospect list:
 
 Search uses OpenStreetMap data through Nominatim and Overpass servers that an operator configures. **It stays off until those are set up**; CSV import and manual entry work regardless. Google Places is not used for importing because its terms forbid storing its business details. Implemented and verified locally only, with a simulated directory. See [docs/LEAD-DISCOVERY.md](docs/LEAD-DISCOVERY.md) for the provider decision, setup, API, security and limitations.
 
+## Apollo.io lead generation (M6B)
+
+Discovery → **Apollo** searches people and companies with your own Apollo API key, reveals emails and phone numbers after showing the credit cost, tracks every credit in a ledger synced with Apollo's own balances, and saves results to Leads and lead lists without duplicates. Keys are server-side secrets (`APOLLO_API_KEYS`, `APOLLO_WORKSPACE_IDS`). See [docs/APOLLO.md](docs/APOLLO.md).
+
 ## Set up a Supabase project
 
 1. Create a Supabase project. In Authentication, disable anonymous sign-ins. Either keep public sign-up disabled and create users with a confirmed email in the dashboard, or enable it after following the [sign-up checklist](docs/MULTI-TENANCY.md#onboarding-and-workspace-management) (redirect URLs, SMTP, password length). Each account gets its own personal workspace. Accounts share data only through explicit workspace membership (see [multi-tenancy](docs/MULTI-TENANCY.md)).
@@ -74,6 +78,7 @@ npm run test:integrations
 npm run test:tenancy
 npm run test:onboarding
 npm run test:discovery
+npm run test:apollo
 npm run check:edge
 npm test
 npm run test:production

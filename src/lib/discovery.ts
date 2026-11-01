@@ -31,6 +31,8 @@ export interface HistoryItem {
 export interface LeadOrigin {
   leadId: string; method: 'discovery' | 'csv'; provider: string | null; providerRef: string | null; searchId: string | null
   sourceUrl: string | null; sourceUpdatedAt: string | null; discoveredAt: string | null; importedAt: string
+  /** Apollo leads: the account used, and when contact details were revealed. */
+  accountRef?: string | null; emailRevealedAt?: string | null; phoneRevealedAt?: string | null
 }
 /** One lead to import. The database validates every field again and decides duplicates. */
 export interface ImportRow {
@@ -48,7 +50,7 @@ export const reasonLabels: Record<DuplicateReason, string> = {
 }
 export const filterLabels: Record<ContactFilter, string> = { website: 'Has a website', phone: 'Has a phone number', email: 'Has a public email' }
 export const failureLabels: Record<string, string> = {
-  rate_limited: 'Rate limited', unavailable: 'Source unavailable', timeout: 'Took too long', location_not_found: 'Location not found', bad_response: 'Unexpected answer', internal: 'Could not complete',
+  rate_limited: 'Rate limited', unauthorized: 'Key rejected', forbidden: 'Not allowed', plan: 'Needs paid plan', invalid: 'Not accepted', ambiguous: 'Unclear answer', credits: 'Not enough credits', unavailable: 'Source unavailable', timeout: 'Took too long', location_not_found: 'Location not found', bad_response: 'Unexpected answer', internal: 'Could not complete',
 }
 
 /** A failed discovery request, with the HTTP status and any wait the server asked for. */

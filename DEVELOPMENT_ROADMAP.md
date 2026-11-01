@@ -116,6 +116,20 @@ Details, setup and limitations: [docs/LEAD-DISCOVERY.md](docs/LEAD-DISCOVERY.md)
 3. Run a real search per target country and record result quality.
 4. Get legal review of storage terms.
 
+## M6B — Apollo.io lead generation
+
+**Status: implemented and verified locally with a simulated Apollo API, 1 November 2026. Migration `202611010001` applied and the `apollo` and `apollo-webhook` functions deployed to the hosted project the same day. No real Apollo key used yet; the frontend is not deployed.**
+
+- **Discovery → Apollo:** people search (free), company search (1 credit per page, confirmed each time), every filter Apollo's API documents, chips, saved filters, recent searches, a results table with columns, sorting, in-page search and pagination.
+- **Reveals:** email and phone reveals through bulk people enrichment, a cost confirmation, and phones delivered to a one-time-token webhook.
+- **Credits:** a locked, idempotent credit ledger; Apollo-reported credits where available; Apollo balance and billing-cycle sync; a per-account and combined dashboard; filterable history.
+- **Leads:** saving through `import_leads` with duplicate protection, provenance and the account used; lead lists with a Leads-page filter; reveals fill in masked names and empty fields on saved leads.
+- **Not built:** automatic account rotation to stretch free credits, which Apollo's Terms (§4.2) prohibit; campaigns (none exist yet); paid organization enrichment.
+
+Setup, endpoints, limits and security: [docs/APOLLO.md](docs/APOLLO.md).
+
+**Next:** set `APOLLO_API_KEYS` and `APOLLO_WORKSPACE_IDS`, deploy the frontend, then run a real test connection, search and one reveal to confirm free-plan access.
+
 ## M7 — Production readiness and controlled beta
 
 **Status: not started; contingent on M6 and evidence.**

@@ -1,0 +1,113 @@
+/* Apollo lead generation and the searchable multi-select. Uses the dashboard palette from App.css and Discovery.css. */
+.tag-select{position:relative}
+.tag-select-box{display:flex;flex-wrap:wrap;gap:6px;align-items:center;min-height:40px;padding:5px 8px;border:1px solid #dbe4da;border-radius:6px;background:#fff;cursor:text}
+.tag-select-box:focus-within{outline:2px solid #90b49a;outline-offset:1px}
+.tag-select-box input{flex:1;min-width:90px;border:0;padding:4px 2px;margin:0;font-size:13px;background:transparent;outline:none;display:block}
+.tag-chip{display:inline-flex;align-items:center;gap:4px;max-width:100%;padding:3px 4px 3px 9px;border-radius:999px;background:#e8f2ec;color:#2d5a41;font-size:12px;line-height:1.4}
+.tag-chip span{overflow-wrap:anywhere}
+.tag-chip button{border:0;background:none;color:inherit;font-size:15px;line-height:1;width:22px;height:22px;border-radius:50%;display:inline-grid;place-items:center;padding:0;flex-shrink:0}
+.tag-chip button:hover{background:#d3e6da}
+.tag-select-list{position:absolute;z-index:6;left:0;right:0;top:calc(100% + 4px);max-height:240px;overflow:auto;margin:0;padding:4px;list-style:none;background:#fff;border:1px solid #dbe4da;border-radius:8px;box-shadow:0 12px 30px #173e2320}
+.tag-select-list li{padding:8px 10px;border-radius:6px;font-size:13px;cursor:pointer;color:var(--ink)}
+.tag-select-list li.active{background:#eaf3ee}
+
+.ap-bar{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+.ap-account-picker{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.ap-account-picker label{font-size:12px;color:var(--muted);display:grid;gap:6px}
+.ap-account-picker select{min-height:40px;border:1px solid var(--line);border-radius:6px;padding:0 10px;background:#fff;font-size:13px;color:var(--ink);min-width:200px}
+.ap-remaining{font-size:12px;font-weight:600;padding:9px 12px;border-radius:8px;background:#e8f2ec;color:#2d6b49;white-space:nowrap}
+.ap-remaining.low{background:#fff1dc;color:#845414}
+.ap-layout{display:grid;grid-template-columns:minmax(260px,320px) minmax(0,1fr);gap:20px;align-items:start}
+.ap-sidebar{position:sticky;top:16px;max-height:calc(100vh - 32px);display:flex;flex-direction:column;overflow:hidden;margin-bottom:24px}
+.ap-filters{overflow:auto;padding:18px 18px 8px;flex:1}
+.ap-filters-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.ap-filters-head h3{margin:0;font-size:15px;color:var(--ink)}
+.ap-chips{list-style:none;margin:0 0 12px;padding:0;display:flex;flex-wrap:wrap;gap:6px}
+.ap-chips .tag-chip{border-radius:8px;align-items:flex-start}
+.ap-group{border-top:1px solid #eef2ef}
+.ap-group>summary{cursor:pointer;min-height:44px;display:flex;align-items:center;gap:8px;font-size:13px;font-weight:650;color:var(--ink)}
+.ap-field{display:grid;gap:6px;margin-bottom:14px;font-size:12px}
+.ap-label{font-size:12px;font-weight:550;color:#3f5a48}
+.ap-help{display:block;font-size:11px;line-height:1.5;color:var(--muted);margin:0}
+.ap-input{width:100%;min-height:40px;border:1px solid #dbe4da;border-radius:6px;padding:8px 10px;background:#fff;font-size:13px;color:var(--ink)}
+.ap-input:focus{outline:2px solid #90b49a;outline-offset:1px}
+.ap-range{display:grid;grid-template-columns:1fr auto 1fr;gap:6px;align-items:center;color:var(--muted)}
+.ap-unsupported ul{margin:0 0 12px;padding-left:18px;font-size:12px;line-height:1.6;color:var(--muted)}
+.ap-sidebar-foot{display:grid;gap:10px;padding:14px 18px 18px;border-top:1px solid #eef2ef;background:#fbfcfb}
+.ap-sidebar-foot .text-button{justify-self:center}
+.ap-perpage{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted)}
+.ap-perpage select{border:1px solid var(--line);border-radius:6px;padding:6px 8px;background:#fff}
+.ap-results{overflow:visible;min-width:0}
+.ap-empty{padding-block:60px}
+.ap-table td{font-size:12px}
+.ap-sort{border:0;background:none;padding:0;font:inherit;color:inherit;font-weight:inherit;cursor:pointer}
+.ap-sort:hover{color:var(--ink)}
+.ap-lock{display:inline-flex;align-items:center;gap:6px;color:#7a6220;font-size:11px}
+.ap-lock::before{content:"";width:7px;height:7px;border:1.5px solid currentColor;border-radius:2px}
+.ap-pending{color:#355782;font-size:11px}
+.ap-waiting{display:flex;align-items:center;gap:10px;margin:0 24px 14px;font-size:12px;color:#355782}
+.ap-waiting .dv-spinner{width:16px;height:16px;border-width:2px}
+.ap-pager{display:flex;justify-content:center;align-items:center;gap:14px;padding:16px;font-size:12px;color:var(--muted)}
+.dv-actionbar .ap-bar-secondary{background:transparent;color:#fff;border-color:#ffffff66;margin-left:auto}
+.dv-actionbar .ap-bar-secondary+.primary{margin-left:0}
+.ap-credit-line{font-size:12px;line-height:1.6;padding:10px 12px;border-radius:8px;background:#f3f7f3;color:#3f5a48;margin:0 0 6px}
+.ap-credit-line.ap-short{background:#fbe9e4;color:#9b3b27}
+.ap-cost{display:grid;gap:4px;margin:12px 0;font-size:13px}
+.ap-cost>div{display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px solid #eef2ef}
+.ap-cost dd{margin:0}
+.ap-phone-option{margin:4px 0 8px}
+.ap-detail dd .ap-phone{display:block}
+.ap-column-list{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:4px 16px}
+
+.ap-totals{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:8px}
+.ap-totals>div{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:grid;gap:6px}
+.ap-totals span{font-size:12px;color:var(--muted)}
+.ap-totals strong{font-size:26px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+.ap-note{margin:0 0 18px}
+.ap-account-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;margin-bottom:8px}
+.ap-account{padding:18px 20px;margin-bottom:16px;display:grid;gap:12px;align-content:start}
+.ap-account.current{border-color:#9cc3ab;box-shadow:0 0 0 1px #9cc3ab}
+.ap-account.missing{opacity:.75}
+.ap-account header{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.ap-account h3{margin:0 0 4px;font-size:16px;color:var(--ink)}
+.ap-account header small{font-size:11px}
+.ap-meter{height:8px;border-radius:999px;background:#edf2ee;overflow:hidden}
+.ap-meter i{display:block;height:100%;background:#4c946b;border-radius:inherit}
+.ap-meter i.high{background:#c0732f}
+.ap-figures{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px 10px;margin:0}
+.ap-figures>div{display:grid;gap:2px}
+.ap-figures dt{font-size:11px;color:var(--muted)}
+.ap-figures dd{margin:0;font-size:15px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+.ap-synced{font-size:12px;padding:10px 12px;border-radius:8px;background:#f3f6fa;color:#355782}
+.ap-synced ul{margin:6px 0 0;padding-left:18px;line-height:1.6}
+.ap-notes{font-size:12px;color:#4e6256;background:#f7f9f6;border-radius:6px;padding:8px 10px;margin:0;white-space:pre-wrap}
+.ap-account-actions{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center}
+.ap-ledger-filters{flex-wrap:wrap}
+.ap-date{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+.ap-date input{border:1px solid #e3e9e5;border-radius:6px;padding:8px;font-size:12px}
+.ap-ledger td{vertical-align:top}
+.ap-status-succeeded{background:#e8f2ec;color:#2d6b49}
+.ap-status-pending{background:#e6edf7;color:#355782}
+.ap-status-failed{background:#fbe9e4;color:#9b3b27}
+.ap-status-no_match{background:#eef1ef;color:#4f6457}
+.ap-status-unknown{background:#fff1dc;color:#845414}
+.ap-active{align-self:end}
+.ap-saved .dv-history li{grid-template-columns:minmax(0,1fr) auto auto auto}
+@media(max-width:1150px){
+  .ap-layout{grid-template-columns:1fr}
+  .ap-sidebar{position:static;max-height:none}
+  .ap-totals{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:580px){
+  .ap-bar{align-items:stretch}
+  .ap-account-picker{width:100%}
+  .ap-account-picker label{flex:1}
+  .ap-account-picker select{min-width:0;width:100%}
+  .ap-figures{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .ap-account-grid{grid-template-columns:1fr}
+  .ap-saved .dv-history li{grid-template-columns:1fr auto}
+  .ap-saved .dv-history li .secondary{grid-column:1/-1}
+  .dv-actionbar{flex-wrap:wrap}
+  .dv-actionbar .ap-bar-secondary{margin-left:0}
+  .ap-column-list{grid-template-columns:1fr}
+}

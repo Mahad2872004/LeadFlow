@@ -19,3 +19,11 @@ verify_jwt = false
 # The handler verifies the caller by passing their token to the database; gateway JWT checks would
 # also reject the browser's unauthenticated CORS preflight.
 verify_jwt = false
+
+[functions.apollo]
+# Callers are checked by passing their token to the database (apollo_member_role).
+verify_jwt = false
+
+[functions.apollo-webhook]
+# Apollo calls this without a Supabase token; a per-reveal random token in the URL authorizes each delivery.
+verify_jwt = false

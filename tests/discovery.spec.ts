@@ -29,7 +29,7 @@ async function start(page:Page,overrides:Record<string,string|undefined>={},user
  return harness
 }
 const existing=(rows:Record<string,string>[])=>rpc(owner.id,'select public.import_leads($1,$2,$3)',[owner.id,crypto.randomUUID(),JSON.stringify({method:'csv',rows:rows.map((row,index)=>({key:`seed-${index}`,...row}))})])
-async function openDiscovery(page:Page){await page.getByRole('button',{name:'Discovery',exact:true}).click();await expect(page.getByRole('heading',{name:'Lead discovery',level:1})).toBeVisible()}
+async function openDiscovery(page:Page){await page.getByRole('button',{name:'Discovery',exact:true}).click();await expect(page.getByRole('heading',{name:'Lead discovery',level:1})).toBeVisible();await page.getByRole('tab',{name:'Find businesses'}).click()}
 const noHorizontalScroll=(page:Page)=>page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)
 const resultRow=(page:Page,name:string)=>page.locator('.dv-table tbody tr',{hasText:name})
 

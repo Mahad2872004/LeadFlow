@@ -3,12 +3,13 @@ import type { WorkspaceSummary } from '../lib/backend'
 import { criteriaSummary, discoveryHistory, searchEnabled, discoveryStatus, failureLabels, filterLabels, leadOrigins, type HistoryItem, type LeadOrigin, type ProviderStatus, type SearchCriteria } from '../lib/discovery'
 import { dateLabel } from '../lib/format'
 import type { Lead } from '../lib/model'
+import { ApolloWorkspace } from './ApolloWorkspace'
 import { CsvImport } from './CsvImport'
 import { DiscoverySearch } from './DiscoverySearch'
 import { Icon } from './Icon'
 import './Discovery.css'
 
-type Tab = 'find' | 'csv' | 'history'
+type Tab = 'apollo' | 'find' | 'csv' | 'history'
 type Status = { state: 'loading' } | { state: 'error'; message: string } | { state: 'ready'; providers: ProviderStatus[] }
 interface DiscoveryProps {
   workspace: WorkspaceSummary; leads: Lead[]
@@ -21,7 +22,7 @@ interface DiscoveryProps {
 /** Lead discovery: find businesses through a configured provider, import a CSV file, and review past searches. */
 export function LeadDiscovery({workspace,leads,blocked,onImported,onAddLead}:DiscoveryProps){
   // While business search is "coming soon", the page opens on CSV import; manual entry is always available.
-  const [tab,setTab]=useState<Tab>(searchEnabled?'find':'csv')
+  const [tab,setTab]=useState<Tab>('apollo')
   const [status,setStatus]=useState<Status>({state:'loading'}),[attempt,setAttempt]=useState(0)
   const [origins,setOrigins]=useState<LeadOrigin[]>([]),[history,setHistory]=useState<HistoryItem[]|null>(null),[historyError,setHistoryError]=useState('')
   const [reopened,setReopened]=useState<{key:number;provider:string;criteria:SearchCriteria}|null>(null)
@@ -49,7 +50,7 @@ export function LeadDiscovery({workspace,leads,blocked,onImported,onAddLead}:Dis
   const providers=status.state==='ready'?status.providers:[]
   const configured=providers.filter(provider=>provider.configured)
   const providerFor=(id:string)=>providers.find(provider=>provider.id===id)
-  const tabs:[Tab,string][]=searchEnabled?[['find','Find businesses'],['csv','Import CSV'],['history','Search history']]:[['csv','Import CSV'],['find','Find businesses']]
+  const tabs:[Tab,string][]=searchEnabled?[['apollo','Apollo'],['find','Find businesses'],['csv','Import CSV'],['history','Search history']]:[['apollo','Apollo'],['csv','Import CSV'],['find','Find businesses']]
   return <div className="dv">
     <div className="dv-toolbar">
       <div className="dv-tabs" role="tablist" aria-label="Lead discovery views">{tabs.map(([id,label])=><button key={id} role="tab" id={`dv-tab-${id}`} aria-selected={tab===id} aria-controls={`dv-panel-${id}`} className={tab===id?'active':''} onClick={()=>setTab(id)}>{label}{!searchEnabled&&id==='find'&&<span className="dv-soon">Coming soon</span>}</button>)}</div>
@@ -61,6 +62,7 @@ export function LeadDiscovery({workspace,leads,blocked,onImported,onAddLead}:Dis
         :status.state==='error'?<div className="error-banner load-error" role="alert"><p><strong>We couldn’t load lead discovery.</strong> {status.message}</p><button className="secondary" onClick={()=>{setStatus({state:'loading'});setAttempt(value=>value+1)}}>Try again</button></div>
         :configured.length===0?<NotConfigured providers={providers} canManage={workspace.role!=='member'} onCsv={()=>setTab('csv')} onAddLead={onAddLead}/>
         :<DiscoverySearch key={reopened?.key??0} workspace={workspace} providers={providers} leads={leads} origins={origins} blocked={blocked} initial={reopened} onSearched={()=>setHistory(null)} onImported={onImported}/>)}
+      {tab==='apollo'&&<ApolloWorkspace workspace={workspace} leads={leads} origins={origins} blocked={blocked} onImported={onImported}/>}
       {tab==='csv'&&<CsvImport workspace={workspace} leads={leads} origins={origins} blocked={blocked} onImported={onImported}/>}
       {tab==='history'&&<section className="panel" aria-labelledby="dv-history-title">
         <div className="section-heading"><div><h2 id="dv-history-title">Recent searches</h2><p>The last 25 searches in {workspace.name}. Criteria and counts only; results aren’t stored.</p></div><button className="text-button" onClick={loadHistory}>Refresh</button></div>

@@ -20,15 +20,16 @@ import './App.css'
 import { IntegrationsHub } from './components/IntegrationsHub'
 import { ClientOnboarding } from './components/ClientOnboarding'
 import { LeadDiscovery } from './components/LeadDiscovery'
+import { leadLists, type LeadList } from './lib/apollo'
 import { LeadProvenance } from './components/LeadProvenance'
-import { duplicateIndex, forgetOrigins, reasonLabels, searchEnabled } from './lib/discovery'
+import { duplicateIndex, forgetOrigins, reasonLabels } from './lib/discovery'
 
 
 const blank:LeadInput={name:'',email:'',phone:'',company:'',service:'',source:'',message:''}
 const headings:Record<Page,[string,string]>={
  Overview:['A clear view. A better follow-up.','Keep good conversations moving. Here’s where things stand.'],
  Leads:['Leads','Every opportunity, organized and ready for the next step.'],
- Discovery:['Lead discovery',searchEnabled?'Find businesses that match your ideal client, then add the right ones to your pipeline.':'Import a list or add businesses yourself. Business search is coming soon.'],
+ Discovery:['Lead discovery','Find people and companies with Apollo, import a list, or add businesses yourself.'],
  'Follow-ups':['Follow-ups','Make the next conversation happen.'],
  Onboarding:['Client onboarding','Collect what each new client needs to provide, review it, and know exactly when they’re ready for delivery.'],
  Activity:['Activity','A running history of your workspace.'],
@@ -56,6 +57,8 @@ function App({workspace,page,onPageChange:setPage,initialNotice}:{workspace:Work
  const [search,setSearch]=useState('')
  const [filter,setFilter]=useState('All statuses')
  const [sourceFilter,setSourceFilter]=useState('All sources')
+ // Lead lists (filled from Apollo or later uses); reloaded when the leads change.
+ const [lists,setLists]=useState<LeadList[]>([]),[listFilter,setListFilter]=useState('')
  const [modal,setModal]=useState<'lead'|'edit'|'task'|'reset'|'import'|null>(null)
  const [selected,setSelected]=useState<string|null>(null)
  const [formError,setFormError]=useState('')
@@ -71,6 +74,12 @@ function App({workspace,page,onPageChange:setPage,initialNotice}:{workspace:Work
  // An unsaved attempt belongs to this workspace, so switching waits until it is retried or discarded.
  useEffect(()=>{setLocked(busy||!!pending)},[busy,pending,setLocked])
  useEffect(()=>()=>setLocked(false),[setLocked])
+ useEffect(()=>{
+   if(page!=='Leads'&&page!=='Overview')return
+   let active=true
+   leadLists(workspace.id).then(items=>{if(active)setLists(items)}).catch(()=>{/* Lists are optional; the lead table works without them. */})
+   return()=>{active=false}
+ },[page,workspace.id,data?.leads])
  useEffect(()=>{
    let active=true
    loadWorkspace(workspace.id).then(result=>{if(active){setData(result.data);setRevision(result.revision)}}).catch(cause=>{if(active){setError(cause.message);setAccessLost(accessDenied(cause))}})
@@ -113,7 +122,8 @@ function App({workspace,page,onPageChange:setPage,initialNotice}:{workspace:Work
  }
  if(!data) return shell(error?<div className="error-banner load-error" role="alert"><p><strong>We couldn’t open {workspace.name}.</strong> {error}</p><button className="secondary" disabled={busy} onClick={reload}>Retry loading</button><button className="secondary" onClick={()=>void refresh()}>Refresh workspace list</button></div>
   :<div className="content-skeleton" role="status"><span className="sr-only">Loading your workspace…</span><i className="skeleton skeleton-title"/><div className="skeleton-grid">{[0,1,2,3].map(item=><i key={item} className="skeleton skeleton-card"/>)}</div><i className="skeleton skeleton-panel"/></div>)
- const visible=data.leads.filter(l=>(filter==='All statuses'||l.status===filter)&&(sourceFilter==='All sources'||l.source===sourceFilter)&&`${l.name} ${l.company} ${l.email} ${l.service} ${l.website??""} ${l.industry??""} ${l.city??""}`.toLowerCase().includes(search.trim().toLowerCase()))
+ const listMembers=listFilter?new Set(lists.find(list=>list.id===listFilter)?.leadIds??[]):null
+ const visible=data.leads.filter(l=>(!listMembers||listMembers.has(l.id))&&(filter==='All statuses'||l.status===filter)&&(sourceFilter==='All sources'||l.source===sourceFilter)&&`${l.name} ${l.company} ${l.email} ${l.service} ${l.website??""} ${l.industry??""} ${l.city??""}`.toLowerCase().includes(search.trim().toLowerCase()))
  const activeLead=data.leads.find(l=>l.id===selected)
  // Warns before creating a lead that matches one already here, using the same rules as imports.
  function findDuplicate(input:LeadInput){const match=duplicateIndex(data!.leads,[]).find({businessName:input.company,contactName:input.name,email:input.email,phone:input.phone,website:input.website??'',city:input.city??'',postcode:input.postcode??''});return match?.lead?{lead:match.lead,reason:reasonLabels[match.reason]}:null}
@@ -133,7 +143,7 @@ function App({workspace,page,onPageChange:setPage,initialNotice}:{workspace:Work
  {page==='Onboarding'&&<ClientOnboarding workspace={workspace} leads={data.leads} startLead={onboardingLead}/>}
  {page==='Discovery'&&<LeadDiscovery workspace={workspace} leads={data.leads} blocked={busy||!!pending} onImported={async message=>{forgetOrigins(workspace.id);await reload();setNotice(n=>[message,...n].slice(0,20))}} onAddLead={()=>openModal('lead')}/>}
  {page==='Overview'&&<DashboardOverview day={day} leads={data.leads} tasks={data.tasks} onLeads={showLeads} onFollowUps={showDueTasks}/>}
- {(page==='Overview'||page==='Leads')&&<section className="panel leads-panel"><div className="section-heading"><div><h2>{page==='Overview'?'Recent leads':'All leads'} <span className="number-tag">{data.leads.length}</span></h2><p>{page==='Overview'?'Your five most recent opportunities.':'Every conversation in one place.'}</p></div>{page==='Overview'&&<button className="text-button" onClick={()=>showLeads()}>View all leads <Icon name="arrow" size={16}/></button>}</div><div className="filters"><label className="search"><Icon name="search" size={18}/><input aria-label="Search leads" placeholder="Search name, company, or email…" value={search} onChange={e=>setSearch(e.target.value)}/></label><select aria-label="Filter by status" value={filter} onChange={e=>setFilter(e.target.value)}><option>All statuses</option>{statuses.map(s=><option key={s}>{s}</option>)}</select><select aria-label="Filter by source" value={sourceFilter} onChange={event=>setSourceFilter(event.target.value)}><option>All sources</option>{sources.map(source=><option key={source}>{source}</option>)}</select><span className="results" role="status">{visible.length} results</span>{(search||filter!=='All statuses'||sourceFilter!=='All sources')&&<button className="text-button" onClick={()=>{setSearch('');setFilter('All statuses');setSourceFilter('All sources')}}>Clear filters</button>}</div><LeadTable leads={displayedLeads} onSelect={setSelected} onAdd={()=>openModal('lead')} onStatus={(lead,status)=>commit(changeStatus(data,lead.id,status),`${lead.name} moved to ${status}.`)}/><div className="table-footer">Showing {displayedLeads.length} of {visible.length} matching leads<span>All sample contacts are fictional</span></div></section>}
+ {(page==='Overview'||page==='Leads')&&<section className="panel leads-panel"><div className="section-heading"><div><h2>{page==='Overview'?'Recent leads':'All leads'} <span className="number-tag">{data.leads.length}</span></h2><p>{page==='Overview'?'Your five most recent opportunities.':'Every conversation in one place.'}</p></div>{page==='Overview'&&<button className="text-button" onClick={()=>showLeads()}>View all leads <Icon name="arrow" size={16}/></button>}</div><div className="filters"><label className="search"><Icon name="search" size={18}/><input aria-label="Search leads" placeholder="Search name, company, or email…" value={search} onChange={e=>setSearch(e.target.value)}/></label><select aria-label="Filter by status" value={filter} onChange={e=>setFilter(e.target.value)}><option>All statuses</option>{statuses.map(s=><option key={s}>{s}</option>)}</select><select aria-label="Filter by source" value={sourceFilter} onChange={event=>setSourceFilter(event.target.value)}><option>All sources</option>{sources.map(source=><option key={source}>{source}</option>)}</select>{lists.length>0&&<select aria-label="Filter by list" value={listFilter} onChange={event=>setListFilter(event.target.value)}><option value="">All lists</option>{lists.map(list=><option key={list.id} value={list.id}>{list.name} ({list.leadIds.length})</option>)}</select>}<span className="results" role="status">{visible.length} results</span>{(search||filter!=='All statuses'||sourceFilter!=='All sources'||listFilter)&&<button className="text-button" onClick={()=>{setSearch('');setFilter('All statuses');setSourceFilter('All sources');setListFilter('')}}>Clear filters</button>}</div><LeadTable leads={displayedLeads} onSelect={setSelected} onAdd={()=>openModal('lead')} onStatus={(lead,status)=>commit(changeStatus(data,lead.id,status),`${lead.name} moved to ${status}.`)}/><div className="table-footer">Showing {displayedLeads.length} of {visible.length} matching leads<span>All sample contacts are fictional</span></div></section>}
  {page==='Overview'&&<section className="panel"><div className="section-heading"><div><h2>On your radar</h2><p>Follow-ups due today or earlier</p></div><button className="text-button" onClick={()=>{setPage('Follow-ups');setTaskFilter('Open')}}>View all ↗</button></div>{taskList(due)}</section>}
  {page==='Follow-ups'&&<section className="panel"><div className="section-heading"><h2>Your next steps</h2><select aria-label="Filter tasks" value={taskFilter} onChange={e=>setTaskFilter(e.target.value)}>{['Open','Due','Overdue','Upcoming','Completed','All'].map(s=><option key={s}>{s}</option>)}</select></div>{taskList(tasks)}</section>}
  {page==='Activity'&&<section className="panel"><div className="section-heading"><h2>Workspace activity</h2><span className="soft-tag">{data.activities.length} events</span></div><ActivityTimeline activities={data.activities} leads={data.leads} onSelect={setSelected}/></section>}
