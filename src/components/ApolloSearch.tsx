@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import type { WorkspaceSummary } from '../lib/backend'
 import { accountLabel, apolloExport, apolloLeft, apolloReveal, apolloSave, apolloSearch, ApolloRequestError, contactsFor, contactsForMany, createLeadList, organizationRow, personRow, remainingOf, saveSearch,
   type ApolloAccount, type Contact, type FilterValues, type LeadList, type Organization, type Person, type ResultPage, type SearchKind } from '../lib/apollo'
-import { compactFilters } from '../lib/apolloFilters'
+import { compactFilters, summarize } from '../lib/apolloFilters'
 import { organizationsExport, peopleExport, peopleFromExport } from '../lib/apolloExport'
 import { downloadCsv, maxCsvBytes, parseCsv, toCsv } from '../lib/csv'
 import { domainOf, type LeadOrigin } from '../lib/discovery'
@@ -16,6 +16,12 @@ type Item = Person | Organization
 type Column = { id: string; label: string; sort?: (item: Item) => string; render: (item: Item) => ReactNode }
 type Problem = { message: string; retry?: () => void }
 type Row = { label: string; value: ReactNode }
+type Session = { id: string; filters: FilterValues; page: number; perPage: number; total: number; at: string }
+const maxSessions = 12
+/** Filters as stable text, so the same search in another order is the same session. */
+const sessionKey = (filters: FilterValues) => JSON.stringify(Object.keys(filters).sort().map(key => [key, Array.isArray(filters[key]) ? [...filters[key] as string[]].sort() : filters[key]]))
+const readSessions = (key: string): Session[] => { try { const list = JSON.parse(localStorage.getItem(key) ?? '[]'); return Array.isArray(list) ? list.slice(0, maxSessions) : [] } catch { return [] } }
+const sleep = (ms: number) => new Promise(resolve => window.setTimeout(resolve, ms))
 interface SearchProps {
   kind: SearchKind; workspace: WorkspaceSummary; account: ApolloAccount; phoneReveal: boolean; leads: Lead[]; origins: LeadOrigin[]; lists: LeadList[]; blocked: boolean
   /** Filters to start from (a saved or past search). The parent remounts this component to load others. */
@@ -28,15 +34,18 @@ const storageKey = (kind: SearchKind) => `leadflow.apollo.columns.${kind}`
 const chunk = <T,>(items: T[], size: number) => Array.from({ length: Math.ceil(items.length / size) }, (_, index) => items.slice(index * size, index * size + size))
 /** People or company search with Apollo: filters, results, reveals and saving to leads. */
 export function ApolloSearch({kind,workspace,account,phoneReveal,leads,origins,lists,blocked,initial,onChanged,onImported,onListsChanged}:SearchProps){
-  const [filters,setFilters]=useState<FilterValues>(initial??{})
+  const sessionsKey=`leadflow.apollo.sessions.${workspace.id}.${kind}`
+  const [sessions,setSessions]=useState<Session[]>(()=>readSessions(sessionsKey))
+  // Without filters handed in, the tab reopens on the most recent session.
+  const resume=initial?null:sessions[0]??null
+  const [filters,setFilters]=useState<FilterValues>(initial??resume?.filters??{})
   const [applied,setApplied]=useState<{filters:FilterValues;searchId:string}|null>(null)
   const [result,setResult]=useState<ResultPage<Item>|null>(null),[loading,setLoading]=useState(false),[problem,setProblem]=useState<Problem|null>(null)
-  const [perPage,setPerPage]=useState(25),[confirm,setConfirm]=useState<{page:number;filters:FilterValues;searchId:string|null;refresh:boolean}|null>(null),[hideSaved,setHideSaved]=useState(false)
-  const lastKey=`leadflow.apollo.last.${workspace.id}.${kind}`
+  const [perPage,setPerPage]=useState(resume?.perPage??25),[confirm,setConfirm]=useState<{page:number;filters:FilterValues;searchId:string|null;refresh:boolean;size:number}|null>(null),[hideSaved,setHideSaved]=useState(false)
   const fileInput=useRef<HTMLInputElement>(null)
   const [selected,setSelected]=useState<Set<string>>(new Set()),[contacts,setContacts]=useState<Map<string,Contact>>(new Map())
   const [query,setQuery]=useState(''),[sort,setSort]=useState<{column:string;dir:1|-1}|null>(null),[detail,setDetail]=useState<Item|null>(null)
-  const [modal,setModal]=useState<'reveal'|'save'|'saveSearch'|'columns'|null>(null),[notice,setNotice]=useState('')
+  const [modal,setModal]=useState<'reveal'|'save'|'saveSearch'|'columns'|'export'|null>(null),[notice,setNotice]=useState('')
   const [hidden,setHidden]=useState<Set<string>>(()=>{try{return new Set(JSON.parse(localStorage.getItem(storageKey(kind))??'[]'))}catch{return new Set()}})
   const [phonesWaiting,setPhonesWaiting]=useState<{ids:string[];since:number}|null>(null)
   const people=kind==='people'
@@ -71,37 +80,95 @@ export function ApolloSearch({kind,workspace,account,phoneReveal,leads,origins,l
   },[phonesWaiting,workspace.id,onChanged])
 
   // Saved pages come back free. Only when Apollo has to be asked does company search stop for the 1-credit confirmation.
-  async function run(page:number,useFilters:FilterValues,searchId:string|null,{confirmed=false,refresh=false}={}){
+  async function run(page:number,useFilters:FilterValues,searchId:string|null,{confirmed=false,refresh=false,size=perPage}={}){
     setConfirm(null);setLoading(true);setProblem(null);setNotice('')
     try{
-      const next=await apolloSearch(workspace.id,{kind,accountId:account.id,filters:useFilters,page,perPage,...(searchId?{searchId}:{}),...(refresh?{refresh:true}:{}),...(!people&&confirmed?{operationId:crypto.randomUUID(),confirmCredits:true}:{})})
+      const next=await apolloSearch(workspace.id,{kind,accountId:account.id,filters:useFilters,page,perPage:size,...(searchId?{searchId}:{}),...(refresh?{refresh:true}:{}),...(!people&&confirmed?{operationId:crypto.randomUUID(),confirmCredits:true}:{})})
       setResult(next as ResultPage<Item>);setSelected(new Set());setQuery('');setSort(null)
       setApplied(current=>({filters:useFilters,searchId:searchId??current?.searchId??''}))
-      try{localStorage.setItem(lastKey,JSON.stringify({filters:useFilters,page,perPage}))}catch{/* optional */}
+      remember({filters:useFilters,page,perPage:size,total:next.total})
       if(!next.saved)onChanged()
     }catch(cause){
       const error=cause instanceof ApolloRequestError?cause:new ApolloRequestError('The search didn’t finish.',0)
-      if(error.code==='confirm_credits'){setConfirm({page,filters:useFilters,searchId,refresh});return}
-      setProblem({message:`${error.message}${error.retryAfter?` Try again in about ${error.retryAfter} seconds.`:''}`,retry:error.status===422||error.status===402?undefined:()=>void run(page,useFilters,searchId,{confirmed:!people,refresh})})
+      if(error.code==='confirm_credits'){setConfirm({page,filters:useFilters,searchId,refresh,size});return}
+      setProblem({message:`${error.message}${error.retryAfter?` Try again in about ${error.retryAfter} seconds.`:''}`,retry:error.status===422||error.status===402?undefined:()=>void run(page,useFilters,searchId,{confirmed:!people,refresh,size})})
       if(!people)onChanged()
     }finally{setLoading(false)}
   }
-  // Coming back to this tab shows the last results again, from saved pages only: this never calls Apollo.
+  // Search sessions: each distinct set of filters searched in this tab, kept on this device until cleared. Opening one
+  // shows its saved page (free); only a page that was never fetched goes to Apollo.
+  const [activeSession,setActiveSession]=useState<string|null>(resume?.id??null)
+  const storeSessions=(list:Session[])=>{setSessions(list);try{localStorage.setItem(sessionsKey,JSON.stringify(list))}catch{/* optional */}}
+  function remember(entry:Omit<Session,'id'|'at'>){
+    const key=sessionKey(entry.filters)
+    const existing=sessions.find(item=>sessionKey(item.filters)===key)
+    const session={...entry,id:existing?.id??crypto.randomUUID(),at:new Date().toISOString()}
+    setActiveSession(session.id)
+    storeSessions([session,...sessions.filter(item=>item.id!==session.id)].slice(0,maxSessions))
+  }
+  function openSession(session:Session){
+    setFilters(session.filters);setPerPage(session.perPage);setActiveSession(session.id)
+    void run(session.page,session.filters,null,{size:session.perPage})
+  }
+  function clearResults(){
+    if(activeSession)storeSessions(sessions.filter(item=>item.id!==activeSession))
+    setResult(null);setApplied(null);setActiveSession(null);setSelected(new Set());setNotice('');setProblem(null)
+  }
+  function clearAll(){storeSessions([]);setResult(null);setApplied(null);setActiveSession(null);setSelected(new Set());setNotice('');setProblem(null)}
   const restored=useRef(false)
   useEffect(()=>{
-    if(restored.current||initial)return
+    if(restored.current)return
     restored.current=true
-    let last:{filters:FilterValues;page:number;perPage:number}|null=null
-    try{last=JSON.parse(localStorage.getItem(lastKey)??'null')}catch{/* optional */}
-    if(!last?.filters)return
-    const saved=last
-    setFilters(saved.filters);setPerPage(saved.perPage)
-    apolloSearch(workspace.id,{kind,accountId:account.id,filters:saved.filters,page:saved.page,perPage:saved.perPage,savedOnly:true}).then(next=>{
-      if(!next.missing){setResult(next as ResultPage<Item>);setApplied({filters:saved.filters,searchId:''})}
+    const first=resume
+    if(!first)return
+    apolloSearch(workspace.id,{kind,accountId:account.id,filters:first.filters,page:first.page,perPage:first.perPage,savedOnly:true}).then(next=>{
+      if(!next.missing){setResult(next as ResultPage<Item>);setApplied({filters:first.filters,searchId:''})}
     }).catch(()=>{/* Nothing saved to show. */})
-  },[initial,lastKey,workspace.id,kind,account.id])
+  },[resume,workspace.id,kind,account.id])
   function startSearch(){const clean=compactFilters(filters);if(!Object.keys(clean).length){setProblem({message:'Choose at least one filter.'});return}void run(1,clean,crypto.randomUUID())}
   const goTo=(page:number)=>applied&&void run(page,applied.filters,null)
+  const [exportRun,setExportRun]=useState<{pages:number;done:number;count:number;waiting:number;stopping:boolean}|null>(null)
+  const stopExport=useRef(false)
+  async function exportSearch(limit:number){
+    if(!applied||!result)return
+    const filtersUsed=applied.filters,pages=Math.ceil(Math.min(result.total,50000,limit)/100)
+    stopExport.current=false;setModal(null);setProblem(null);setNotice('')
+    const collected=new Map<string,Item>()
+    let page=1,failure='',stopped=false
+    setExportRun({pages,done:0,count:0,waiting:0,stopping:false})
+    while(page<=pages){
+      if(stopExport.current){stopped=true;break}
+      try{
+        const next=await apolloSearch(workspace.id,{kind,accountId:account.id,filters:filtersUsed,page,perPage:100,...(people?{}:{operationId:crypto.randomUUID(),confirmCredits:true})})
+        for(const item of next.items)collected.set(item.id,item)
+        setExportRun(current=>current&&{...current,done:page,count:collected.size,waiting:0})
+        if(next.items.length<100)break
+        page++
+        // Apollo allows 50 searches a minute on the free plan; stay under it. Saved pages need no pause.
+        if(!next.saved)await sleep(1400)
+      }catch(cause){
+        const error=cause instanceof ApolloRequestError?cause:new ApolloRequestError('Apollo didn’t answer.',0)
+        if(error.status===429&&!stopExport.current){
+          // Apollo's hourly or daily limit: wait as told, then carry on with the same page.
+          for(let left=Math.min(error.retryAfter??60,3600);left>0&&!stopExport.current;left--){setExportRun(current=>current&&{...current,waiting:left});await sleep(1000)}
+          continue
+        }
+        failure=error.message;break
+      }
+    }
+    setExportRun(null)
+    if(!people)onChanged()
+    if(!collected.size){setProblem({message:failure||'Nothing was collected.'});return}
+    const items=[...collected.values()]
+    let rows:string[][]
+    if(people){
+      const found=await apolloExport(workspace.id,'people').catch(()=>({contacts:[] as Contact[]}))
+      const ids=new Set(items.map(item=>item.id))
+      rows=peopleExport(items as Person[],found.contacts.filter(contact=>ids.has(contact.id)),id=>saved.has(`person:${id}`))
+    }else rows=organizationsExport(items as Organization[],org=>inLeadFlow(org))
+    downloadCsv(`apollo-${people?'people':'companies'}-search-${new Date().toISOString().slice(0,10)}.csv`,toCsv(rows))
+    setNotice(`Exported ${items.length.toLocaleString()} ${people?'people':'companies'} from this search${stopped?' (stopped early)':''}.${failure?` Stopped because: ${failure}`:''}`)
+  }
   // Everything Apollo found in this workspace (saved result pages) with every revealed email and phone, as CSV.
   async function exportAll(){
     setLoading(true);setProblem(null);setNotice('')
@@ -239,12 +306,26 @@ export function ApolloSearch({kind,workspace,account,phoneReveal,leads,origins,l
           :people?'People search is free. Names, emails and phone numbers stay hidden until you reveal them, which uses credits.':'Search companies by industry, size, location, technology and funding.'}</p></div>
         <div className="ap-head-actions">
           {result&&<button className="text-button" onClick={()=>setModal('columns')}>Columns</button>}
-          <button className="text-button" disabled={loading} onClick={()=>void exportAll()}>Export all found (CSV)</button>
+          {result&&applied&&!result.fromFile&&<button className="text-button" disabled={loading||!!exportRun} onClick={()=>setModal('export')}>Export this search</button>}
+          <button className="text-button" disabled={loading||!!exportRun} onClick={()=>void exportAll()}>Export everything found</button>
+          {result&&<button className="text-button" disabled={loading||!!exportRun} onClick={clearResults}>Clear results</button>}
           {people&&<><button className="text-button" disabled={loading} onClick={()=>fileInput.current?.click()}>Open an export</button>
             <input ref={fileInput} type="file" accept=".csv,text/csv" className="sr-only" aria-label="Open a LeadFlow Apollo export" tabIndex={-1} onChange={event=>{const file=event.target.files?.[0];if(file)void openExport(file)}}/></>}
         </div>
       </div>
       <div aria-live="polite">
+        {sessions.length>0&&<div className="ap-sessions"><span className="ap-sessions-label">Your searches</span>
+          <ul aria-label="Your searches">{sessions.map(session=><li key={session.id} className={session.id===activeSession?'active':undefined}>
+            <button className="ap-session" aria-current={session.id===activeSession?'true':undefined} disabled={loading||!!exportRun} onClick={()=>openSession(session)}>
+              <strong>{summarize(kind,session.filters)}</strong><small>{session.total.toLocaleString()} found · {new Date(session.at).toLocaleString(undefined,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}</small></button>
+            <button className="ap-session-remove" aria-label={`Remove search: ${summarize(kind,session.filters)}`} disabled={!!exportRun} onClick={()=>{storeSessions(sessions.filter(item=>item.id!==session.id));if(session.id===activeSession){setResult(null);setApplied(null);setActiveSession(null)}}}>×</button>
+          </li>)}</ul>
+          <button className="text-button" disabled={!!exportRun} onClick={clearAll}>Clear all searches</button></div>}
+        {exportRun&&<div className="ap-export-progress" role="status">
+          <div><strong>Exporting this search… {exportRun.count.toLocaleString()} {people?'people':'companies'}</strong> <span>page {exportRun.done} of {exportRun.pages}{exportRun.waiting?` · Apollo’s rate limit reached, continuing in ${exportRun.waiting}s`:''}</span></div>
+          <div className="ap-meter"><i style={{width:`${Math.round(exportRun.done/exportRun.pages*100)}%`}}/></div>
+          <button className="secondary" disabled={exportRun.stopping} onClick={()=>{stopExport.current=true;setExportRun(current=>current&&{...current,stopping:true})}}>{exportRun.stopping?'Stopping…':'Stop and download what’s collected'}</button>
+        </div>}
         {result?.fromFile&&<div className="ap-saved-note" role="status"><span>Showing {result.items.length} {result.items.length===1?'person':'people'} from {result.fromFile}. No search was run and no credits were used.</span></div>}
         {result?.saved&&<div className="ap-saved-note" role="status"><span>Saved results from {dateLabel(result.fetchedAt)}, {new Date(result.fetchedAt).toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'})}. No credits used.</span><button className="text-button" disabled={loading} onClick={()=>applied&&void run(result.page,applied.filters,null,{refresh:true})}>Refresh from Apollo{people?'':' (1 credit)'}</button></div>}
         {notice&&<div className="dv-summary" role="status">{notice}</div>}
@@ -286,8 +367,9 @@ export function ApolloSearch({kind,workspace,account,phoneReveal,leads,origins,l
     {confirm&&<Modal title="Use 1 credit for this page?" onClose={()=>setConfirm(null)}>
       <p className="modal-intro">Apollo charges 1 credit for each page of company results, up to {perPage} companies. LeadFlow records it in the credit history.</p>
       <CreditLine account={account} needed={1}/>
-      <div className="modal-actions"><button className="secondary" onClick={()=>setConfirm(null)}>Cancel</button><button className="primary" disabled={remaining<1} onClick={()=>void run(confirm.page,confirm.filters,confirm.searchId,{confirmed:true,refresh:confirm.refresh})}>Use 1 credit and search</button></div>
+      <div className="modal-actions"><button className="secondary" onClick={()=>setConfirm(null)}>Cancel</button><button className="primary" disabled={remaining<1} onClick={()=>void run(confirm.page,confirm.filters,confirm.searchId,{confirmed:true,refresh:confirm.refresh,size:confirm.size})}>Use 1 credit and search</button></div>
     </Modal>}
+    {modal==='export'&&result&&<ExportDialog total={Math.min(result.total,50000)} people={people} account={account} onCancel={()=>setModal(null)} onStart={limit=>void exportSearch(limit)}/>}
     {modal==='reveal'&&<RevealDialog emailCount={revealable.filter(person=>!alreadyRevealed(person.id,false)).length} phoneCount={revealable.filter(person=>!alreadyRevealed(person.id,true)).length} account={account} phoneReveal={phoneReveal} onCancel={()=>setModal(null)} onConfirm={phone=>void reveal(phone)}/>}
     {modal==='save'&&<SaveDialog count={savable.length} skipped={chosen.length-savable.length} lists={lists} people={people} revealed={savable.filter(item=>contacts.get(item.id)?.email).length} onCancel={()=>setModal(null)} onConfirm={choice=>void save(choice)}/>}
     {modal==='saveSearch'&&<SaveSearchDialog onCancel={()=>setModal(null)} onSave={async name=>{await saveSearch(workspace.id,crypto.randomUUID(),name,kind,{kind,filters:compactFilters(filters),accountId:account.id});setModal(null);setNotice(`Saved “${name}”. Find it under Saved & recent.`);onChanged()}}/>}
@@ -309,6 +391,23 @@ function CreditLine({account,needed}:{account:ApolloAccount;needed:number}){
   const remaining=remainingOf(account),apollo=apolloLeft(account,'lead_credit')
   return <p className={`ap-credit-line${needed>remaining?' ap-short':''}`}><strong>{accountLabel(account)}:</strong> {remaining} of {account.monthlyAllowance} credits left this cycle in LeadFlow’s ledger
     {apollo!==null&&<> · Apollo reported {apollo} email credits left{account.lastSyncedAt?` (synced ${dateLabel(account.lastSyncedAt)})`:''}</>}.{needed>remaining&&' Not enough credits for this.'}</p>
+}
+function ExportDialog({total,people,account,onCancel,onStart}:{total:number;people:boolean;account:ApolloAccount;onCancel:()=>void;onStart:(limit:number)=>void}){
+  const options=[500,1000,5000,10000,25000,50000].filter(value=>value<total)
+  const [limit,setLimit]=useState(Math.min(total,1000))
+  const pages=Math.ceil(Math.min(limit,total)/100)
+  return <Modal title="Export this search" onClose={onCancel}>
+    <p className="modal-intro">LeadFlow fetches every page of this search from Apollo, 100 at a time, and saves them as one CSV with Apollo person IDs, so you can reveal contacts later without searching again. Apollo shows at most the first 50,000 matches.</p>
+    <form onSubmit={event=>{event.preventDefault();onStart(limit)}}>
+      <label>How many<select value={limit} onChange={event=>setLimit(Number(event.target.value))}>{options.map(value=><option key={value} value={value}>First {value.toLocaleString()}</option>)}<option value={total}>All {total.toLocaleString()}</option></select></label>
+      <dl className="ap-cost"><div><dt>Pages from Apollo</dt><dd>up to {pages}</dd></div>
+        <div><dt>{people?'Credits':'Credits (1 per page not already saved)'}</dt><dd><strong>{people?'None, people search is free':`up to ${pages}`}</strong></dd></div>
+        <div><dt>Time</dt><dd>{pages<=50?'about a minute or two':pages<=200?`about ${Math.ceil(pages/40)} minutes`:`over an hour (Apollo’s free plan allows 200 pages an hour)`}</dd></div></dl>
+      {pages>200&&<p className="ap-help">Apollo’s free plan allows about 200 search pages an hour and 600 a day for the whole account. LeadFlow waits whenever Apollo says to, so keep this tab open. You can stop at any time and download what’s been collected.</p>}
+      {!people&&pages>remainingOf(account)&&<p className="field-error">This needs more credits than the {remainingOf(account)} left; the export stops when they run out.</p>}
+      <div className="modal-actions"><button type="button" className="secondary" onClick={onCancel}>Cancel</button><button className="primary">Start export</button></div>
+    </form>
+  </Modal>
 }
 function RevealDialog({emailCount,phoneCount,account,phoneReveal,onCancel,onConfirm}:{emailCount:number;phoneCount:number;account:ApolloAccount;phoneReveal:boolean;onCancel:()=>void;onConfirm:(phone:boolean)=>void}){
   const [phone,setPhone]=useState(false)

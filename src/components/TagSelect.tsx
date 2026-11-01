@@ -18,7 +18,10 @@ export function TagSelect({label,values,onChange,options,suggestions=[],max=25,p
   const labelOf=(value:string)=>options?.find(option=>option.value===value)?.label??value
   const pool=options??suggestions.map(value=>({value,label:value}))
   const typed=query.trim().toLowerCase()
-  const matches=pool.filter(option=>!values.includes(option.value)&&(!typed||option.label.toLowerCase().includes(typed)||option.value.toLowerCase().includes(typed))).slice(0,30)
+  const found=pool.filter(option=>!values.includes(option.value)&&(!typed||option.label.toLowerCase().includes(typed)||option.value.toLowerCase().includes(typed))).slice(0,30)
+  // Free-text fields accept anything; offer what was typed first when it isn't already a suggestion.
+  const clean=query.trim().replace(/\s+/g,' ')
+  const matches=!options&&clean&&!values.includes(clean)&&!found.some(option=>option.value.toLowerCase()===clean.toLowerCase())?[{value:clean,label:`Add “${clean}”`},...found]:found
   const full=values.length>=max
   function add(value:string){
     const clean=value.trim().replace(/\s+/g,' ')
@@ -31,13 +34,13 @@ export function TagSelect({label,values,onChange,options,suggestions=[],max=25,p
     <div className="tag-select-box" onClick={()=>input.current?.focus()}>
       {values.map(value=><span key={value} className="tag-chip">{labelOf(value)}<button type="button" aria-label={`Remove ${labelOf(value)} from ${label}`} onClick={event=>{event.stopPropagation();remove(value)}}>×</button></span>)}
       <input ref={input} role="combobox" aria-label={label} aria-expanded={open&&matches.length>0} aria-controls={listId} aria-autocomplete="list" aria-describedby={describedBy}
-        aria-activedescendant={open&&matches[active]?`${listId}-${active}`:undefined} value={query} disabled={full} placeholder={full?`Up to ${max}`:values.length?'':placeholder??(options?'Search…':'Type and press Enter')}
+        aria-activedescendant={open&&matches[active]?`${listId}-${active}`:undefined} value={query} disabled={full} placeholder={full?`Up to ${max}`:values.length?'':placeholder??(options?'Search…':suggestions.length?'Type anything, or pick a suggestion':'Type and press Enter')}
         onFocus={()=>setOpen(true)} onBlur={()=>{setOpen(false);if(!options&&query.trim())add(query)}}
         onChange={event=>{const text=event.target.value;if(!options&&text.includes(',')&&!/\d,\d/.test(text)){text.split(',').forEach(add);return}setQuery(text);setOpen(true);setActive(0)}}
         onKeyDown={event=>{
           if(event.key==='ArrowDown'){event.preventDefault();setOpen(true);setActive(index=>Math.min(index+1,matches.length-1))}
           else if(event.key==='ArrowUp'){event.preventDefault();setActive(index=>Math.max(index-1,0))}
-          else if(event.key==='Enter'){event.preventDefault();if(open&&matches[active]&&(options||typed&&matches[active].label.toLowerCase().startsWith(typed)))add(matches[active].value);else if(!options)add(query)}
+          else if(event.key==='Enter'){event.preventDefault();if(open&&matches[active])add(matches[active].value);else if(!options)add(query)}
           else if(event.key==='Escape'){setOpen(false)}
           else if(event.key==='Backspace'&&!query&&values.length)remove(values[values.length-1])
         }}/>

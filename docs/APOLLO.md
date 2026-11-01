@@ -124,9 +124,26 @@ Several accounts can be configured, for example separate teams or paid plans. Yo
 - **Hide saved results:** "Hide people already in LeadFlow" (or companies) on the results table removes anyone already saved.
 - **Website column:** people search doesn't return a website. The company website appears after a reveal (Apollo's company domain) and is saved on the lead.
 
+## Search sessions
+
+- Each distinct set of filters you search becomes a session in **Your searches**, above the results, with its filters, match count and time. Up to 12 are kept on this device, per workspace and per tab (people or companies), until cleared.
+- Opening a session loads its filters and its saved results page without calling Apollo. Only a page never fetched before goes to Apollo; for company search, after the 1-credit confirmation.
+- **Clear results** removes the current session from the list. **Clear all searches** removes them all. Clearing affects only the list on this device: saved result pages stay in the database (90 days), so the same search later is still free.
+- Returning to the Apollo tab reopens the most recent session.
+
+## Export this search
+
+**Export this search** fetches every page of the current search, 100 per page, and saves one CSV in the same format as *Export everything found*: Apollo IDs and any revealed details.
+- **How many:** you choose the first 500, 1,000, 5,000, 10,000 or 25,000, or all. Apollo returns at most the first 50,000 matches of any search, so a search with more can't be exported in full.
+- **Cost:** people search uses no credits. Company search uses 1 credit per page not already saved, and the dialog shows the maximum.
+- **Pace:** about 40 pages a minute, under Apollo's free-plan limit of 50 a minute. Saved pages are reused instantly.
+- **Rate limits:** when Apollo says its hourly limit (200 pages on the free plan) or daily limit (600) is reached, the export waits the time Apollo gives and continues. All 50,000 people (500 pages) therefore takes over two hours, and most of a day's allowance for the whole Apollo account.
+- **Stopping:** **Stop and download what's collected** ends it at any time and still produces the file. Keep the tab open while it runs.
+- **Not yet tested:** the rate-limit wait and the stop button have not been run end to end in a browser test; the page loop, the file contents and the free reuse of saved pages have.
+
 ## Export, and reopening an export
 
-- **Export all found (CSV)**, on Find people or Find companies (migration `202611010004`):
+- **Export everything found** (formerly "Export all found"), on Find people or Find companies (migration `202611010004`):
   - It exports every person or company Apollo has found in this workspace, once each, taken from the saved result pages.
   - For people, it adds every revealed email and phone, including people whose result pages have expired.
   - People columns: Apollo person ID, name, title, company, company domain, email, email status, phone and type, LinkedIn, city, state and country, when the email and phone were revealed, whether Apollo has an email or direct phone, whether the person is already in LeadFlow, and Apollo's update date.

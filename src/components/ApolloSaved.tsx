@@ -1,14 +1,10 @@
 import { useEffect, useState } from 'react'
 import type { WorkspaceSummary } from '../lib/backend'
-import { deleteSearch, filtersFor, savedSearches, type FilterValues, type SavedSearch, type SearchKind } from '../lib/apollo'
-import { describeValue } from '../lib/apolloFilters'
+import { deleteSearch, savedSearches, type FilterValues, type SavedSearch, type SearchKind } from '../lib/apollo'
+import { summarize } from '../lib/apolloFilters'
 import { discoveryHistory, failureLabels, type HistoryItem } from '../lib/discovery'
 import { dateLabel } from '../lib/format'
 const kindOf = (provider: string): SearchKind | null => provider === 'apollo_people' ? 'people' : provider === 'apollo_organizations' ? 'organizations' : null
-/** "Job titles: owner · Seniority: Founder" */
-function summarize(kind: SearchKind, filters: FilterValues) {
-  return filtersFor(kind).filter(definition => filters[definition.key] !== undefined).map(definition => `${definition.label}: ${describeValue(definition, filters[definition.key])}`).join(' · ') || 'No filters'
-}
 interface SavedProps { workspace: WorkspaceSummary; refreshKey: number; onUse: (kind: SearchKind, filters: FilterValues, accountId?: string) => void }
 /** Saved filter sets and recent Apollo searches in this workspace, each of which can be run again. */
 export function ApolloSaved({workspace,refreshKey,onUse}:SavedProps){

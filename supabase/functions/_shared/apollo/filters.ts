@@ -34,7 +34,26 @@ const industries = ['accounting', 'architecture & planning', 'automotive', 'comp
   'financial services', 'health, wellness & fitness', 'hospital & health care', 'hospitality', 'information technology & services', 'insurance', 'internet', 'law practice',
   'legal services', 'management consulting', 'marketing & advertising', 'medical practice', 'real estate', 'restaurants', 'retail', 'staffing & recruiting', 'e-learning']
 const technologies = ['salesforce', 'hubspot', 'wordpress_org', 'shopify', 'google_analytics', 'google_tag_manager', 'mailchimp', 'stripe', 'zendesk', 'intercom', 'wix', 'squarespace']
-const locations = ['United States', 'United Kingdom', 'Australia', 'California, US', 'Texas, US', 'New York, US', 'London, United Kingdom', 'Sydney, Australia']
+// Suggestions only: Apollo accepts any city, state, region or country as free text, and has no endpoint listing them all.
+const countries = ['United States', 'United Kingdom', 'Canada', 'Australia', 'New Zealand', 'Ireland', 'Germany', 'France', 'Netherlands', 'Belgium', 'Spain', 'Portugal', 'Italy',
+  'Switzerland', 'Austria', 'Sweden', 'Norway', 'Denmark', 'Finland', 'Poland', 'Czech Republic', 'Greece', 'Turkey', 'Israel', 'United Arab Emirates', 'Saudi Arabia', 'Qatar',
+  'Egypt', 'South Africa', 'Nigeria', 'Kenya', 'India', 'Pakistan', 'Bangladesh', 'Sri Lanka', 'Singapore', 'Malaysia', 'Indonesia', 'Philippines', 'Thailand', 'Vietnam', 'Japan',
+  'South Korea', 'China', 'Hong Kong', 'Taiwan', 'Mexico', 'Brazil', 'Argentina', 'Chile', 'Colombia', 'Peru']
+const usStates = ['Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado', 'Connecticut', 'Delaware', 'Florida', 'Georgia', 'Hawaii', 'Idaho', 'Illinois', 'Indiana',
+  'Iowa', 'Kansas', 'Kentucky', 'Louisiana', 'Maine', 'Maryland', 'Massachusetts', 'Michigan', 'Minnesota', 'Mississippi', 'Missouri', 'Montana', 'Nebraska', 'Nevada',
+  'New Hampshire', 'New Jersey', 'New Mexico', 'New York', 'North Carolina', 'North Dakota', 'Ohio', 'Oklahoma', 'Oregon', 'Pennsylvania', 'Rhode Island', 'South Carolina',
+  'South Dakota', 'Tennessee', 'Texas', 'Utah', 'Vermont', 'Virginia', 'Washington', 'West Virginia', 'Wisconsin', 'Wyoming', 'District of Columbia'].map(state => `${state}, US`)
+const regions = [...['England', 'Scotland', 'Wales', 'Northern Ireland'].map(region => `${region}, United Kingdom`),
+  ...['New South Wales', 'Victoria', 'Queensland', 'Western Australia', 'South Australia', 'Tasmania', 'Australian Capital Territory', 'Northern Territory'].map(region => `${region}, Australia`),
+  ...['Ontario', 'Quebec', 'British Columbia', 'Alberta', 'Manitoba', 'Saskatchewan', 'Nova Scotia', 'New Brunswick'].map(region => `${region}, Canada`)]
+const cities = ['New York City, US', 'Los Angeles, US', 'Chicago, US', 'Houston, US', 'Dallas, US', 'Austin, US', 'San Antonio, US', 'Phoenix, US', 'San Diego, US', 'San Francisco, US',
+  'San Jose, US', 'Seattle, US', 'Denver, US', 'Miami, US', 'Atlanta, US', 'Boston, US', 'Philadelphia, US', 'Washington, US', 'Nashville, US', 'Charlotte, US', 'Minneapolis, US',
+  'Las Vegas, US', 'Portland, US', 'London, United Kingdom', 'Manchester, United Kingdom', 'Birmingham, United Kingdom', 'Leeds, United Kingdom', 'Glasgow, United Kingdom',
+  'Edinburgh, United Kingdom', 'Bristol, United Kingdom', 'Liverpool, United Kingdom', 'Sydney, Australia', 'Melbourne, Australia', 'Brisbane, Australia', 'Perth, Australia',
+  'Adelaide, Australia', 'Toronto, Canada', 'Vancouver, Canada', 'Montreal, Canada', 'Calgary, Canada', 'Dublin, Ireland', 'Auckland, New Zealand', 'Dubai, United Arab Emirates',
+  'Singapore, Singapore', 'Berlin, Germany', 'Paris, France', 'Amsterdam, Netherlands', 'Madrid, Spain', 'Karachi, Pakistan', 'Lahore, Pakistan', 'Islamabad, Pakistan',
+  'Mumbai, India', 'Bangalore, India', 'Delhi, India']
+const locations = [...countries, ...usStates, ...regions, ...cities]
 
 const shared = {
   domains: { key: 'domains', param: 'q_organization_domains_list', label: 'Company domains', help: 'Company website domains without www, such as apollo.io.', group: 'Company', type: 'list', max: 100 },
