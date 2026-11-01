@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test'
+import { readFile } from 'node:fs/promises'
 import type { PGlite } from '@electric-sql/pglite'
 import { createDatabase } from './support/database'
 import { createApolloHarness, demoPeople } from './support/apollo'
@@ -106,6 +107,27 @@ test('saves and reuses filters, runs a company search only after confirming the 
  await page.getByRole('button',{name:'Save these filters'}).click()
  await page.getByRole('dialog',{name:'Save these filters'}).getByLabel('Name').fill('Owners')
  await page.getByRole('dialog',{name:'Save these filters'}).getByRole('button',{name:'Save'}).click()
+ // Search, export everything found, then open the export again and reveal the rest without searching.
+ await page.getByRole('button',{name:'Search people'}).click()
+ await expect(page.getByRole('heading',{name:'3 people found'})).toBeVisible()
+ const download=page.waitForEvent('download')
+ await page.getByRole('button',{name:'Export all found (CSV)'}).click()
+ const file=await download
+ const text=(await readFile(await file.path(),'utf8')).replace(/^\uFEFF/,'')
+ expect(text.split('\r\n')[0]).toContain('Apollo person ID,Name,Title,Company')
+ expect(text).toContain('Avery St***e')
+ await expect(page.locator('.dv-summary')).toContainText('Exported 3 people, 0 with revealed contact details.')
+ const searches=harness.state.calls.length
+ await page.getByLabel('Open a LeadFlow Apollo export').setInputFiles({name:'my-apollo-leads.csv',mimeType:'text/csv',buffer:Buffer.from(text)})
+ await expect(page.getByText('Showing 3 people from my-apollo-leads.csv. No search was run and no credits were used.')).toBeVisible()
+ expect(harness.state.calls.length).toBe(searches)
+ await page.getByRole('button',{name:'Select not yet revealed'}).click()
+ await page.getByRole('button',{name:'Reveal contact details'}).click()
+ await page.getByRole('dialog',{name:'Reveal 3 people?'}).getByRole('button',{name:'Reveal for up to 3 credits'}).click()
+ await expect(page.locator('.dv-summary')).toContainText('Revealed 3 of 3 · 3 credits used.')
+ await expect(row(page,'Avery Stone')).toContainText('harbor-dental.example')
+ await page.getByRole('button',{name:'Select not yet revealed'}).click()
+ await expect(page.getByRole('button',{name:'Reveal contact details'})).toHaveCount(0)
  await page.getByRole('tab',{name:'Saved & recent'}).click()
  await expect(page.locator('.ap-saved li',{hasText:'Owners'})).toContainText('Job titles: owner')
  await page.locator('.ap-saved li',{hasText:'Owners'}).getByRole('button',{name:'Use filters'}).click()
@@ -120,7 +142,16 @@ test('saves and reuses filters, runs a company search only after confirming the 
  await page.getByRole('button',{name:'Search companies'}).click();await page.getByRole('button',{name:'Use 1 credit and search'}).click()
  await expect(page.getByRole('heading',{name:'1 company found'})).toBeVisible()
  await expect(row(page,'Harbor Dental')).toContainText('+15125550100')
- await expect(page.locator('.ap-remaining')).toHaveText('69 / 70 credits left')
+ await expect(page.locator('.ap-remaining')).toHaveText('66 / 70 credits left')
+ // Leaving and coming back shows the same page from saved results, without another credit.
+ const callsBefore=harness.state.calls.length
+ await page.getByRole('tab',{name:'Find people'}).click();await page.getByRole('tab',{name:'Find companies'}).click()
+ await expect(page.getByText(/Saved results from .* No credits used./)).toBeVisible()
+ await expect(row(page,'Harbor Dental')).toBeVisible()
+ await page.getByRole('button',{name:'Search companies'}).click()
+ await expect(page.getByRole('dialog',{name:'Use 1 credit for this page?'})).toHaveCount(0)
+ expect(harness.state.calls.length).toBe(callsBefore)
+ await expect(page.locator('.ap-remaining')).toHaveText('66 / 70 credits left')
  await page.setViewportSize({width:390,height:844})
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true)
  await page.getByRole('tab',{name:'Credits & accounts'}).click()

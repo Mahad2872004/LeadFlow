@@ -145,7 +145,7 @@ test('imports a CSV file with column mapping, row validation, duplicate review a
  await expect(page.locator('.dv-summary')).toContainText('4 leads imported from expo-leads.csv. 3 rows weren’t imported.')
  const download=page.waitForEvent('download')
  await page.getByRole('button',{name:'Download rows not imported'}).click()
- const file=await readFile(await (await download).path(),'utf8')
+ const file=(await readFile(await (await download).path(),'utf8')).replace(/^\uFEFF/,'')
  expect(file.split('\r\n')[0]).toBe('Company,Contact,E-mail,Website,City,Country,Notes,LeadFlow issue')
  expect(file).toContain('Bad Email Ltd');expect(file).toContain('Same email as an existing lead')
  await page.getByRole('button',{name:'Leads',exact:true}).click()

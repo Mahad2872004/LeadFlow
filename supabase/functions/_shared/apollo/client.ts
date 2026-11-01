@@ -4,21 +4,29 @@
 import { buildQuery, type FilterValues, type SearchKind } from './filters.ts'
 export const apolloBase = 'https://api.apollo.io/api/v1'
 export interface ApolloAccountKey { id: string; key: string }
+// Quotes and spaces often come along when a secret is pasted into a shell; they are never part of a key.
+const unquote = (value: string) => value.trim().replace(/^["']+|["']+$/g, '').trim()
+const validKey = (key: string) => /^[\x21-\x7e]{8,300}$/.test(key) && !/[,"']/.test(key)
 /**
  * Accounts configured for this deployment: APOLLO_API_KEYS="primary:KEY,client-b:KEY2", or APOLLO_API_KEY=KEY for one
- * account called "default". Labels are lowercase letters, numbers, - and _.
+ * account called "default". An entry without a label (just the key) is also read as "default". Labels are letters,
+ * numbers, - and _, and are lowercased.
  */
 export function configuredAccounts(env: (name: string) => string | undefined): ApolloAccountKey[] {
   const accounts: ApolloAccountKey[] = []
-  for (const entry of (env('APOLLO_API_KEYS') ?? '').split(',').map(item => item.trim()).filter(Boolean)) {
-    const separator = entry.indexOf(':')
-    const id = entry.slice(0, separator).trim().toLowerCase(), key = entry.slice(separator + 1).trim()
-    if (separator > 0 && /^[a-z0-9][a-z0-9_-]{0,39}$/.test(id) && /^[A-Za-z0-9_-]{8,200}$/.test(key) && !accounts.some(account => account.id === id)) accounts.push({ id, key })
+  const add = (id: string, key: string) => { if (validKey(key) && !accounts.some(account => account.id === id)) accounts.push({ id, key }) }
+  for (const entry of unquote(env('APOLLO_API_KEYS') ?? '').split(',').map(unquote).filter(Boolean)) {
+    const separator = entry.indexOf(':'), label = entry.slice(0, separator).trim()
+    if (separator > 0 && /^[A-Za-z0-9][A-Za-z0-9_-]{0,39}$/.test(label)) add(label.toLowerCase(), unquote(entry.slice(separator + 1)))
+    else add('default', entry)
   }
-  const single = (env('APOLLO_API_KEY') ?? '').trim()
-  if (single && /^[A-Za-z0-9_-]{8,200}$/.test(single) && !accounts.some(account => account.id === 'default')) accounts.push({ id: 'default', key: single })
+  const single = unquote(env('APOLLO_API_KEY') ?? '')
+  if (single) add('default', single)
   return accounts
 }
+/** True when a key secret is set but no account could be read from it, so the user can be told to fix its format. */
+export const unreadableKeys = (env: (name: string) => string | undefined) =>
+  !configuredAccounts(env).length && !!(unquote(env('APOLLO_API_KEYS') ?? '') || unquote(env('APOLLO_API_KEY') ?? ''))
 
 export type ApolloFailure = 'unauthorized' | 'forbidden' | 'plan' | 'rate_limited' | 'invalid' | 'unavailable' | 'timeout' | 'ambiguous'
 /** A failed Apollo call. `charged` is true when Apollo may have performed the work (a timeout after sending). */
@@ -128,6 +136,12 @@ export interface RevealedContact {
   organizationName: string; organizationDomain: string; city: string; state: string; country: string
 }
 export interface RevealResult { contacts: RevealedContact[]; unmatched: string[]; creditsConsumed: number | null; requestId: string | null }
+/** The most complete name Apollo returned: `name` can be abbreviated ("Jennifer L") while first_name and last_name are whole. */
+export function fullName(person: Record<string, unknown>) {
+  const parts = [text(person.first_name, 75), text(person.last_name, 75)].filter(Boolean).join(' '), whole = text(person.name, 150)
+  const letters = (value: string) => value.replace(/[^p{L}]/gu, '').length
+  return letters(parts) > letters(whole) ? parts : whole || parts
+}
 const phonesOf = (value: unknown): Phone[] => (Array.isArray(value) ? value : []).flatMap(raw => {
   const phone = raw as Record<string, unknown>, number = text(phone.sanitized_number, 30) || text(phone.raw_number, 30)
   return number ? [{ number, type: text(phone.type_cd ?? phone.type, 40), status: text(phone.status_cd ?? phone.status, 40) }] : []
@@ -149,7 +163,7 @@ export async function revealPeople(fetcher: Fetch, account: ApolloAccountKey, pe
     if (typeof person.id !== 'string' || !personIds.includes(person.id)) return
     found.add(person.id)
     const email = text(person.email, 150).toLowerCase()
-    contacts.push({ id: person.id, name: text(person.name, 150) || [text(person.first_name, 75), text(person.last_name, 75)].filter(Boolean).join(' '), title: text(person.title, 200),
+    contacts.push({ id: person.id, name: fullName(person), title: text(person.title, 200),
       email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && !/^email_not_unlocked@/.test(email) ? email : '', emailStatus: text(person.email_status, 40),
       phones: phonesOf(contact.phone_numbers ?? person.phone_numbers), linkedinUrl: /^https?:\/\//.test(text(person.linkedin_url)) ? text(person.linkedin_url) : '',
       organizationName: text(organization.name, 150), organizationDomain: text(organization.primary_domain, 150), city: text(person.city, 100), state: text(person.state, 100), country: text(person.country, 100) })

@@ -128,7 +128,9 @@ Details, setup and limitations: [docs/LEAD-DISCOVERY.md](docs/LEAD-DISCOVERY.md)
 
 Setup, endpoints, limits and security: [docs/APOLLO.md](docs/APOLLO.md).
 
-**Next:** set `APOLLO_API_KEYS` and `APOLLO_WORKSPACE_IDS`, deploy the frontend, then run a real test connection, search and one reveal to confirm free-plan access.
+**Setup status (1 November 2026):** `APOLLO_API_KEYS` and `APOLLO_WORKSPACE_IDS` are set. People search was confirmed live on the Free account (work email): 1,768,393 results for an owner/founder search. Reveals and company search on Free are not yet confirmed.
+
+**Next:** push the frontend; add local addresses to `DISCOVERY_ALLOWED_ORIGINS` to test locally; then reveal one person (1 credit) to confirm reveals on this plan. See the troubleshooting table in [docs/APOLLO.md](docs/APOLLO.md#troubleshooting).
 
 ## M7 — Production readiness and controlled beta
 

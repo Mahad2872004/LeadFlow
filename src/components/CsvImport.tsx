@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import type { WorkspaceSummary } from '../lib/backend'
-import { guessMapping, importFields, maxCsvBytes, maxCsvRows, parseCsv, prepareRows, toCsv, type ColumnMapping, type ImportField, type PreparedRow } from '../lib/csv'
+import { downloadCsv, guessMapping, importFields, maxCsvBytes, maxCsvRows, parseCsv, prepareRows, toCsv, type ColumnMapping, type ImportField, type PreparedRow } from '../lib/csv'
 import { duplicateIndex, importLeads, reasonLabels, type DuplicateMatch, type ImportResult, type ImportRow, type LeadOrigin } from '../lib/discovery'
 import type { Lead } from '../lib/model'
 import { Icon } from './Icon'
@@ -12,13 +12,6 @@ const statusOf = (row: Reviewed): Status => !row.row ? 'invalid' : !row.match ? 
 const statusLabels: Record<Status, string> = { ready: 'Ready', review: 'Possible duplicate', existing: 'Already in LeadFlow', invalid: 'Needs fixing' }
 const template = toCsv([['Business name', 'Contact name', 'Email', 'Phone', 'Website', 'Industry', 'Address', 'City', 'State or region', 'Postcode', 'Country', 'Notes'],
   ['Example Dental', 'Jordan Lee', 'hello@dental.example', '+1 512 555 0100', 'https://dental.example', 'Dental clinics', '12 Main St', 'Austin', 'TX', '78701', 'US', 'Fictional example row']])
-/** Lets the user save a generated CSV. Only files LeadFlow built from the user's own data are offered. */
-function download(name: string, csv: string) {
-  const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }))
-  const link = Object.assign(document.createElement('a'), { href: url, download: name })
-  document.body.append(link); link.click(); link.remove()
-  window.setTimeout(() => URL.revokeObjectURL(url), 1000)
-}
 interface CsvProps { workspace: WorkspaceSummary; leads: Lead[]; origins: LeadOrigin[]; blocked: boolean; onImported: (message: string) => Promise<void> }
 /** Upload → map columns → review every row → import in idempotent batches → summary with a file of rows not imported. */
 export function CsvImport({workspace,leads,origins,blocked,onImported}:CsvProps){
@@ -75,7 +68,7 @@ export function CsvImport({workspace,leads,origins,blocked,onImported}:CsvProps)
     ...serverSkipped.map(item=>[reviewed.find(row=>row.row?.key===item.key)!,reasonLabels[item.reason]] as const).filter(([row])=>row)]:[]
   return <section className="panel dv-csv" aria-labelledby="dv-csv-title">
     <div className="section-heading"><div><h2 id="dv-csv-title">Import leads from a CSV file</h2><p>Bring in a list from a spreadsheet, another CRM or an event. You’ll check every row before anything is added.</p></div>
-      <button className="text-button" onClick={()=>download('leadflow-import-template.csv',template)}>Download a template</button></div>
+      <button className="text-button" onClick={()=>downloadCsv('leadflow-import-template.csv',template)}>Download a template</button></div>
     <ol className="dv-steps" aria-label="Import progress">{steps.map((label,index)=><li key={label} className={index<current?'done':index===current?'current':''} aria-current={index===current?'step':undefined}><span>{index<current?'✓':index+1}</span>{label}</li>)}</ol>
 
     {step==='upload'&&<div className="dv-csv-body">
@@ -114,7 +107,7 @@ export function CsvImport({workspace,leads,origins,blocked,onImported}:CsvProps)
       <div className="dv-summary" role="status"><strong>{results.reduce((total,result)=>total+result.imported.length,0)} leads imported from {parsed?.name}.</strong> {notImported.length?`${notImported.length} rows weren’t imported.`:'Every row was imported.'}</div>
       {notImported.length>0&&<><ul className="dv-skipped">{notImported.slice(0,8).map(([row,reason])=><li key={row.line}><span className="muted">Row {row.line}</span> {row.row?.businessName||row.row?.contactName||'Unnamed row'} — {reason}</li>)}</ul>
         {notImported.length>8&&<p className="muted">…and {notImported.length-8} more in the file below.</p>}</>}
-      <div className="modal-actions dv-done-actions">{notImported.length>0&&parsed&&<button className="secondary" onClick={()=>download(parsed.name.replace(/\.csv$/i,'')+'-not-imported.csv',toCsv([[...parsed.headers,'LeadFlow issue'],...notImported.map(([row,reason])=>[...row.values,reason])]))}>Download rows not imported</button>}<button className="primary" onClick={reset}>Import another file</button></div>
+      <div className="modal-actions dv-done-actions">{notImported.length>0&&parsed&&<button className="secondary" onClick={()=>downloadCsv(parsed.name.replace(/\.csv$/i,'')+'-not-imported.csv',toCsv([[...parsed.headers,'LeadFlow issue'],...notImported.map(([row,reason])=>[...row.values,reason])]))}>Download rows not imported</button>}<button className="primary" onClick={reset}>Import another file</button></div>
     </div>}
   </section>
 }

@@ -97,3 +97,11 @@ export function prepareRows(records: string[][], mapping: ColumnMapping): Prepar
     return { line, values, row: errors.length ? null : row, errors }
   })
 }
+
+/** Saves a CSV file LeadFlow built from the user's own data. */
+export function downloadCsv(name: string, content: string) {
+  const url = URL.createObjectURL(new Blob(['\uFEFF' + content], { type: 'text/csv;charset=utf-8' }))
+  const link = Object.assign(document.createElement('a'), { href: url, download: name })
+  document.body.append(link); link.click(); link.remove()
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000)
+}

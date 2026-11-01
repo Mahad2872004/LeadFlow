@@ -111,3 +111,5 @@
   .dv-actionbar .ap-bar-secondary{margin-left:0}
   .ap-column-list{grid-template-columns:1fr}
 }
+.ap-head-actions{display:flex;gap:6px 16px;flex-wrap:wrap;justify-content:flex-end;align-items:center}
+.ap-saved-note{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:0 24px 14px;padding:9px 12px;border-radius:8px;background:#f3f6fa;color:#355782;font-size:12px}

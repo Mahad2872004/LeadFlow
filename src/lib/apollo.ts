@@ -13,13 +13,14 @@ export interface ApolloAccount {
   lastConnectedAt: string | null; lastConnectionError: string | null; lastSyncedAt: string | null; synced: Record<string, CreditStat> | null
   cycleStart: string; cycleEnd: string; cycleSource: 'apollo' | 'reset_day'; used: number; usedEmail: number; usedPhone: number; usedSearch: number; pending: number
 }
-export interface ApolloStatus { enabled: boolean; reason: 'no_accounts' | 'workspace_not_enabled' | null; role: string; phoneReveal: boolean; accounts: ApolloAccount[] }
-export interface ResultPage<T> { kind: SearchKind; accountId: string; searchId: string | null; fetchedAt: string; filters: FilterValues; items: T[]; page: number; perPage: number; total: number; totalPages: number }
+export interface ApolloStatus { enabled: boolean; reason: 'no_accounts' | 'keys_unreadable' | 'workspace_not_enabled' | null; role: string; phoneReveal: boolean; accounts: ApolloAccount[] }
+/** saved: answered from LeadFlow's saved pages (no credits). missing: a savedOnly request with nothing saved. */
+export interface ResultPage<T> { kind: SearchKind; accountId: string; searchId: string | null; fetchedAt: string; filters: FilterValues; items: T[]; page: number; perPage: number; total: number; totalPages: number; saved?: boolean; missing?: boolean; fromFile?: string }
 export interface Contact {
   id: string; name: string; title: string; email: string; emailStatus: string; phones: Phone[]; linkedinUrl: string; organizationName: string; organizationDomain: string
   city: string; state: string; country: string; accountId?: string | null; emailRevealedAt?: string | null; phoneRequestedAt?: string | null; phoneRevealedAt?: string | null
 }
-export interface RevealOutcome { contacts: Contact[]; unmatched?: string[]; credits?: number; creditBasis?: 'reported' | 'documented'; phonePending?: boolean; replayed?: boolean; status?: string }
+export interface RevealOutcome { contacts: Contact[]; alreadyRevealed?: string[]; unmatched?: string[]; credits?: number; creditBasis?: 'reported' | 'documented'; phonePending?: boolean; replayed?: boolean; status?: string }
 export interface LedgerEntry {
   id: string; accountId: string; operation: 'email_reveal' | 'phone_reveal' | 'organization_search'; status: 'pending' | 'succeeded' | 'no_match' | 'failed' | 'unknown'
   estimatedCredits: number; credits: number | null; creditBasis: 'reported' | 'documented' | 'estimated'; reference: string | null; error: string | null
@@ -53,7 +54,7 @@ async function invoke<T>(workspaceId: string, body: Record<string, unknown>, tim
   return result as T
 }
 export const apolloStatus = (workspaceId: string) => invoke<ApolloStatus>(workspaceId, { action: 'status' }, 20000)
-export function apolloSearch<K extends SearchKind>(workspaceId: string, request: { kind: K; accountId: string; filters: FilterValues; page: number; perPage: number; searchId?: string; operationId?: string; confirmCredits?: boolean }) {
+export function apolloSearch<K extends SearchKind>(workspaceId: string, request: { kind: K; accountId: string; filters: FilterValues; page: number; perPage: number; searchId?: string; operationId?: string; confirmCredits?: boolean; refresh?: boolean; savedOnly?: boolean }) {
   return invoke<ResultPage<K extends 'people' ? PersonResult : OrganizationResult>>(workspaceId, { action: 'search', ...request }, 60000)
 }
 /** Up to 10 people. Reusing the operation ID after a failure returns the stored outcome without charging again. */
@@ -93,7 +94,7 @@ const clip = (value: string, max: number) => value.trim().slice(0, max)
 /** A lead row for import_leads. Only details Apollo returned or the user revealed are included. */
 export function personRow(person: PersonResult, contact: Contact | undefined, discoveredAt: string): ImportRow & { providerRef: string } {
   const domain = contact?.organizationDomain || ''
-  const notes = [person.title && `Title: ${person.title}`, contact?.linkedinUrl && `LinkedIn: ${contact.linkedinUrl}`, `Apollo person ID: ${person.id}`].filter(Boolean).join('\n')
+  const notes = [person.title && `Title: ${person.title}`, contact?.emailStatus && contact.email && `Email status (Apollo): ${contact.emailStatus}`, contact?.linkedinUrl && `LinkedIn: ${contact.linkedinUrl}`, `Apollo person ID: ${person.id}`].filter(Boolean).join('\n')
   return { key: `person:${person.id}`, providerRef: `person:${person.id}`, businessName: clip(contact?.organizationName || person.organizationName, 150), contactName: clip(contact?.name || person.name, 150),
     email: contact?.email ?? '', phone: contact?.phones.find(phone => /^[+\d\s().-]{7,25}$/.test(phone.number))?.number ?? '', website: domain && /^[a-z0-9.-]+\.[a-z]{2,}$/i.test(domain) ? `https://${domain}` : '',
     industry: '', address: '', city: clip(contact?.city ?? '', 100), region: clip(contact?.state ?? '', 100), postcode: '', country: countryCodes[(contact?.country ?? '').toLowerCase()] ?? '', notes, discoveredAt }
@@ -103,4 +104,14 @@ export function organizationRow(org: OrganizationResult, discoveredAt: string): 
   const notes = [org.linkedinUrl && `LinkedIn: ${org.linkedinUrl}`, org.foundedYear && `Founded: ${org.foundedYear}`, `Apollo organization ID: ${org.id}`].filter(Boolean).join('\n')
   return { key: `org:${org.id}`, providerRef: `org:${org.id}`, businessName: clip(org.name, 150), contactName: '', email: '', phone: /^[+\d\s().-]{7,25}$/.test(org.phone) ? org.phone : '',
     website: website.length <= 300 ? website : '', industry: '', address: '', city: '', region: '', postcode: '', country: '', notes, discoveredAt }
+}
+
+/** Everything Apollo found for this workspace (saved result pages) and every revealed contact, for export. */
+export const apolloExport = (workspaceId: string, kind: SearchKind) =>
+  invoke<{ items: (PersonResult | OrganizationResult)[]; contacts: Contact[]; limit: number }>(workspaceId, { action: 'export', kind }, 90000)
+/** Revealed details for any number of people, 200 per request. */
+export async function contactsForMany(workspaceId: string, personIds: string[]) {
+  const found: Contact[] = []
+  for (let index = 0; index < personIds.length; index += 200) found.push(...await contactsFor(workspaceId, personIds.slice(index, index + 200)))
+  return found
 }

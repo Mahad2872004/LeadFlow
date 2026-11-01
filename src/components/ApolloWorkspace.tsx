@@ -59,9 +59,9 @@ export function ApolloWorkspace({workspace,leads,origins,blocked,onImported}:Wor
 function NotEnabled({reason,canManage,workspaceId}:{reason:ApolloStatus['reason'];canManage:boolean;workspaceId:string}){
   return <section className="panel dv-setup" aria-labelledby="ap-setup-title"><div className="dv-setup-copy">
     <p className="eyebrow">APOLLO NOT CONNECTED</p>
-    <h2 id="ap-setup-title">{reason==='no_accounts'?'No Apollo API key has been added yet':'Apollo isn’t switched on for this workspace'}</h2>
+    <h2 id="ap-setup-title">{reason==='no_accounts'?'No Apollo API key has been added yet':reason==='keys_unreadable'?'The Apollo API key couldn’t be read':'Apollo isn’t switched on for this workspace'}</h2>
     <p>Apollo search and contact reveals run on the server with your own Apollo API key. Until it’s connected, you can still import a CSV file or add businesses yourself.</p>
-    {canManage&&<p className="dv-setup-detail">{reason==='no_accounts'?<>Set the <code>APOLLO_API_KEYS</code> secret for the <code>apollo</code> function, for example <code>primary:YOUR_KEY</code>, and add this workspace to <code>APOLLO_WORKSPACE_IDS</code>.</>
+    {canManage&&<p className="dv-setup-detail">{reason==='keys_unreadable'?<>The <code>APOLLO_API_KEYS</code> secret is set, but no key could be read from it. Set it to <code>primary:YOUR_KEY</code> on one line, with no spaces inside the key, and reload this page.</>:reason==='no_accounts'?<>Set the <code>APOLLO_API_KEYS</code> secret for the <code>apollo</code> function, for example <code>primary:YOUR_KEY</code>, and add this workspace to <code>APOLLO_WORKSPACE_IDS</code>.</>
       :<>Add this workspace’s ID to the <code>APOLLO_WORKSPACE_IDS</code> secret: <code>{workspaceId}</code></>} See the Apollo setup guide (docs/APOLLO.md).</p>}
   </div></section>
 }

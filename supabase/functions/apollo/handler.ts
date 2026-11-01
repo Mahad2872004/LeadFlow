@@ -1,11 +1,13 @@
 import { boundedJson } from '../_shared/request.ts'
 import { rpc, rpcAs, RpcError, type Runtime } from '../_shared/runtime.ts'
-import { ApolloError, configuredAccounts, creditUsage, revealPeople, searchKindProvider, searchOrganizations, searchPeople, testConnection, type ApolloAccountKey } from '../_shared/apollo/client.ts'
+import { ApolloError, configuredAccounts, unreadableKeys, creditUsage, revealPeople, searchKindProvider, searchOrganizations, searchPeople, testConnection, type ApolloAccountKey } from '../_shared/apollo/client.ts'
 import { FilterError, parseFilters, type SearchKind } from '../_shared/apollo/filters.ts'
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 const personId = /^[A-Za-z0-9]{1,40}$/
 /** Apollo's documented cost of a mobile number found by people enrichment, used to reserve credits until Apollo reports the actual figure. */
 export const phoneCreditEstimate = 8
+/** Filters as stable text: keys and list values sorted, so the same search always has the same saved-page key. */
+const canonical = (filters: Record<string, unknown>) => JSON.stringify(Object.keys(filters).sort().map(key => [key, Array.isArray(filters[key]) ? [...filters[key] as string[]].sort() : filters[key]]))
 const sha256Hex = async (value: string) => Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value))), x => x.toString(16).padStart(2, '0')).join('')
 /** The signed-in user's ID from a token the database has already accepted (apollo_member_role ran with it). */
 const subjectOf = (token: string) => { try { return JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))).sub as string } catch { return null } }
@@ -53,7 +55,7 @@ export function createApolloHandler(runtime: Runtime) {
     const log = (detail: string) => console.log(`apollo ${action} ${detail}`)
 
     if (action === 'status') {
-      const reason = !accounts.length ? 'no_accounts' : !enabled ? 'workspace_not_enabled' : null
+      const reason = !accounts.length ? (unreadableKeys(runtime.env) ? 'keys_unreadable' : 'no_accounts') : !enabled ? 'workspace_not_enabled' : null
       let list: unknown[] = []
       try { list = await rpc<unknown[]>(runtime, 'apollo_accounts_status', { configured: accounts.map(account => account.id) }) } catch { return respond(503, { error: 'Apollo account settings couldn’t be loaded.' }) }
       return respond(200, { enabled: !reason, reason, role, phoneReveal, accounts: enabled ? list : [] })
@@ -123,6 +125,18 @@ export function createApolloHandler(runtime: Runtime) {
       if (!Number.isInteger(page) || page < 1 || page > 500 || ![10, 25, 50, 100].includes(perPage) || page * perPage > 50000) return respond(422, { error: 'Apollo shows up to 50,000 results (500 pages of 100).' })
       let filters
       try { filters = parseFilters(kind, body.filters) } catch (error) { if (error instanceof FilterError) return respond(422, { error: error.message }); throw error }
+      // Saved pages: a repeated search, or a page already fetched, is answered from the database for free unless the user
+      // asks to refresh. savedOnly never calls Apollo; it restores the last results when a user comes back to the page.
+      const signature = await sha256Hex(`${kind}|${page}|${perPage}|${canonical(filters)}`)
+      if (body.refresh !== true) {
+        const saved = await rpc<{ result: Record<string, unknown>; fetchedAt: string; accountId: string | null } | null>(runtime, 'apollo_saved_result', { target_workspace: workspaceId, page_signature: signature }).catch(() => null)
+        if (saved?.result) { log(`${account!.id} ${kind} saved page`); return respond(200, { kind, accountId: saved.accountId ?? account!.id, searchId: null, fetchedAt: saved.fetchedAt, filters, ...saved.result, page, perPage, saved: true }) }
+      }
+      if (body.savedOnly === true) return respond(200, { kind, missing: true })
+      // Organization Search costs 1 credit per page, so it needs an operation ID and the user's confirmation. Asked before
+      // anything is recorded, so the confirmed request can reuse the same search ID.
+      const confirmed = body.confirmCredits === true && typeof body.operationId === 'string' && uuid.test(body.operationId)
+      if (kind === 'organizations' && !confirmed) return respond(428, { error: 'Company search uses 1 Apollo credit per page. Confirm to continue.', code: 'confirm_credits' })
       // A new search (page 1 with a search ID) is recorded in history; that also applies the workspace search quotas.
       const searchId = typeof body.searchId === 'string' && uuid.test(body.searchId) ? body.searchId.toLowerCase() : null
       if (searchId) {
@@ -138,8 +152,6 @@ export function createApolloHandler(runtime: Runtime) {
       if (!await paced(account!)) { await finish('failed', null, 'rate_limited'); return respond(429, { error: 'Too many Apollo requests this minute. Try again shortly.', retryAfter: 60 }) }
       let ledger: Ledger | null = null
       if (kind === 'organizations') {
-        // Organization Search costs 1 credit per page, so it needs an operation ID and the user's confirmation.
-        if (body.confirmCredits !== true || typeof body.operationId !== 'string' || !uuid.test(body.operationId)) return respond(428, { error: 'Company search uses 1 Apollo credit per page. Confirm to continue.', code: 'confirm_credits' })
         try {
           ledger = await rpc<Ledger>(runtime, 'apollo_reserve', { account_id: account!.id, target_workspace: workspaceId, operation_id: body.operationId, operation: 'organization_search', estimate: 1,
             subjects: [{ id: `page-${page}`, name: `Company search, page ${page}` }], actor: subjectOf(token), webhook_token_hash: null })
@@ -155,7 +167,9 @@ export function createApolloHandler(runtime: Runtime) {
         if (ledger) await rpc(runtime, 'apollo_settle', { ledger_id: ledger.id, outcome: 'succeeded', credits: 1, basis: 'documented', reference: null, failure: null })
         await finish('completed', result.total, null)
         log(`${account!.id} ${kind} ok`)
-        return respond(200, { kind, accountId: account!.id, searchId, fetchedAt: new Date().toISOString(), filters, ...result })
+        await rpc(runtime, 'apollo_save_result', { target_workspace: workspaceId, page_signature: signature, kind, filters, page, per_page: perPage, account_id: account!.id,
+          result: { items: result.items, total: result.total, totalPages: result.totalPages } }).catch(() => { /* The results are still returned; only reuse is lost. */ })
+        return respond(200, { kind, accountId: account!.id, searchId, fetchedAt: new Date().toISOString(), filters, ...result, saved: false })
       } catch (error) {
         if (ledger) {
           const charged = error instanceof ApolloError && error.charged
@@ -175,6 +189,14 @@ export function createApolloHandler(runtime: Runtime) {
         return respond(422, { error: 'Reveal between 1 and 10 people at a time.' })
       const subjects = [...new Map(people.map(item => [item.id as string, { id: item.id as string, name: (item.name as string).trim() }])).values()]
       const wantPhone = body.phone === true
+      // People already revealed in this workspace (and, for phone lookups, already looked up) are never sent to Apollo again.
+      let known: { id: string; emailRevealedAt?: string | null; phoneRequestedAt?: string | null }[] = []
+      try { known = await rpcAs(runtime, token, 'apollo_contacts_for', { target_workspace: workspaceId, person_ids: subjects.map(subject => subject.id) }) } catch { return respond(503, { error: 'We couldn’t check who is already revealed. Try again.' }) }
+      const requested = subjects.map(subject => subject.id)
+      const done = known.filter(contact => contact.emailRevealedAt && (!wantPhone || contact.phoneRequestedAt))
+      const alreadyRevealed = done.map(contact => contact.id)
+      if (alreadyRevealed.length === subjects.length) return respond(200, { contacts: done, unmatched: [], credits: 0, creditBasis: 'documented', phonePending: false, alreadyRevealed })
+      subjects.splice(0, subjects.length, ...subjects.filter(subject => !alreadyRevealed.includes(subject.id)))
       if (wantPhone && !phoneReveal) return respond(422, { error: 'Phone reveals need an HTTPS webhook address, which this deployment doesn’t have.' })
       const operationId = body.operationId.toLowerCase(), actor = subjectOf(token)
       let email: Ledger, phone: Ledger | null = null, webhookToken = ''
@@ -182,7 +204,7 @@ export function createApolloHandler(runtime: Runtime) {
         email = await rpc<Ledger>(runtime, 'apollo_reserve', { account_id: account!.id, target_workspace: workspaceId, operation_id: operationId, operation: 'email_reveal', estimate: subjects.length, subjects, actor, webhook_token_hash: null })
         if (email.existing) {
           // A retry: report what happened instead of calling Apollo again.
-          const contacts = await rpcAs(runtime, token, 'apollo_contacts_for', { target_workspace: workspaceId, person_ids: subjects.map(subject => subject.id) })
+          const contacts = await rpcAs(runtime, token, 'apollo_contacts_for', { target_workspace: workspaceId, person_ids: requested })
           return respond(email.status === 'pending' ? 409 : 200, { replayed: true, status: email.status, contacts, error: email.status === 'pending' ? 'This reveal is still being processed.' : email.error })
         }
         if (wantPhone) {
@@ -217,7 +239,7 @@ export function createApolloHandler(runtime: Runtime) {
           else await rpc(runtime, 'apollo_settle', { ledger_id: phone.id, outcome: 'pending', credits: null, basis: 'estimated', reference: result.requestId, failure: null })
         }
         log(`${account!.id} ok matched ${matched}/${subjects.length}${phone ? ' phone pending' : ''}`)
-        return respond(200, { contacts: result.contacts, unmatched: result.unmatched, credits: result.creditsConsumed ?? matched, creditBasis: result.creditsConsumed === null ? 'documented' : 'reported',
+        return respond(200, { contacts: [...result.contacts, ...done], alreadyRevealed, unmatched: result.unmatched, credits: result.creditsConsumed ?? matched, creditBasis: result.creditsConsumed === null ? 'documented' : 'reported',
           phonePending: !!phone && matched > 0 })
       } catch (error) {
         const charged = error instanceof ApolloError && error.charged
@@ -227,6 +249,15 @@ export function createApolloHandler(runtime: Runtime) {
       }
     }
 
+    if (action === 'export') {
+      const kind: SearchKind | null = body.kind === 'people' || body.kind === 'organizations' ? body.kind : null
+      if (!kind) return respond(400, { error: 'Choose people or companies.' })
+      try {
+        const found = await rpc<{ items: unknown[]; contacts: unknown[] }>(runtime, 'apollo_export', { target_workspace: workspaceId, kind, max_items: 20000 })
+        log(`${kind} ${found.items.length} items`)
+        return respond(200, { kind, ...found, limit: 20000 })
+      } catch { return respond(503, { error: 'The export couldn’t be prepared. Try again.' }) }
+    }
     if (action === 'save') {
       if (needAccount()) return needAccount()!
       const kind: SearchKind | null = body.kind === 'people' || body.kind === 'organizations' ? body.kind : null
