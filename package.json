@@ -19,7 +19,8 @@
     "test:onboarding": "node scripts/test-onboarding.mjs",
     "test:discovery": "node scripts/test-discovery.mjs",
     "directory:load": "node scripts/load-overture.mjs",
-    "test:apollo": "node scripts/test-apollo.mjs"
+    "test:apollo": "node scripts/test-apollo.mjs",
+    "test:analysis": "node scripts/test-analysis.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.118.0",
