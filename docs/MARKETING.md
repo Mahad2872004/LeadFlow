@@ -8,6 +8,10 @@ Public routes: `/`, `/features`, `/integrations`, `/solutions`, `/pricing`, `/re
 
 The site uses the existing pathname approach with native links and lazy page bundles. Titles and descriptions update per route. The existing Vercel SPA rewrite supports direct navigation and refreshes.
 
+## Business reports (M7)
+
+The home page (`#business-reports`) and Features (`/features#business-reports`) present business reports with an illustrated, fictional report (`ReportPreview` in `shared.tsx`): what is checked, the four finding labels (observed, measured, AI interpretation, hypothesis), opportunity matching, and the limits (public pages only, no bypassing protections, "not found" means not found on the pages analyzed, no promised results). The FAQ, Solutions, Pricing comparison, Security and Resources (field note 04) were updated to match. Copy names Google PageSpeed Insights and Google Gemini because website text is sent to them. Copy also reflects that CSV import and workspace roles exist, while team invitations and a general lead export are still planned.
+
 ## Access and accurate claims
 
 Request access leads to `/signup`, then `/inquiry?topic=leadflow-access` with a prefilled message. It uses the existing configured inquiry destination and notification flow. It does not provision an account or promise approval. Existing accounts sign in through `/login`.

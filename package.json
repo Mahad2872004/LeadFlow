@@ -4,8 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
+    "dev": "node init && vite",
+    "build": "node init && tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
     "test": "playwright test",
@@ -19,10 +19,13 @@
     "test:onboarding": "node scripts/test-onboarding.mjs",
     "test:discovery": "node scripts/test-discovery.mjs",
     "directory:load": "node scripts/load-overture.mjs",
-    "test:apollo": "node scripts/test-apollo.mjs"
+    "test:apollo": "node scripts/test-apollo.mjs",
+    "test:analysis": "node scripts/test-analysis.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.118.0",
+    "dotenv": "^8.2.0",
+    "node-fetch": "^3.3.2",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
   },

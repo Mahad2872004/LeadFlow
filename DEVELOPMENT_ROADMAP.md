@@ -132,7 +132,23 @@ Setup, endpoints, limits and security: [docs/APOLLO.md](docs/APOLLO.md).
 
 **Next:** push the frontend; add local addresses to `DISCOVERY_ALLOWED_ORIGINS` to test locally; then reveal one person (1 credit) to confirm reveals on this plan. See the troubleshooting table in [docs/APOLLO.md](docs/APOLLO.md#troubleshooting).
 
-## M7 — Production readiness and controlled beta
+## M7 — AI business intelligence and opportunity analysis
+
+**Status: implemented and verified locally with simulated websites, DNS, Apify, PageSpeed Insights and Gemini, 8 November 2026. Migration `202611080001` is applied to the hosted project and the `business-analysis` and `analysis-worker` functions are deployed. Gemini is the only AI provider (no Claude). No real Gemini key used yet.**
+
+- **Report per lead:** Lead → **Business report** analyzes the lead's public website as a background job (validate → crawl → site checks → PageSpeed → interpret → match) with live progress, history, reanalysis with a "recent report" check, and comparison with the previous report.
+- **Collection:** SSRF-safe fetching (every resolved address and redirect checked), LeadFlow's own page reader, optional Apify Website Content Crawler with polling, budgets and fallback, robots.txt, sitemap, broken links, social profiles, about 60 technology signatures, PageSpeed Insights mobile and desktop.
+- **Evidence model:** every finding cites stored evidence; findings are typed (observed, measured, AI interpretation, hypothesis) with severity and confidence; absence findings are never high confidence; AI confidence is capped; teams mark findings confirmed or not accurate.
+- **AI:** Gemini (Google AI Studio key) through its REST API with a fixed JSON schema; website text fenced as data against prompt injection; invalid citations dropped.
+- **Opportunities:** matched to the workspace's agency service catalog (Settings, with 11 editable starter services), with priority, confidence, why, possible benefit and next action; accept, dismiss, needs verification and notes.
+- **Controls:** monthly and concurrent analyses per workspace, an Apify page budget and per-run charge cap, usage recorded per provider (cost only when the provider reports it).
+- **Not built:** outreach from reports, enrichment, scheduled re-analysis, PDF export, billing.
+
+Details, configuration, security and limitations: [docs/BUSINESS-INTELLIGENCE.md](docs/BUSINESS-INTELLIGENCE.md).
+
+**Next:** set `GEMINI_API_KEY` (and `APIFY_API_TOKEN` if wanted); schedule the worker; push the frontend; then analyze two or three real leads and review the findings by hand.
+
+## Production readiness and controlled beta (formerly listed as M7; not scheduled)
 
 **Status: not started; contingent on M6 and evidence.**
 
@@ -164,6 +180,13 @@ Use consented, bounded beta accounts with a named operator and support channel. 
 Next steps: apply `202610200002` and `202610200003`, deploy `submit-inquiry`, then the frontend; hosted two-account verification; a decision on opening public sign-up; then invitations and member management. See [docs/MULTI-TENANCY.md](docs/MULTI-TENANCY.md).
 
 ## Current verification ledger
+
+**M7 business intelligence, 8 November 2026 (local).** All passed:
+- `npm run lint`, `npx tsc -b`, `npm run check:edge` and `npm run build`;
+- `npm run test:db`, `test:m3`, `test:integrations`, `test:tenancy` (updated exact grant list), `test:onboarding`, `test:discovery`, `test:apollo` and the new `test:analysis`;
+- `npx playwright test`: 41/41, including 2 new business-report tests; `npm run test:production`: 41/41.
+
+Websites, DNS, Apify, PageSpeed Insights and the AI provider were simulated; no external service was contacted and nothing was billed. Found and fixed by these tests: IPv4-mapped IPv6 addresses in hexadecimal form (`::ffff:a00:1`) passed the private-address check; AI interpretations marked "high" were lowered to "low" instead of capped at "medium".
 
 **M6 lead discovery, 31 October 2026 (local).** All passed:
 - `npm run lint` (no warnings), `npx tsc -b`, `npm run check:edge` and `npm run build`;
