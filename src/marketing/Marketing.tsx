@@ -1,5 +1,4 @@
 import { useEffect, useLayoutEffect, useRef, useState, type RefObject } from 'react'
-import '@fontsource-variable/inter'
 import '@fontsource/instrument-serif/latin-400-italic.css'
 import { marketingPages, type MarketingPath } from './content'
 import { Glyph } from './Glyph'

@@ -13,7 +13,6 @@ dist-ssr
 *.local
 
 # Editor directories and files
-.vscode/*
 !.vscode/extensions.json
 .idea
 .DS_Store
@@ -27,11 +26,10 @@ dist-ssr
 test-results/
 playwright-report/
 
-.env
-.env.*
 !.env.example
 !.env.test
 
 supabase/.temp/
 supabase/.env*
 !supabase/.env.example
+config.bat
