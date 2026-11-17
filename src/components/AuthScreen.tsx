@@ -16,8 +16,9 @@ export function AuthScreen({mode,notice}:{mode:'sign-in'|'sign-up';notice:string
   return <main className="auth-page">
     <section className="auth-story" aria-label="About LeadFlow">
       <a className="auth-brand" href="/"><span className="brand-mark"><Icon name="arrow" size={22}/></span>LeadFlow<span className="brand-dot">.</span></a>
-      <div><p className="eyebrow">GOOD CONVERSATIONS DESERVE A FOLLOW-UP</p><h2>Every inquiry, organized. Every next step, in sight.</h2>
-        <ul>{['Capture website inquiries in one place','Plan follow-ups and see what’s due','Keep a separate workspace for each business'].map(item=><li key={item}><Icon name="check" size={18}/>{item}</li>)}</ul></div>
+      <div><p className="eyebrow">AI-assisted prospecting</p><h2>Know what every lead needs before the first call.</h2>
+        <ul>{['Find businesses worth talking to','Business reports with the evidence attached','Follow-ups that don’t slip'].map(item=><li key={item}><Icon name="check" size={18}/>{item}</li>)}</ul>
+        <div className="auth-preview" aria-hidden="true"><div className="auth-preview-head"><b>HD</b><span><strong>Harbor Dental</strong><small>Business report · Completed</small></span></div><div className="auth-preview-row"><span>Mobile speed</span><b className="is-poor">42 / 100</b></div><div className="auth-preview-row"><span>Online booking</span><b>Not found</b></div><div className="auth-preview-opp"><small>Opportunity · High priority</small>Add online booking · matches Booking &amp; scheduling</div></div></div>
       <small>Workspace data is private to its members and protected in the database.</small>
     </section>
     <section className="auth-main">
