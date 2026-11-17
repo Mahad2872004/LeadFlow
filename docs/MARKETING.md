@@ -4,7 +4,46 @@ Public routes: `/`, `/features`, `/integrations`, `/solutions`, `/pricing`, `/re
 
 ## Design and behavior
 
-`src/marketing/` contains shared components, page content, and scoped styles. The warm neutral and forest-green palette builds on the dashboard. Product illustrations use fictional records, never database reads. The preview switches between pipeline and follow-up examples. Native FAQ disclosures, a keyboard-accessible mobile menu, visible focus, skip navigation, and reduced-motion styles are included. No extra fonts, tracking scripts, or dependencies were added.
+Redesigned on 18 November 2026 after a UI/UX audit ([MARKETING-UX-AUDIT.md](MARKETING-UX-AUDIT.md)). The site now positions LeadFlow as AI-assisted prospecting: find, analyze, pitch, follow through.
+
+Files in `src/marketing/`:
+- `Home.tsx`, `Pages.tsx` and `Guides.tsx`: the pages.
+- `shared.tsx`: brand, buttons, page intro, status chips, FAQ list, workspace preview and report preview.
+- `visuals.tsx`: illustrations, including the animated hero analysis and the API code sample.
+- `content.ts`: page metadata, FAQs, capabilities, evidence labels and the feature-status table.
+- `Glyph.tsx`: marketing-only icons. The dashboard keeps `Icon`.
+- `Marketing.css`: scoped styles, organised by section.
+
+Design system:
+- dark ink and emerald surfaces for the hero and AI sections, on a light canvas;
+- one emerald-to-lime accent;
+- Inter Variable with an Instrument Serif italic accent. Both are self-hosted through `@fontsource` and imported only by the lazy-loaded marketing bundle;
+- the system monospace font for code.
+
+Two audiences:
+- outcome-led copy in the main flow;
+- "For technical teams" content: the architecture points and the `inbound-lead` request sample, which matches [INTEGRATIONS.md](INTEGRATIONS.md).
+
+Availability language:
+- Every capability carries a status chip: **Available**, **Needs setup**, **Beta**, **Planned** or **Not available**.
+- `featureStatus` in `content.ts` is the single source for the Pricing table.
+- Client onboarding is shown as **Beta** because it isn't applied to the hosted project yet. Remove it from `capabilities`, `featureStatus` and Features stage 05 if it won't ship with the frontend.
+
+Illustrations:
+- They use fictional businesses and never read the database.
+- The hero analysis replays the real report steps (Checking the website → Reading pages → Measuring → Interpreting → Matching services).
+- Visitors who prefer reduced motion see its finished state.
+- Sections fade in on scroll, also only without reduced motion.
+- One footer line covers the "fictional data" disclosure. Each visual keeps a single "Illustration" tag.
+
+Accessibility:
+- native FAQ disclosures;
+- a keyboard-accessible mobile menu that closes on Escape;
+- "How it works" uses arrow-key tabs;
+- visible focus and skip navigation;
+- page copy is at least 12 px.
+
+No tracking scripts were added.
 
 The site uses the existing pathname approach with native links and lazy page bundles. Titles and descriptions update per route. The existing Vercel SPA rewrite supports direct navigation and refreshes.
 

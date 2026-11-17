@@ -1,14 +1,227 @@
-import { Icon } from '../components/Icon'
-import { CTA,Eyebrow,FeatureGrid,FAQs,ProductPreview,ReportPreview } from './shared'
+import { useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
+import { Glyph, type GlyphName } from './Glyph'
+import { capabilities, providers, reportChecks } from './content'
+import { CTA, EvidenceLabels, Eyebrow, FAQs, ProductPreview, ReportPreview, SectionHead, Status, TextLink } from './shared'
+import { AnalyzeVisual, CallPrepVisual, CodeSample, FindVisual, FollowVisual, HeroAnalysis, PitchVisual } from './visuals'
 import { signupOpen } from './access'
-export default function Home(){return <>
- <section className="mk-hero mk-wrap"><div className="mk-hero-copy"><Eyebrow>LESS ADMIN. MORE CONVERSATION.</Eyebrow><h1>A first hello.<br/>A clear next step.<br/><em>A better way to grow.</em></h1><p>Turn website inquiries into a pipeline you can actually follow. LeadFlow keeps your leads, context, and next conversations together, and shows what each business could use from you.</p><div className="mk-actions"><CTA/><CTA href="#product-preview" secondary>Take a closer look</CTA></div><p className="mk-fine">Built for service businesses. {signupOpen?'Create an account to get started.':'Currently available by invitation.'}</p></div><div className="mk-hero-art" aria-label="An inquiry becomes a lead with a next step"><span className="mk-orbit mk-orbit-one"/><span className="mk-orbit mk-orbit-two"/><div className="mk-inquiry-slip"><span className="mk-slip-tag"><i/> A NEW CONVERSATION</span><h3>“We have a project<br/>in mind.”</h3><p>Website inquiry · Fictional example</p><div className="mk-slip-line"/><span>Consulting <Icon name="arrow" size={15}/></span></div><div className="mk-next-slip"><span className="mk-icon"><Icon name="calendar"/></span><div><strong>Give it a next step.</strong><small>Follow-up planned. Context kept.</small></div><Icon name="check" size={22}/></div><span className="mk-art-caption">FROM INTEREST TO OPPORTUNITY ↗</span></div></section>
- <section className="mk-audience"><div className="mk-wrap"><span>MADE FOR THE WAY YOU WORK</span><p>Independent agencies</p><p>Consultants</p><p>Service businesses</p><p>Growing practices</p></div></section>
- <section className="mk-section mk-wrap"><div className="mk-section-heading"><div><Eyebrow>YOUR PIPELINE, IN FOCUS</Eyebrow><h2>The whole picture.<br/><em>Without the busywork.</em></h2></div><p>A new lead should feel like an opportunity, not another thing to keep in your head.</p></div><ProductPreview/></section><section className="mk-wrap mk-section mk-split" id="business-reports"><div><Eyebrow>BEFORE THE FIRST CALL</Eyebrow><h2>Know the business.<br/><em>Before you reach out.</em></h2><p>Open a lead and run a business report. LeadFlow reads their public website, measures its speed with Google PageSpeed Insights, spots the tools it runs on, and uses Google Gemini to summarize what the business does.</p><p>Every finding links to the evidence behind it and says whether it was observed, measured, or interpreted. Opportunities are matched to the services you sell, so you know what to offer, and why.</p><p className="mk-fine">Public pages only. No logins, no getting around site protections, and nothing is sent to the business.</p><CTA href="/features#business-reports" secondary>See how reports work</CTA></div><ReportPreview/></section>
- <section className="mk-band"><div className="mk-wrap mk-section"><div className="mk-section-heading"><div><Eyebrow>A SIMPLE RHYTHM</Eyebrow><h2>Capture. Understand.<br/><em>Follow through.</em></h2></div><a className="mk-text-link" href="/features">Explore the product ↗</a></div><div className="mk-steps">{[['01','Make it easy to reach you.','A hosted or embedded inquiry form collects the details you need, right from your website.'],['02','Understand who’s asking.','Keep the message, source, and service interest together, then run a business report to see what their website is missing.'],['03','Keep the conversation moving.','Set a follow-up, review what is due, and return to the full history when it is time to reach out.']].map(([n,title,text])=><article key={n}><span>{n}</span><h3>{title}</h3><p>{text}</p></article>)}</div></div></section>
- <section className="mk-wrap mk-section"><Eyebrow>FOCUSED BY DESIGN</Eyebrow><h2>The essentials.<br/><em>Thoughtfully connected.</em></h2><FeatureGrid/></section>
- <section className="mk-wrap mk-split mk-section"><div className="mk-integration-art" aria-hidden="true"><span>YOUR WEBSITE</span><div><b>HTML</b><b>WordPress</b><b>React</b></div><i>↓</i><strong>↗ LeadFlow.</strong><p>One secure inquiry flow.</p></div><div><Eyebrow>MEET YOUR WEBSITE WHERE IT IS</Eyebrow><h2>A small addition.<br/><em>A clearer pipeline.</em></h2><p>Share a link or bring the form into your existing website. For server workflows, use the authenticated inbound API with your automation platform.</p><p className="mk-fine">Zapier, Make, and n8n are guided HTTP setups, not native connections.</p><CTA href="/integrations" secondary>Find your integration</CTA></div></section>
- <section className="mk-dark"><div className="mk-wrap mk-section mk-split"><div><Eyebrow>SMALL BUSINESS. REAL CONTEXT.</Eyebrow><h2>Built around<br/><em>your next client.</em></h2><p>From a studio’s project inquiry to a consultant’s discovery call, keep the details that help you respond thoughtfully.</p><CTA href="/solutions" secondary>See the use cases</CTA></div><div className="mk-use-list">{[['For agencies','See what a prospect’s website needs before the first call.'],['For consultants','Move from initial interest to a useful first conversation.'],['For service businesses','Keep new requests visible alongside the next action.']].map(([title,text],i)=><article key={title}><span>0{i+1}</span><div><h3>{title}</h3><p>{text}</p></div></article>)}</div></div></section>
- <section className="mk-wrap mk-section mk-split"><div><Eyebrow>CLARITY IN THE PRODUCT. CLARITY IN THE PROMISE.</Eyebrow><h2>Your account today.<br/><em>Teamwork on the roadmap.</em></h2><p>Each workspace’s records are visible only to its members, with owner, admin and member roles. Team invitations and shared collaboration are planned—not available yet.</p><a className="mk-text-link" href="/security">How access is protected ↗</a></div><div className="mk-trust-card"><Icon name="check" size={32}/><h3>Private records.<br/>A protected front door.</h3><p>Supabase authentication, workspace-scoped database access, validated public forms, and server-side credentials support the current architecture.</p><a href="/security">Read the security details ↗</a></div></section>
- <section className="mk-wrap mk-section mk-split mk-faq-section"><div><Eyebrow>A FEW THINGS YOU MIGHT BE WONDERING</Eyebrow><h2>Good questions.<br/><em>Straight answers.</em></h2><a className="mk-text-link" href="/faq">All frequently asked questions ↗</a></div><FAQs short/></section>
- </>}
+
+const steps: { id: string; label: string; title: string; text: string; visual: ReactNode }[] = [
+  { id: 'find', label: 'Find', title: 'Find businesses worth talking to', text: 'Search a business directory by industry and location, search people and companies with your Apollo account, or import a CSV. Duplicates are caught before they reach your pipeline.', visual: <FindVisual /> },
+  { id: 'analyze', label: 'Analyze', title: 'Let AI read their website', text: 'LeadFlow reads public pages, checks SEO, booking and contact options, measures speed with PageSpeed Insights and spots their tools. Gemini summarizes the business.', visual: <AnalyzeVisual /> },
+  { id: 'pitch', label: 'Pitch', title: 'Lead with what they’re missing', text: 'Findings are matched to the services you sell. Each opportunity explains why, the possible benefit, and a question to open the conversation.', visual: <PitchVisual /> },
+  { id: 'follow', label: 'Follow through', title: 'Keep every conversation moving', text: 'Statuses, follow-up tasks and full history show what’s due today. When a deal is won, start client onboarding with a private checklist link.', visual: <FollowVisual /> },
+]
+
+function HowItWorks() {
+  const [active, setActive] = useState(0)
+  const tabs = useRef<(HTMLButtonElement | null)[]>([])
+  const onKeyDown = (event: KeyboardEvent, index: number) => {
+    const keys: Record<string, number> = { ArrowDown: index + 1, ArrowRight: index + 1, ArrowUp: index - 1, ArrowLeft: index - 1, Home: 0, End: steps.length - 1 }
+    if (!(event.key in keys)) return
+    event.preventDefault()
+    const next = (keys[event.key] + steps.length) % steps.length
+    setActive(next)
+    tabs.current[next]?.focus()
+  }
+  return (
+    <div className="mk-how" data-reveal>
+      <div className="mk-how-tabs" role="tablist" aria-label="How LeadFlow works">
+        {steps.map((step, i) => (
+          <button key={step.id} ref={node => { tabs.current[i] = node }} type="button" role="tab" id={`how-tab-${step.id}`}
+            aria-selected={i === active} aria-controls={`how-panel-${step.id}`} tabIndex={i === active ? 0 : -1}
+            className="mk-how-tab" onClick={() => setActive(i)} onKeyDown={event => onKeyDown(event, i)}>
+            <span className="mk-how-n">0{i + 1}</span>
+            <span className="mk-how-copy">
+              <span className="mk-how-label">{step.label}</span>
+              <strong>{step.title}</strong>
+              <span className="mk-how-text">{step.text}</span>
+            </span>
+          </button>
+        ))}
+      </div>
+      <div className="mk-how-stage">
+        {steps.map((step, i) => (
+          <div key={step.id} role="tabpanel" id={`how-panel-${step.id}`} aria-labelledby={`how-tab-${step.id}`} hidden={i !== active} className="mk-how-panel">
+            {step.visual}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function Bento() {
+  return (
+    <div className="mk-bento">
+      {capabilities.map(item => (
+        <article key={item.title} className={`mk-card is-${item.size}`} data-reveal>
+          <div className="mk-card-top">
+            <span className="mk-card-icon"><Glyph name={item.icon} size={20} /></span>
+            {item.status && <Status kind={item.status[0]}>{item.status[1]}</Status>}
+          </div>
+          <h3>{item.title}</h3>
+          <p>{item.text}</p>
+          {item.icon === 'compass' && (
+            <div className="mk-card-visual mk-map" aria-hidden="true">
+              {[['Dentists', 'Austin, TX'], ['Physiotherapists', 'Leeds, UK'], ['Plumbers', 'Brisbane, AU']].map(([what, where]) => <span key={where}><Glyph name="search" size={13} />{what}<i>{where}</i></span>)}
+            </div>
+          )}
+          {item.icon === 'globe' && <div className="mk-card-visual mk-chip-row" aria-hidden="true">{['HTML', 'WordPress', 'React'].map(chip => <span key={chip} className="mk-chip">{chip}</span>)}</div>}
+          {item.icon === 'clipboard' && (
+            <div className="mk-card-visual" aria-hidden="true">
+              <div className="mk-ready"><span>Readiness</span><b>7 of 9 items</b></div>
+              <div className="mk-bar mk-bar-lg"><span style={{ width: '78%' }} /></div>
+            </div>
+          )}
+          {item.icon === 'code' && <div className="mk-card-visual mk-inline-code" aria-hidden="true"><span>POST</span> /functions/v1/inbound-lead</div>}
+        </article>
+      ))}
+    </div>
+  )
+}
+
+const ownerPoints = [
+  'Know their speed score, what’s missing and what they sell before you dial.',
+  'Pitch services they actually need, with evidence you can show them.',
+  'See what’s due today, so no conversation goes quiet by accident.',
+  'Start with a form link or a CSV. No setup project.',
+]
+const builderPoints: [GlyphName, string][] = [
+  ['database', 'PostgreSQL row-level security isolates every workspace’s records.'],
+  ['key', 'Scoped API tokens, stored only as hashes, with rotation and revocation.'],
+  ['shield', 'The website reader refuses private networks and stops at logins.'],
+  ['sparkles', 'Website text is passed to the AI as data; its output is schema-checked and must cite real evidence.'],
+  ['zap', 'Idempotent request IDs: retrying a request never duplicates a lead.'],
+]
+const uses = [
+  { icon: 'compass' as GlyphName, title: 'Web and marketing agencies', text: 'See what a prospect’s website needs before the first call, and pitch the service that fixes it.', flow: ['Discovery', 'Report', 'Proposal'] },
+  { icon: 'users' as GlyphName, title: 'Consultants', text: 'Keep a contact’s goals and context together, from first interest to a useful discovery call.', flow: ['Inquiry', 'Contacted', 'Discovery call'] },
+  { icon: 'calendar' as GlyphName, title: 'Service businesses', text: 'Give every incoming request a clear owner and next step, so none of them goes cold.', flow: ['Request', 'Review', 'Follow-up'] },
+]
+
+export default function Home() {
+  return <>
+    <section className="mk-hero">
+      <div className="mk-stage mk-dark">
+        <div className="mk-wrap mk-hero-copy">
+          <a className="mk-announce" href="/features#business-reports"><b>New</b>AI business reports, with the evidence attached<Glyph name="arrowRight" size={15} /></a>
+          <h1>Know what every lead needs <em>before</em> the first call.</h1>
+          <p className="mk-lede">LeadFlow finds businesses worth talking to, reads their website with AI, and matches every gap to a service you sell. Then it keeps each follow-up on track.</p>
+          <div className="mk-actions">
+            <CTA />
+            <CTA href="#product-preview" secondary>Take a closer look</CTA>
+          </div>
+          <ul className="mk-hero-points">
+            <li><Glyph name="check" size={16} />Evidence behind every finding</li>
+            <li><Glyph name="check" size={16} />Public website pages only</li>
+            <li><Glyph name="check" size={16} />{signupOpen ? 'No checkout required' : 'Invitation access, no checkout'}</li>
+          </ul>
+        </div>
+      </div>
+      <div className="mk-wrap mk-hero-visual"><HeroAnalysis /></div>
+    </section>
+
+    <section className="mk-providers" aria-label="Services LeadFlow works with">
+      <div className="mk-wrap">
+        <p>Works with</p>
+        <ul>{providers.map(name => <li key={name}>{name}</li>)}</ul>
+      </div>
+    </section>
+
+    <section className="mk-section">
+      <div className="mk-wrap">
+        <SectionHead center eyebrow="The workspace" title={<>Every lead, report and follow-up. <em>One calm place.</em></>}
+          text="Leads, business reports, follow-ups and history stay together, so the next conversation starts where the last one ended." />
+        <div data-reveal><ProductPreview /></div>
+      </div>
+    </section>
+
+    <section className="mk-section mk-section-tint">
+      <div className="mk-wrap">
+        <SectionHead eyebrow="How it works" title="From a cold list to a warm conversation."
+          text="Four steps that replace a spreadsheet, a dozen browser tabs and a lot of guesswork." />
+        <HowItWorks />
+      </div>
+    </section>
+
+    <section className="mk-night mk-dark" id="business-reports">
+      <div className="mk-wrap mk-section">
+        <div className="mk-split">
+          <div data-reveal>
+            <Eyebrow>AI business reports</Eyebrow>
+            <h2>Know the business. <em>Before you reach out.</em></h2>
+            <p className="mk-split-text">Open a lead and run a report. In one to three minutes LeadFlow reads up to ten public pages, measures mobile and desktop speed with Google PageSpeed Insights, detects the tools the site runs on, and uses Google Gemini to write a short summary of the business.</p>
+            <p className="mk-split-text">Every finding links to the evidence behind it and says whether it was observed, measured or interpreted. Opportunities are matched to the services you sell, so you know what to offer, and why.</p>
+            <ul className="mk-check-chips">{reportChecks.map(check => <li key={check}><Glyph name="check" size={14} />{check}</li>)}</ul>
+            <div className="mk-actions"><CTA href="/features#business-reports" secondary>See how reports work</CTA></div>
+          </div>
+          <div data-reveal><ReportPreview /></div>
+        </div>
+        <div data-reveal><EvidenceLabels /></div>
+        <p className="mk-fine mk-center">Public pages only. No logins, no getting around site protections, and nothing is sent to the business.</p>
+      </div>
+    </section>
+
+    <section className="mk-section">
+      <div className="mk-wrap">
+        <SectionHead eyebrow="Platform" title={<>Everything between a first search <em>and a won client.</em></>}
+          text="One workspace for finding, understanding and following up, with a clear label wherever something needs setup or is still in beta." />
+        <Bento />
+      </div>
+    </section>
+
+    <section className="mk-section mk-section-tint">
+      <div className="mk-wrap">
+        <SectionHead center eyebrow="Built for both sides of the table" title={<>Clear enough for owners. <em>Solid enough for engineers.</em></>} />
+        <div className="mk-duo">
+          <article className="mk-duo-card mk-duo-owner" data-reveal>
+            <span className="mk-duo-label"><Glyph name="target" size={16} />For owners and sales leads</span>
+            <h3>Walk into every call prepared.</h3>
+            <ul className="mk-ticks">{ownerPoints.map(point => <li key={point}><Glyph name="checkCircle" size={20} />{point}</li>)}</ul>
+            <CallPrepVisual />
+            <div className="mk-duo-foot"><TextLink href="/solutions">See how teams use it</TextLink></div>
+          </article>
+          <article className="mk-duo-card mk-duo-dev mk-dark" data-reveal>
+            <span className="mk-duo-label"><Glyph name="code" size={16} />For technical teams</span>
+            <h3>Inspectable by design.</h3>
+            <ul className="mk-ticks">{builderPoints.map(([icon, point]) => <li key={point}><Glyph name={icon} size={20} />{point}</li>)}</ul>
+            <CodeSample />
+            <div className="mk-duo-foot"><TextLink href="/security">Security details</TextLink><TextLink href="/integrations">Integration methods</TextLink></div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section className="mk-section">
+      <div className="mk-wrap">
+        <SectionHead eyebrow="Who it’s for" title="Made for businesses that sell expertise.">
+          <div className="mk-head-link"><TextLink href="/solutions">Explore use cases</TextLink></div>
+        </SectionHead>
+        <div className="mk-uses">
+          {uses.map(use => (
+            <article key={use.title} className="mk-use" data-reveal>
+              <span className="mk-card-icon"><Glyph name={use.icon} size={20} /></span>
+              <h3>{use.title}</h3>
+              <p>{use.text}</p>
+              <p className="mk-flow"><span className="mk-sr">Typical flow: </span>
+                {use.flow.map((stage, i) => <span key={stage}>{i > 0 && <Glyph name="arrowRight" size={12} />}<b>{stage}</b></span>)}
+              </p>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <section className="mk-section mk-faq-section">
+      <div className="mk-wrap mk-faq-wrap">
+        <div data-reveal>
+          <Eyebrow>FAQ</Eyebrow>
+          <h2>Questions, answered straight.</h2>
+          <p className="mk-split-text">What LeadFlow does today, how to get access, and what is still ahead.</p>
+          <div className="mk-head-link"><TextLink href="/faq">All frequently asked questions</TextLink></div>
+        </div>
+        <FAQs short />
+      </div>
+    </section>
+  </>
+}
