@@ -20,9 +20,9 @@ export function DashboardOverview({leads,tasks,day,onLeads,onFollowUps}:Dashboar
         <div className="section-heading"><div><h2 id="pipeline-title">Pipeline snapshot</h2><p>From first hello to a new client</p></div><span className="soft-tag">{leads.length} leads</span></div>
         <div className="pipeline-bar" aria-hidden="true">{counts.map(count=><div key={count.status} className={count.status.toLowerCase()} style={{flex:count.count}}/>)}</div>
         <div className="pipeline-legend">{counts.map(count=><button key={count.status} onClick={()=>onLeads(count.status)} aria-label={`View ${count.count} ${count.status.toLowerCase()} leads`}><span className={'legend-dot '+count.status.toLowerCase()}/>{count.status}<strong>{count.count}</strong></button>)}</div>
-        <div className="pipeline-foot"><span>Small steps build strong relationships.</span><button className="text-button" onClick={()=>onLeads()}>View pipeline <Icon name="arrow" size={14}/></button></div>
+        <div className="pipeline-foot"><span>{leads.length} leads across five stages</span><button className="text-button" onClick={()=>onLeads()}>View pipeline <Icon name="arrow" size={14}/></button></div>
       </section>
-      <section className="focus-card"><span className="eyebrow">MAKE YOUR NEXT MOVE</span><h2>A timely follow-up<br/> makes a difference.</h2><p>{due.length?`${due.length} follow-ups are ready for your attention.`:'You’re all caught up. Plan your next conversation.'}</p><button onClick={onFollowUps}>Review follow-ups <Icon name="arrow" size={16}/></button></section>
+      <section className="focus-card"><span className="eyebrow">Next best action</span><h2>{due.length?`${due.length} follow-up${due.length===1?'':'s'} need${due.length===1?'s':''} you today.`:'You’re all caught up.'}</h2><p>{due.length?(overdue?`${overdue} overdue. A quick message now keeps the conversation warm.`:'Due today or earlier. A quick message now keeps the conversation warm.'):'Plan your next conversation, or run a business report on a new lead.'}</p><button onClick={onFollowUps}>Review follow-ups <Icon name="arrow" size={16}/></button></section>
     </div>
   </>
 }
