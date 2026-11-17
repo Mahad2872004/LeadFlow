@@ -4,8 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
+    "dev": "node init && vite",
+    "build": "node init && tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
     "test": "playwright test",
@@ -23,7 +23,10 @@
     "test:analysis": "node scripts/test-analysis.mjs"
   },
   "dependencies": {
+    "@fontsource-variable/inter": "5.3.0",
+    "@fontsource/instrument-serif": "5.3.0",
     "@supabase/supabase-js": "^2.118.0",
+    "node-fetch": "^3.3.2",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
   },
