@@ -10,9 +10,9 @@ main.auth-page, main.onboarding, main.shell-message { width: 100%; margin: 0 }
   position: relative; isolation: isolate; overflow: hidden;
   display: flex; flex-direction: column; justify-content: space-between; gap: 40px;
   margin: 12px; padding: 36px 40px; border-radius: 24px; color: var(--lf-night-text);
-  background: radial-gradient(70% 50% at 50% -5%, rgba(46, 204, 140, .3), transparent 70%), radial-gradient(40% 40% at 100% 30%, rgba(196, 242, 106, .1), transparent 70%), linear-gradient(180deg, #05110c, #0a1e16 70%, #0c241b);
+  background: radial-gradient(70% 50% at 50% -5%, color-mix(in srgb, var(--lf-glow-emerald) 30%, transparent), transparent 70%), radial-gradient(40% 40% at 100% 30%, color-mix(in srgb, var(--lf-glow-lime) 10%, transparent), transparent 70%), linear-gradient(180deg, var(--lf-night), var(--lf-night-2) 70%, var(--lf-night-2));
 }
-.auth-story::before { content: ''; position: absolute; inset: 0; z-index: -1; background-image: linear-gradient(rgba(214, 255, 236, .06) 1px, transparent 1px), linear-gradient(90deg, rgba(214, 255, 236, .06) 1px, transparent 1px); background-size: 48px 48px; -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 20%, transparent 75%); mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 20%, transparent 75%) }
+.auth-story::before { content: ''; position: absolute; inset: 0; z-index: -1; background-image: linear-gradient(color-mix(in srgb, var(--lf-grid-line) 6%, transparent) 1px, transparent 1px), linear-gradient(90deg, color-mix(in srgb, var(--lf-grid-line) 6%, transparent) 1px, transparent 1px); background-size: 48px 48px; -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 20%, transparent 75%); mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 20%, transparent 75%) }
 .auth-brand { display: inline-flex; align-items: center; gap: 10px; color: inherit; font-size: 20px; font-weight: 700; letter-spacing: -.035em; text-decoration: none }
 .auth-story .auth-brand { color: #fff }
 .auth-story .eyebrow { color: var(--lf-mint) }
@@ -21,19 +21,19 @@ main.auth-page, main.onboarding, main.shell-message { width: 100%; margin: 0 }
 .auth-story li { display: flex; align-items: center; gap: 10px }
 .auth-story li svg { color: var(--lf-mint) }
 .auth-story small { color: var(--lf-night-muted); font-size: 12.5px; line-height: 1.6 }
-.auth-preview { max-width: 380px; margin-top: 30px; padding: 14px; border: 1px solid rgba(214, 255, 236, .14); border-radius: 16px; background: rgba(255, 255, 255, .05); box-shadow: 0 30px 60px -30px rgba(0, 0, 0, .6); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px) }
-.auth-preview-head { display: flex; align-items: center; gap: 10px; padding-bottom: 10px; border-bottom: 1px solid rgba(214, 255, 236, .1) }
-.auth-preview-head b { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 9px; background: rgba(196, 242, 106, .14); color: var(--lf-lime); font-size: 12px }
+.auth-preview { max-width: 380px; margin-top: 30px; padding: 14px; border: 1px solid color-mix(in srgb, var(--lf-night-ink) 14%, transparent); border-radius: 16px; background: rgba(255, 255, 255, .05); box-shadow: 0 30px 60px -30px rgba(0, 0, 0, .6); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px) }
+.auth-preview-head { display: flex; align-items: center; gap: 10px; padding-bottom: 10px; border-bottom: 1px solid color-mix(in srgb, var(--lf-night-ink) 10%, transparent) }
+.auth-preview-head b { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 9px; background: color-mix(in srgb, var(--lf-lime) 14%, transparent); color: var(--lf-lime); font-size: 12px }
 .auth-preview-head strong { display: block; color: #fff; font-size: 14px }
 .auth-preview-head small { display: block; color: var(--lf-night-muted); font-size: 12px }
-.auth-preview-row { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px dashed rgba(214, 255, 236, .1); color: var(--lf-night-muted); font-size: 13px }
+.auth-preview-row { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px dashed color-mix(in srgb, var(--lf-night-ink) 10%, transparent); color: var(--lf-night-muted); font-size: 13px }
 .auth-preview-row b { color: #fff; font-weight: 600 }
 .auth-preview-row b.is-poor { color: #ff9b85 }
-.auth-preview-opp { margin-top: 10px; padding: 10px 12px; border-radius: 10px; background: rgba(196, 242, 106, .1); color: var(--lf-night-text); font-size: 13px }
+.auth-preview-opp { margin-top: 10px; padding: 10px 12px; border-radius: 10px; background: color-mix(in srgb, var(--lf-lime) 10%, transparent); color: var(--lf-night-text); font-size: 13px }
 .auth-preview-opp small { display: block; color: var(--lf-lime); font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase }
 .auth-main { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 40px 24px }
 .auth-back { width: min(440px, 100%); color: var(--lf-muted) }
-.auth-card { width: min(440px, 100%); padding: 32px; border: 1px solid var(--lf-line); border-radius: var(--lf-radius-xl); background: #fff; box-shadow: var(--lf-shadow-lg) }
+.auth-card { width: min(440px, 100%); padding: 32px; border: 1px solid var(--lf-line); border-radius: var(--lf-radius-xl); background: var(--lf-surface); box-shadow: var(--lf-shadow-lg) }
 .auth-card h1 { margin-bottom: 6px; color: var(--lf-ink); font-size: 26px }
 .auth-lead { margin-bottom: 22px; color: var(--lf-muted); font-size: 14.5px; line-height: 1.6 }
 .auth-submit { width: 100%; min-height: 46px; margin-top: 6px; font-size: 15px }
@@ -63,7 +63,7 @@ main.auth-page, main.onboarding, main.shell-message { width: 100%; margin: 0 }
 /* Auth fields */
 .field { margin-bottom: 16px }
 .field label { display: block; margin: 0 0 6px; color: var(--lf-text); font-size: 13px; font-weight: 550 }
-.field input, .field select { display: block; width: 100%; min-height: 44px; margin: 0; padding: 10px 12px; border: 1px solid var(--lf-line-strong); border-radius: 10px; background: #fff; color: var(--lf-ink); font-size: 15px; transition: border-color .15s, box-shadow .15s }
+.field input, .field select { display: block; width: 100%; min-height: 44px; margin: 0; padding: 10px 12px; border: 1px solid var(--lf-line-strong); border-radius: 10px; background: var(--lf-surface); color: var(--lf-ink); font-size: 15px; transition: border-color .15s, box-shadow .15s }
 .field input:focus, .field select:focus { border-color: var(--lf-brand); outline: none; box-shadow: 0 0 0 3px var(--lf-brand-ring) }
 .field input[aria-invalid="true"] { border-color: #d0705d; background: #fffaf8 }
 .field input:disabled, .field select:disabled { background: var(--lf-subtle); color: var(--lf-muted); cursor: not-allowed; opacity: 1 }
@@ -72,7 +72,7 @@ main.auth-page, main.onboarding, main.shell-message { width: 100%; margin: 0 }
 .optional { color: var(--lf-muted); font-weight: 400 }
 
 /* ---------- Loading skeletons ---------- */
-.skeleton, .auth-skeleton i { background: linear-gradient(90deg, #e9efec 25%, #f4f7f5 50%, #e9efec 75%); background-size: 200% 100%; animation: lf-shimmer 1.4s ease-in-out infinite }
+.skeleton, .auth-skeleton i { background: linear-gradient(90deg, var(--lf-track) 25%, #f4f7f5 50%, var(--lf-track) 75%); background-size: 200% 100%; animation: lf-shimmer 1.4s ease-in-out infinite }
 .sidebar .skeleton { background: linear-gradient(90deg, rgba(255, 255, 255, .05) 25%, rgba(255, 255, 255, .1) 50%, rgba(255, 255, 255, .05) 75%); background-size: 200% 100% }
 .skeleton { display: block; border-radius: 8px }
 @keyframes lf-shimmer { from { background-position: 200% 0 } to { background-position: -200% 0 } }
@@ -93,8 +93,8 @@ main.auth-page, main.onboarding, main.shell-message { width: 100%; margin: 0 }
 .load-error .secondary { margin: 10px 10px 0 0 }
 
 /* ---------- First workspace setup ---------- */
-.onboarding { min-height: 100vh; padding-bottom: 56px; background: radial-gradient(60% 40% at 80% 0%, rgba(94, 224, 168, .16), transparent 70%), var(--lf-bg) }
-.onboarding-top { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 32px; border-bottom: 1px solid var(--lf-line); background: rgba(255, 255, 255, .8); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px) }
+.onboarding { min-height: 100vh; padding-bottom: 56px; background: radial-gradient(60% 40% at 80% 0%, color-mix(in srgb, var(--lf-glow-mint) 16%, transparent), transparent 70%), var(--lf-bg) }
+.onboarding-top { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 32px; border-bottom: 1px solid var(--lf-line); background: var(--lf-glass); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px) }
 .onboarding-top .auth-brand { color: var(--lf-ink) }
 .onboarding-top > div { display: flex; align-items: center; gap: 14px; color: var(--lf-muted); font-size: 13.5px }
 .onboarding > .auth-alert { max-width: 980px; margin: 16px auto 0 }
@@ -104,7 +104,7 @@ main.auth-page, main.onboarding, main.shell-message { width: 100%; margin: 0 }
 .onboarding-lead { max-width: 540px; margin-bottom: 24px; color: var(--lf-muted); font-size: 14.5px; line-height: 1.65 }
 .onboarding-points { display: grid; gap: 22px; margin: 0; padding: 12px 0 0; list-style: none }
 .onboarding-points li { display: flex; gap: 14px }
-.onboarding-points span { display: grid; flex-shrink: 0; place-items: center; width: 42px; height: 42px; border-radius: 12px; background: var(--lf-ink); color: var(--lf-lime) }
+.onboarding-points span { display: grid; flex-shrink: 0; place-items: center; width: 42px; height: 42px; border-radius: 12px; background: var(--lf-accent-bg); color: var(--lf-lime) }
 .onboarding-points strong { display: block; margin-bottom: 4px; color: var(--lf-ink); font-size: 14.5px }
 .onboarding-points p { margin: 0; color: var(--lf-muted); font-size: 13.5px; line-height: 1.6 }
 .workspace-form .modal-actions { margin-top: 24px }
@@ -113,7 +113,7 @@ main.auth-page, main.onboarding, main.shell-message { width: 100%; margin: 0 }
 .workspace-switcher { position: relative; margin: 20px 0 18px }
 .workspace-trigger { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 52px; padding: 8px 10px; border: 1px solid rgba(255, 255, 255, .1); border-radius: 12px; background: rgba(255, 255, 255, .04); color: #fff; text-align: left }
 .workspace-trigger:hover { border-color: rgba(255, 255, 255, .2); background: rgba(255, 255, 255, .07) }
-.workspace-trigger[aria-expanded="true"] { border-color: rgba(196, 242, 106, .5); box-shadow: 0 0 0 3px rgba(196, 242, 106, .12) }
+.workspace-trigger[aria-expanded="true"] { border-color: color-mix(in srgb, var(--lf-lime) 50%, transparent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--lf-lime) 12%, transparent) }
 .workspace-trigger:focus-visible { outline-color: var(--lf-lime) }
 .workspace-trigger svg { flex-shrink: 0; color: var(--lf-night-muted); transition: transform .15s }
 .workspace-trigger[aria-expanded="true"] svg { transform: rotate(180deg) }
@@ -123,7 +123,7 @@ main.auth-page, main.onboarding, main.shell-message { width: 100%; margin: 0 }
 .workspace-trigger-text small { color: var(--lf-night-muted) }
 .workspace-icon { display: grid; flex-shrink: 0; place-items: center; width: 32px; height: 32px; border: 1px solid var(--lf-line); border-radius: 9px; background: var(--lf-brand-soft); color: var(--lf-brand-strong); font-size: 11.5px; font-weight: 700 }
 .workspace-trigger .workspace-icon { border-color: transparent; background: linear-gradient(145deg, #1f4636, #143027); color: var(--lf-lime) }
-.workspace-menu { position: absolute; top: calc(100% + 6px); left: 0; z-index: 40; width: 100%; min-width: 240px; max-height: min(440px, 70vh); padding: 6px; overflow: auto; border: 1px solid var(--lf-line); border-radius: 14px; background: #fff; color: var(--lf-ink); box-shadow: var(--lf-shadow-pop) }
+.workspace-menu { position: absolute; top: calc(100% + 6px); left: 0; z-index: 40; width: 100%; min-width: 240px; max-height: min(440px, 70vh); padding: 6px; overflow: auto; border: 1px solid var(--lf-line); border-radius: 14px; background: var(--lf-surface); color: var(--lf-ink); box-shadow: var(--lf-shadow-pop) }
 .workspace-menu-label { margin: 6px 8px; color: var(--lf-muted); font-size: 11px; font-weight: 650; letter-spacing: .07em; text-transform: uppercase }
 .workspace-menu ul { margin: 0; padding: 0; list-style: none }
 .workspace-option, .workspace-menu-actions button { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 46px; padding: 8px; border: 0; border-radius: 10px; background: none; color: var(--lf-ink); font-size: 13.5px; text-align: left }
@@ -144,15 +144,15 @@ main.auth-page, main.onboarding, main.shell-message { width: 100%; margin: 0 }
   position: relative; isolation: isolate; overflow: hidden;
   display: flex; align-items: center; justify-content: space-between; gap: 24px;
   padding: 28px; border-color: transparent; color: var(--lf-night-text);
-  background: radial-gradient(60% 90% at 100% 0%, rgba(46, 204, 140, .3), transparent 70%), linear-gradient(160deg, #07160f, #0c241b);
+  background: radial-gradient(60% 90% at 100% 0%, color-mix(in srgb, var(--lf-glow-emerald) 30%, transparent), transparent 70%), linear-gradient(160deg, var(--lf-night), var(--lf-night-2));
 }
-.panel.welcome-panel::after { content: ''; position: absolute; inset: 0; z-index: -1; background-image: linear-gradient(rgba(214, 255, 236, .06) 1px, transparent 1px), linear-gradient(90deg, rgba(214, 255, 236, .06) 1px, transparent 1px); background-size: 32px 32px; -webkit-mask-image: radial-gradient(ellipse 60% 90% at 100% 0%, #000, transparent 75%); mask-image: radial-gradient(ellipse 60% 90% at 100% 0%, #000, transparent 75%) }
+.panel.welcome-panel::after { content: ''; position: absolute; inset: 0; z-index: -1; background-image: linear-gradient(color-mix(in srgb, var(--lf-grid-line) 6%, transparent) 1px, transparent 1px), linear-gradient(90deg, color-mix(in srgb, var(--lf-grid-line) 6%, transparent) 1px, transparent 1px); background-size: 32px 32px; -webkit-mask-image: radial-gradient(ellipse 60% 90% at 100% 0%, #000, transparent 75%); mask-image: radial-gradient(ellipse 60% 90% at 100% 0%, #000, transparent 75%) }
 .panel.welcome-panel h2 { margin: 0 0 8px; color: #fff; font-size: 22px; letter-spacing: -.03em }
 .panel.welcome-panel p { max-width: 560px; margin: 0; color: var(--lf-night-muted); font-size: 14px; line-height: 1.6 }
 .panel.welcome-panel .eyebrow { margin-bottom: 10px; color: var(--lf-mint) }
 .welcome-actions { display: flex; flex-shrink: 0; flex-wrap: wrap; gap: 10px }
-.panel.welcome-panel .primary { background: var(--lf-lime); color: var(--lf-ink); box-shadow: 0 8px 24px -10px rgba(196, 242, 106, .6) }
-.panel.welcome-panel .primary:hover:not(:disabled) { background: #d3f78c }
+.panel.welcome-panel .primary { background: var(--lf-lime); color: var(--lf-on-lime); box-shadow: 0 8px 24px -10px color-mix(in srgb, var(--lf-lime) 60%, transparent) }
+.panel.welcome-panel .primary:hover:not(:disabled) { background: var(--lf-lime-hover) }
 .panel.welcome-panel .secondary { border-color: rgba(255, 255, 255, .18); background: rgba(255, 255, 255, .05); color: #fff; box-shadow: none }
 .panel.welcome-panel .secondary:hover:not(:disabled) { border-color: rgba(255, 255, 255, .34); background: rgba(255, 255, 255, .1) }
 
@@ -179,7 +179,7 @@ main.auth-page, main.onboarding, main.shell-message { width: 100%; margin: 0 }
 .permission-list li > span:first-child { display: grid; flex-shrink: 0; place-items: center; width: 24px; height: 24px; border-radius: 8px; background: var(--lf-brand-soft); color: var(--lf-brand) }
 .permission-list li.denied > span:first-child { background: var(--lf-subtle); color: var(--lf-faint) }
 .role-badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap }
-.role-owner { background: var(--lf-ink); color: var(--lf-lime) }
+.role-owner { background: var(--lf-accent-bg); color: var(--lf-lime) }
 .role-admin { background: var(--lf-info-soft); color: var(--lf-info) }
 .role-member { background: var(--lf-subtle); color: var(--lf-muted) }
 .member-list { margin: 0; padding: 0; list-style: none }
@@ -227,3 +227,18 @@ main.auth-page, main.onboarding, main.shell-message { width: 100%; margin: 0 }
   .welcome-actions button { flex: 1 }
 }
 @media (prefers-reduced-motion: reduce) { .skeleton, .auth-skeleton i, .spinner { animation: none } }
+
+/* ---------- Dark theme refinements ---------- */
+.auth-back { display: flex; align-items: center; justify-content: space-between; gap: 12px }
+:root[data-theme="dark"] :is(.skeleton, .auth-skeleton i) { background: linear-gradient(90deg, #18211d 25%, #222e29 50%, #18211d 75%); background-size: 200% 100% }
+:root[data-theme="dark"] .field input[aria-invalid="true"] { border-color: var(--lf-danger-line); background: var(--lf-danger-soft) }
+:root[data-theme="dark"] .auth-story, :root[data-theme="dark"] .onboarding-points span { box-shadow: inset 0 0 0 1px var(--lf-night-edge) }
+:root[data-theme="dark"] .onboarding { background: radial-gradient(60% 40% at 80% 0%, color-mix(in srgb, var(--lf-glow-mint) 8%, transparent), transparent 70%), var(--lf-bg) }
+:root[data-theme="dark"] .onboarding-top { background: var(--lf-glass) }
+:root[data-theme="dark"] .workspace-icon { border-color: var(--lf-line); background: var(--lf-brand-soft); color: var(--lf-brand) }
+:root[data-theme="dark"] .workspace-trigger { border-color: var(--lf-line); background: #131417 }
+:root[data-theme="dark"] .workspace-trigger:hover { border-color: var(--lf-line-strong); background: #18191c }
+:root[data-theme="dark"] .workspace-trigger[aria-expanded="true"] { border-color: var(--lf-line-strong); box-shadow: 0 0 0 3px rgba(255, 255, 255, .06) }
+:root[data-theme="dark"] .workspace-trigger .workspace-icon { background: #26272c; color: #ededef }
+:root[data-theme="dark"] .workspace-trigger-text small { color: #8f9199 }
+:root[data-theme="dark"] .onboarding-points span { background: var(--lf-subtle); color: var(--lf-ink) }

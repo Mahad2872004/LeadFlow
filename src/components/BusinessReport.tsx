@@ -5,6 +5,7 @@ import { advanceAnalysis, analysesFor, analysisConfig, analysisReport, AnalysisR
 import { normalizeWebsite, type Lead } from '../lib/model'
 import { dateLabel } from '../lib/format'
 import type { WorkspaceSummary } from '../lib/backend'
+import { Icon } from './Icon'
 import './BusinessReport.css'
 
 type Tab = 'overview' | 'findings' | 'opportunities' | 'evidence' | 'details'
@@ -19,6 +20,31 @@ const severityLabel = { high: 'High', medium: 'Medium', low: 'Low', info: 'Info'
 const errorText = (cause: unknown) => cause instanceof Error ? cause.message : 'Something went wrong. Try again.'
 const ms = (value: number | null | undefined) => value === null || value === undefined ? '—' : value >= 1000 ? `${(value / 1000).toFixed(1)} s` : `${Math.round(value)} ms`
 const score = (value: number | null | undefined) => value === null || value === undefined ? null : Math.round(value * 100)
+const band = (value: number | null) => value === null ? 'none' : value >= 90 ? 'good' : value >= 50 ? 'ok' : 'poor'
+const levels = ['high', 'medium', 'low', 'info'] as const
+
+// Decorative visuals only: every one is aria-hidden and holds no text.
+const Glyph = ({ d, size = 16 }: { d: string; size?: number }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false"><path d={d} /></svg>
+const glyphs = {
+  globe: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm-9 9h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3Z',
+  tick: 'm5 12.5 4.5 4.5L19 7.5',
+  dash: 'M7 12h10',
+  shield: 'M12 3 5 6v5.5c0 4.3 3 8.2 7 9.5 4-1.3 7-5.2 7-9.5V6l-7-3Zm-3 9 2.2 2.2L15.5 10',
+  alert: 'M12 8v5m0 3.5v.01M10.3 3.9 2.6 17.2A2 2 0 0 0 4.3 20h15.4a2 2 0 0 0 1.7-2.8L13.7 3.9a2 2 0 0 0-3.4 0Z',
+}
+/** A ring meter for a 0–100 score. */
+function GaugeRing({ value }: { value: number | null }) {
+  // Presentation attributes keep the ring an outline of the right size even before the stylesheet applies.
+  return <svg className="br-ring" width="74" height="74" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false">
+    <circle className="br-ring-track" cx="32" cy="32" r="27" fill="none" stroke="#edf2ef" strokeWidth="6" pathLength={100} />
+    {value !== null && <circle className="br-ring-value" cx="32" cy="32" r="27" fill="none" stroke="currentColor" strokeWidth="6" strokeLinecap="round" pathLength={100} strokeDasharray={`${Math.max(value, 1)} 100`} />}
+  </svg>
+}
+/** Share of findings at each severity, as one stacked bar. */
+function SeverityBar({ counts }: { counts: Record<(typeof levels)[number], number> }) {
+  const shown = levels.filter(level => counts[level] > 0)
+  return <span className="br-sevbar" aria-hidden="true">{shown.length ? shown.map(level => <i key={level} className={level} style={{ flexGrow: counts[level] }} />) : <i className="none" />}</span>
+}
 
 /** One-line description of an evidence item, from the facts it holds. */
 function evidenceSummary(item: Evidence): string {
@@ -56,13 +82,15 @@ function EvidenceValue({ item }: { item: Evidence }) {
 
 function Progress({ report }: { report: AnalysisSummary }) {
   const current = stages.findIndex(stage => stage.statuses.includes(report.status))
-  return <div className="br-progress" role="status" aria-live="polite">
-    <div className="br-progress-head"><strong>{statusLabels[report.status]}…</strong><span>{report.pagesAnalyzed ? `${report.pagesAnalyzed} page${report.pagesAnalyzed === 1 ? '' : 's'} read so far` : 'Starting'}</span></div>
+  return <><div className="br-progress" role="status" aria-live="polite">
+    <div className="br-progress-head"><span className="br-orb" aria-hidden="true"><Icon name="spark" size={18} /></span><strong>{statusLabels[report.status]}…</strong><span>{report.pagesAnalyzed ? `${report.pagesAnalyzed} page${report.pagesAnalyzed === 1 ? '' : 's'} read so far` : 'Starting'}</span></div>
     <div className="br-bar" aria-hidden><i style={{ width: `${Math.round(progressOf(report) * 100)}%` }} /></div>
-    <ol className="br-stages">{stages.map((stage, index) => <li key={stage.label} className={index < current ? 'done' : index === current ? 'current' : ''}>{stage.label}</li>)}</ol>
+    <ol className="br-stages">{stages.map((stage, index) => <li key={stage.label} className={index < current ? 'done' : index === current ? 'current' : ''}><span className="br-step" aria-hidden="true">{index < current && <Glyph d={glyphs.tick} size={13} />}</span>{stage.label}</li>)}</ol>
     {Object.entries(report.providers).filter(([, state]) => ['running', 'retrying'].includes(state.status)).map(([name, state]) => <p key={name} className="br-muted">{providerNames[name] ?? name}: {state.detail}</p>)}
     <p className="br-muted">Usually one to three minutes. You can close this window; the analysis keeps running and the report will be here when you come back.</p>
   </div>
+  {/* A placeholder of the report taking shape (decorative). */}
+  <div className="br-ghost" aria-hidden="true"><i /><i /><i /><i /><b /><b /></div></>
 }
 
 function FindingCard({ finding, evidence, canReview, onVerify, onShowEvidence }: { finding: Finding; evidence: Map<string, Evidence>; canReview: boolean; onVerify: (status: Finding['verificationStatus']) => void; onShowEvidence: (id: string) => void }) {
@@ -72,32 +100,38 @@ function FindingCard({ finding, evidence, canReview, onVerify, onShowEvidence }:
     <div className="br-tags"><span className={`br-type ${finding.findingType}`} title={findingTypeHelp[finding.findingType]}>{findingTypeLabels[finding.findingType]}</span>
       <span className="br-tag">Confidence: {finding.confidence}</span>{finding.opportunityType && <span className="br-tag">{opportunityLabels[finding.opportunityType]}</span>}
       {finding.verificationStatus !== 'unverified' && <span className={`br-tag verify-${finding.verificationStatus}`}>{finding.verificationStatus === 'verified' ? 'Verified by your team' : 'Disputed by your team'}</span>}</div>
-    {finding.description && <p>{finding.description}</p>}
-    {finding.businessRelevance && <p className="br-muted"><strong>Why it matters:</strong> {finding.businessRelevance}</p>}
-    {finding.recommendedAction && <p className="br-muted"><strong>Suggested next step:</strong> {finding.recommendedAction}</p>}
-    <details className="br-cites"><summary>Evidence ({cited.length})</summary><ul>{cited.map(item => <li key={item.id}><button className="br-link" onClick={() => onShowEvidence(item.id)}>{item.ref}</button> {evidenceSummary(item)}{item.sourceUrl && <> · <a href={item.sourceUrl} target="_blank" rel="noopener noreferrer nofollow">{item.sourceUrl.replace(/^https?:\/\//, '').slice(0, 60)}</a></>}</li>)}</ul></details>
-    {canReview && <label className="br-verify">Your check<select value={finding.verificationStatus} onChange={event => onVerify(event.target.value as Finding['verificationStatus'])}>
-      <option value="unverified">Not checked</option><option value="verified">Confirmed</option><option value="disputed">Not accurate</option></select></label>}
+    {finding.description && <p className="br-desc">{finding.description}</p>}
+    {finding.businessRelevance && <p className="br-muted br-note"><strong>Why it matters:</strong> {finding.businessRelevance}</p>}
+    {finding.recommendedAction && <p className="br-muted br-note"><strong>Suggested next step:</strong> {finding.recommendedAction}</p>}
+    <div className="br-finding-foot">
+      <details className="br-cites"><summary>Evidence ({cited.length})</summary><ul>{cited.map(item => <li key={item.id}><button className="br-link" onClick={() => onShowEvidence(item.id)}>{item.ref}</button> {evidenceSummary(item)}{item.sourceUrl && <> · <a href={item.sourceUrl} target="_blank" rel="noopener noreferrer nofollow">{item.sourceUrl.replace(/^https?:\/\//, '').slice(0, 60)}</a></>}</li>)}</ul></details>
+      {canReview && <label className="br-verify">Your check<select value={finding.verificationStatus} onChange={event => onVerify(event.target.value as Finding['verificationStatus'])}>
+        <option value="unverified">Not checked</option><option value="verified">Confirmed</option><option value="disputed">Not accurate</option></select></label>}
+    </div>
   </article>
 }
 
 function OpportunityCard({ opportunity, findings, onStatus, onNotes, busy }: { opportunity: Opportunity; findings: Map<string, Finding>; onStatus: (status: OpportunityStatus) => void; onNotes: (notes: string) => void; busy: boolean }) {
   const [notes, setNotes] = useState(opportunity.notes)
   const basis = opportunity.findingIds.map(id => findings.get(id)).filter((item): item is Finding => !!item)
-  return <article className={`br-opportunity status-${opportunity.status}`}>
+  return <article className={`br-opportunity status-${opportunity.status} priority-${opportunity.priority}`}>
     <header><div><span className={`br-sev ${opportunity.priority}`}>{severityLabel[opportunity.priority]} priority</span><h4>{opportunity.title}</h4>
       <p className="br-service">{opportunity.serviceId ? <>Matches your service <strong>{opportunity.serviceName}</strong></> : <span className="br-muted">{opportunity.serviceName || 'No matching service in your catalog'}</span>} · {opportunityLabels[opportunity.opportunityType]}</p></div>
       <span className={`br-status ${opportunity.status}`}>{opportunityStatusLabels[opportunity.status]}</span></header>
-    <p>{opportunity.why}</p>
-    <p className="br-muted"><strong>Possible benefit:</strong> {opportunity.benefit}</p>
-    <p className="br-muted"><strong>Next action:</strong> {opportunity.nextAction}</p>
-    <p className="br-muted">Confidence: {opportunity.confidence} · Based on {basis.length} finding{basis.length === 1 ? '' : 's'}: {basis.slice(0, 4).map(item => item.title).join('; ')}{basis.length > 4 ? '…' : ''}</p>
-    <div className="br-actions">
-      {(['accepted', 'needs_verification', 'dismissed'] as const).map(status => <button key={status} className={opportunity.status === status ? 'primary' : 'secondary'} disabled={busy}
-        aria-pressed={opportunity.status === status} onClick={() => onStatus(opportunity.status === status ? 'suggested' : status)}>{status === 'accepted' ? 'Accept' : status === 'dismissed' ? 'Dismiss' : 'Needs verification'}</button>)}
+    <p className="br-why">{opportunity.why}</p>
+    <div className="br-opp-blocks">
+      <p className="br-muted"><span className="br-block-icon" aria-hidden="true"><Icon name="arrow" size={15} /></span><strong>Possible benefit:</strong> {opportunity.benefit}</p>
+      <p className="br-muted"><span className="br-block-icon" aria-hidden="true"><Icon name="compass" size={15} /></span><strong>Next action:</strong> {opportunity.nextAction}</p>
     </div>
-    <label className="br-notes">Notes<textarea rows={2} maxLength={2000} value={notes} placeholder="What you’ll mention, what to check first…" onChange={event => setNotes(event.target.value)}
-      onBlur={() => { if (notes !== opportunity.notes) onNotes(notes) }} /></label>
+    <p className="br-muted br-basis">Confidence: {opportunity.confidence} · Based on {basis.length} finding{basis.length === 1 ? '' : 's'}: {basis.slice(0, 4).map(item => item.title).join('; ')}{basis.length > 4 ? '…' : ''}</p>
+    <div className="br-opp-foot">
+      <div className="br-actions">
+        {(['accepted', 'needs_verification', 'dismissed'] as const).map(status => <button key={status} className={opportunity.status === status ? 'primary' : 'secondary'} disabled={busy}
+          aria-pressed={opportunity.status === status} onClick={() => onStatus(opportunity.status === status ? 'suggested' : status)}>{status === 'accepted' ? 'Accept' : status === 'dismissed' ? 'Dismiss' : 'Needs verification'}</button>)}
+      </div>
+      <label className="br-notes">Notes<textarea rows={2} maxLength={2000} value={notes} placeholder="What you’ll mention, what to check first…" onChange={event => setNotes(event.target.value)}
+        onBlur={() => { if (notes !== opportunity.notes) onNotes(notes) }} /></label>
+    </div>
   </article>
 }
 
@@ -204,6 +238,7 @@ export function BusinessReport({ workspace, lead, onEditLead }: { workspace: Wor
     return { resolved: previous.findings.filter(item => item.source !== 'ai' && !now.has(item.key)), added: report.findings.filter(item => item.source !== 'ai' && !before.has(item.key)), at: previous.createdAt }
   }, [report, previous])
   const pagespeed = (strategy: string) => report?.evidence.find(item => item.kind === 'pagespeed' && item.value.strategy === strategy)?.value
+  const mobileScore = score(pagespeed('mobile')?.performanceScore), desktopScore = score(pagespeed('desktop')?.performanceScore)
   const technologies = report?.evidence.filter(item => item.kind === 'technology') ?? []
   const counts = { high: 0, medium: 0, low: 0, info: 0 }
   for (const finding of report?.findings ?? []) counts[finding.severity]++
@@ -212,30 +247,41 @@ export function BusinessReport({ workspace, lead, onEditLead }: { workspace: Wor
 
   if (history === null) return <div className="br-loading" role="status"><i className="skeleton skeleton-title" /><i className="skeleton skeleton-panel" /></div>
 
+  const providerMark = (ok: boolean) => <span className="br-provider-mark" aria-hidden="true"><Glyph d={ok ? glyphs.tick : glyphs.dash} size={12} /></span>
   const providerChips = config && <ul className="br-providers" aria-label="Available analysis tools">
-    <li className="ok">Website reader{config.providers.crawler.provider === 'apify' ? ` · Apify, up to ${config.providers.crawler.maxPages} pages` : ` · up to ${config.providers.crawler.maxPages} pages`}</li>
-    <li className={config.providers.pagespeed.configured ? 'ok' : 'off'}>PageSpeed Insights{config.providers.pagespeed.configured ? '' : ' · not set up'}</li>
-    <li className={config.providers.ai.configured ? 'ok' : 'off'}>AI interpretation{config.providers.ai.configured ? ' · Gemini' : ' · not set up'}</li>
-    <li className="ok">Technology detection</li>
+    <li className="ok">{providerMark(true)}Website reader{config.providers.crawler.provider === 'apify' ? ` · Apify, up to ${config.providers.crawler.maxPages} pages` : ` · up to ${config.providers.crawler.maxPages} pages`}</li>
+    <li className={config.providers.pagespeed.configured ? 'ok' : 'off'}>{providerMark(config.providers.pagespeed.configured)}PageSpeed Insights{config.providers.pagespeed.configured ? '' : ' · not set up'}</li>
+    <li className={config.providers.ai.configured ? 'ok' : 'off'}>{providerMark(config.providers.ai.configured)}AI interpretation{config.providers.ai.configured ? ' · Gemini' : ' · not set up'}</li>
+    <li className="ok">{providerMark(true)}Technology detection</li>
   </ul>
 
-  if (!website) return <div className="br-empty"><h3>Add a website to analyze this business</h3><p>Business analysis reads the lead’s public website. {lead.company || lead.name} doesn’t have one yet.</p>
+  if (!website) return <div className="br-empty br-nosite"><span className="br-nosite-icon" aria-hidden="true"><Icon name="link" size={22} /></span><h3>Add a website to analyze this business</h3><p>Business analysis reads the lead’s public website. {lead.company || lead.name} doesn’t have one yet.</p>
     <button className="primary" onClick={onEditLead}>Edit lead</button></div>
 
-  if (!report) return <div className="br-empty">
-    <p className="eyebrow">BUSINESS INTELLIGENCE</p>
-    <h3>Analyze {lead.company || lead.name}’s website</h3>
-    <p>LeadFlow reads the public pages of <a href={website} target="_blank" rel="noopener noreferrer nofollow">{website.replace(/^https?:\/\//, '')}</a>, measures speed with PageSpeed Insights, detects the technology it uses, and matches what it finds to your agency services. Every finding links to the evidence behind it.</p>
-    {providerChips}
-    {error && <p className="br-error" role="alert">{error}</p>}
-    <button className="primary" disabled={busy} onClick={() => void start()}>{busy ? 'Starting…' : 'Analyze business'}</button>
-    <p className="br-muted">Only public pages are read. Logins, CAPTCHAs and bot protection are never bypassed.</p>
+  if (!report) return <div className="br-empty br-launch">
+    <div className="br-launch-copy">
+      <p className="eyebrow"><Icon name="spark" size={14} />BUSINESS INTELLIGENCE</p>
+      <h3>Analyze {lead.company || lead.name}’s website</h3>
+      <p>LeadFlow reads the public pages of <a href={website} target="_blank" rel="noopener noreferrer nofollow">{website.replace(/^https?:\/\//, '')}</a>, measures speed with PageSpeed Insights, detects the technology it uses, and matches what it finds to your agency services. Every finding links to the evidence behind it.</p>
+      {providerChips}
+      {error && <p className="br-error" role="alert">{error}</p>}
+      <button className="primary" disabled={busy} onClick={() => void start()}>{busy ? 'Starting…' : 'Analyze business'}</button>
+      <p className="br-muted"><Glyph d={glyphs.shield} size={15} />Only public pages are read. Logins, CAPTCHAs and bot protection are never bypassed.</p>
+    </div>
+    <div className="br-launch-art" aria-hidden="true">
+      <span className="br-radar"><i /><i /><i /><b /></span>
+      <span className="br-core"><Icon name="spark" size={26} /></span>
+      <span className="br-float f1"><i /><b /><b /></span>
+      <span className="br-float f2"><i /><b /><b /></span>
+      <span className="br-float f3"><i /><b /><b /></span>
+      <span className="br-float f4"><svg width="24" height="24" viewBox="0 0 36 36" fill="none" focusable="false"><circle cx="18" cy="18" r="14" fill="none" stroke="rgba(255, 255, 255, .12)" strokeWidth="5" pathLength={100} /><circle cx="18" cy="18" r="14" fill="none" stroke="#c4f26a" strokeWidth="5" strokeLinecap="round" pathLength={100} strokeDasharray="72 100" /></svg><b /><b /></span>
+    </div>
   </div>
 
   const done = !isActive(report)
   return <div className="br">
     <div className="br-top">
-      <div><a href={report.website} target="_blank" rel="noopener noreferrer nofollow" className="br-site">{report.website.replace(/^https?:\/\//, '').replace(/\/$/, '')}</a>
+      <div className="br-top-main"><span className="br-site-icon" aria-hidden="true"><Glyph d={glyphs.globe} size={20} /></span><a href={report.website} target="_blank" rel="noopener noreferrer nofollow" className="br-site">{report.website.replace(/^https?:\/\//, '').replace(/\/$/, '')}</a>
         <p className="br-muted">{done ? `Analyzed ${dateLabel(report.completedAt ?? report.createdAt)}` : `Started ${new Date(report.createdAt).toLocaleTimeString()}`} · {report.pagesAnalyzed} page{report.pagesAnalyzed === 1 ? '' : 's'} analyzed</p></div>
       <div className="br-top-actions">
         <span className={`br-state ${report.status}`}>{statusLabels[report.status]}</span>
@@ -258,15 +304,15 @@ export function BusinessReport({ workspace, lead, onEditLead }: { workspace: Wor
       {tab === 'overview' && <section className="br-overview">
         {report.status === 'partial' && <p className="br-notice">Some parts couldn’t be completed: {Object.entries(report.providers).filter(([, state]) => !['ok', 'not_configured', 'running'].includes(state.status)).map(([name, state]) => `${providerNames[name] ?? name} (${providerStatus[state.status] ?? state.status})`).join(', ') || 'fewer pages than expected were read'}. See Details.</p>}
         <div className="br-metrics">
-          <div><span>Mobile performance</span><strong className={`score-${(score(pagespeed('mobile')?.performanceScore) ?? -1) >= 90 ? 'good' : (score(pagespeed('mobile')?.performanceScore) ?? -1) >= 50 ? 'ok' : 'poor'}`}>{score(pagespeed('mobile')?.performanceScore) ?? '—'}</strong><small>{pagespeed('mobile') ? `LCP ${ms(pagespeed('mobile')?.lcpMs)}` : 'Not measured'}</small></div>
-          <div><span>Desktop performance</span><strong className={`score-${(score(pagespeed('desktop')?.performanceScore) ?? -1) >= 90 ? 'good' : (score(pagespeed('desktop')?.performanceScore) ?? -1) >= 50 ? 'ok' : 'poor'}`}>{score(pagespeed('desktop')?.performanceScore) ?? '—'}</strong><small>{pagespeed('desktop') ? `LCP ${ms(pagespeed('desktop')?.lcpMs)}` : 'Not measured'}</small></div>
-          <div><span>Findings</span><strong>{report.findings.length}</strong><small>{counts.high} high · {counts.medium} medium · {counts.low} low</small></div>
-          <div><span>Opportunities</span><strong>{report.opportunities.length}</strong><small>{report.opportunities.filter(item => item.status === 'accepted').length} accepted</small></div>
+          <div className={`br-score is-${band(mobileScore)}`}><span>Mobile performance</span><div className="br-gauge"><GaugeRing value={mobileScore} /><strong className={`score-${(mobileScore ?? -1) >= 90 ? 'good' : (mobileScore ?? -1) >= 50 ? 'ok' : 'poor'}`}>{mobileScore ?? '—'}</strong></div><small>{pagespeed('mobile') ? `LCP ${ms(pagespeed('mobile')?.lcpMs)}` : 'Not measured'}</small></div>
+          <div className={`br-score is-${band(desktopScore)}`}><span>Desktop performance</span><div className="br-gauge"><GaugeRing value={desktopScore} /><strong className={`score-${(desktopScore ?? -1) >= 90 ? 'good' : (desktopScore ?? -1) >= 50 ? 'ok' : 'poor'}`}>{desktopScore ?? '—'}</strong></div><small>{pagespeed('desktop') ? `LCP ${ms(pagespeed('desktop')?.lcpMs)}` : 'Not measured'}</small></div>
+          <div className="br-count"><span>Findings</span><strong>{report.findings.length}</strong><SeverityBar counts={counts} /><small>{counts.high} high · {counts.medium} medium · {counts.low} low</small></div>
+          <div className="br-count br-count-opps"><span>Opportunities</span><span className="br-count-icon" aria-hidden="true"><Icon name="spark" size={16} /></span><strong>{report.opportunities.length}</strong><small>{report.opportunities.filter(item => item.status === 'accepted').length} accepted</small></div>
         </div>
         <div className="br-columns">
           <div className="br-card">
             <h3>The business</h3>
-            {report.overview.ai?.summary ? <p>{report.overview.ai.summary.text} <span className="br-type ai_interpretation" title={findingTypeHelp.ai_interpretation}>AI</span></p> : <p className="br-muted">{config?.providers.ai.configured === false ? 'Add a Gemini API key to get a written summary.' : 'No summary was produced.'}</p>}
+            {report.overview.ai?.summary ? <div className="br-ai"><span className="br-ai-icon" aria-hidden="true"><Icon name="spark" size={16} /></span><p>{report.overview.ai.summary.text} <span className="br-type ai_interpretation" title={findingTypeHelp.ai_interpretation}>AI</span></p></div> : <p className="br-muted">{config?.providers.ai.configured === false ? 'Add a Gemini API key to get a written summary.' : 'No summary was produced.'}</p>}
             <dl className="br-kv">
               <div><dt>Name</dt><dd>{report.overview.facts?.name.value || '—'}</dd></div>
               {report.overview.facts?.category.value && <div><dt>Category</dt><dd>{report.overview.facts.category.value}</dd></div>}
@@ -280,18 +326,19 @@ export function BusinessReport({ workspace, lead, onEditLead }: { workspace: Wor
           </div>
           <div className="br-card">
             <h3>Top opportunities</h3>
-            {report.opportunities.length ? <ol className="br-top-list">{report.opportunities.slice(0, 4).map(item => <li key={item.id}><button className="br-link" onClick={() => setTab('opportunities')}>{item.title}</button><span className="br-muted"> · {item.serviceId ? item.serviceName : opportunityLabels[item.opportunityType]} · {item.priority} priority</span></li>)}</ol>
+            {report.opportunities.length ? <ol className="br-top-list br-top-opps">{report.opportunities.slice(0, 4).map(item => <li key={item.id} className={`priority-${item.priority}`}><button className="br-link" onClick={() => setTab('opportunities')}>{item.title}</button><span className="br-muted"> · {item.serviceId ? item.serviceName : opportunityLabels[item.opportunityType]} · {item.priority} priority</span></li>)}</ol>
               : <p className="br-muted">No opportunities were found.</p>}
             <h3>Most important findings</h3>
-            <ol className="br-top-list">{report.findings.filter(item => item.severity === 'high' || item.severity === 'medium').slice(0, 5).map(item => <li key={item.id}><span className={`br-dot ${item.severity}`} aria-hidden />{item.title}</li>)}</ol>
+            <ol className="br-top-list br-top-findings">{report.findings.filter(item => item.severity === 'high' || item.severity === 'medium').slice(0, 5).map(item => <li key={item.id}><span className={`br-dot ${item.severity}`} aria-hidden />{item.title}</li>)}</ol>
             {comparison && <><h3>Since the previous report</h3><p className="br-muted">Compared with {dateLabel(comparison.at)}: {comparison.resolved.length} resolved, {comparison.added.length} new.</p>
-              {!!comparison.resolved.length && <ul className="br-plain">{comparison.resolved.slice(0, 5).map(item => <li key={item.id}>✓ {item.title}</li>)}</ul>}
-              {!!comparison.added.length && <ul className="br-plain">{comparison.added.slice(0, 5).map(item => <li key={item.id}>＋ {item.title}</li>)}</ul>}</>}
+              {!!comparison.resolved.length && <ul className="br-plain br-resolved">{comparison.resolved.slice(0, 5).map(item => <li key={item.id}>✓ {item.title}</li>)}</ul>}
+              {!!comparison.added.length && <ul className="br-plain br-added">{comparison.added.slice(0, 5).map(item => <li key={item.id}>＋ {item.title}</li>)}</ul>}</>}
           </div>
         </div>
       </section>}
 
       {tab === 'findings' && <section>
+        <div className="br-sevsum"><SeverityBar counts={counts} /><p>{levels.filter(level => counts[level] > 0).map(level => <span key={level} className={level}><i aria-hidden="true" /><b>{counts[level]}</b> {level}</span>)}</p></div>
         <div className="br-filters">
           <select aria-label="Filter by category" value={categoryFilter} onChange={event => setCategoryFilter(event.target.value as Category | '')}><option value="">All categories</option>{usedCategories.map(item => <option key={item} value={item}>{categoryLabels[item]}</option>)}</select>
           <select aria-label="Filter by type" value={typeFilter} onChange={event => setTypeFilter(event.target.value)}><option value="">All types</option>{Object.entries(findingTypeLabels).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select>
@@ -305,7 +352,7 @@ export function BusinessReport({ workspace, lead, onEditLead }: { workspace: Wor
         {!visibleFindings.length && <p className="br-muted">No findings match these filters.</p>}
       </section>}
 
-      {tab === 'opportunities' && <section>
+      {tab === 'opportunities' && <section className="br-opps">
         <p className="br-muted">Suggestions based on the findings and your agency services. They describe what could help, not promised results.</p>
         {report.opportunities.map(item => <OpportunityCard key={item.id} opportunity={item} findings={findings} busy={busy} onStatus={status => void updateOpportunity(item, status, null)} onNotes={notes => void updateOpportunity(item, null, notes)} />)}
         {!report.opportunities.length && <p className="br-muted">No opportunities were found.</p>}

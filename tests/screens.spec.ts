@@ -6,6 +6,8 @@ import { createAnalysisHarness, dentalSite } from './support/analysis'
 import { austinDirectory, createDiscoveryHarness } from './support/discovery'
 import { createApolloHarness, demoPeople } from './support/apollo'
 import { createOnboardingHarness } from './support/onboarding'
+import { auditContrast } from './support/contrast'
+import { writeFileSync } from 'node:fs'
 
 // Visual review only: walks every app screen with simulated services and saves full-page screenshots.
 // Run with `npx playwright test --config playwright.screens.config.ts`. Not part of `npm test`.
@@ -17,14 +19,22 @@ const origin = `http://127.0.0.1:${process.env.SCREENS_PORT ?? '5176'}`
 const origins = { DISCOVERY_ALLOWED_ORIGINS: origin, PORTAL_ALLOWED_ORIGINS: origin, PORTAL_URL: `${origin}/client-portal` }
 let db: PGlite
 test.describe.configure({ timeout: 900000 })
+// SCREENS_THEME=dark captures every screen with the operating system set to dark mode.
+test.use({ colorScheme: process.env.SCREENS_THEME === 'dark' ? 'dark' : 'light' })
 test.afterEach(async () => { await db?.close() })
 
+// SCREENS_AUDIT=1 also records low-contrast text and large light surfaces per screen in <SCREENS_DIR>/audit.json.
+const audit: Record<string, unknown> = {}
 async function shot(page: Page, name: string) {
   if (only && !only.some(prefix => name.startsWith(prefix))) return
   for (const width of widths) {
     await page.setViewportSize({ width, height: 900 })
     await page.waitForTimeout(300)
     await page.screenshot({ path: `${dir}/${name}-${width}.png`, fullPage: true })
+    if (process.env.SCREENS_AUDIT) {
+      audit[`${name}-${width}`] = await page.evaluate(auditContrast)
+      writeFileSync(`${dir}/audit.json`, JSON.stringify(audit, null, 1))
+    }
   }
   await page.setViewportSize({ width: widths[0], height: 900 })
 }
@@ -88,6 +98,8 @@ test('app screens', async ({ page }) => {
   })
   await step('overview', async () => shot(page, 'overview'))
   await step('leads', async () => { await nav(page, 'Leads'); await shot(page, 'leads') })
+  await step('leads board', async () => { await page.getByRole('button', { name: 'Board', exact: true }).click(); await shot(page, 'leads-board'); await page.getByRole('button', { name: 'Table', exact: true }).click() })
+  await step('command palette', async () => { await page.keyboard.press('Control+K'); await expect(page.getByRole('dialog', { name: 'Command menu' })).toBeVisible(); await page.keyboard.type('ol'); await shot(page, 'palette'); await page.keyboard.press('Escape') })
   await step('lead detail', async () => { await page.getByLabel('View Olivia Bennett').first().click(); await expect(page.getByRole('dialog')).toBeVisible(); await shot(page, 'lead-detail'); await page.getByLabel('Close dialog').click() })
   await step('lead form', async () => { await page.getByRole('button', { name: 'Add lead' }).first().click(); await expect(page.getByRole('dialog', { name: 'Capture a new lead' })).toBeVisible(); await shot(page, 'lead-form'); await page.getByRole('button', { name: 'Cancel', exact: true }).click() })
   await step('followups', async () => { await page.getByRole('navigation', { name: 'Main navigation' }).getByRole('button', { name: /^Follow-ups/ }).click(); await shot(page, 'followups') })
@@ -104,6 +116,7 @@ test('app screens', async ({ page }) => {
     await page.getByRole('tab', { name: 'Apollo' }).click(); await page.waitForTimeout(800); await shot(page, 'apollo')
     await page.getByRole('combobox', { name: 'Job titles', exact: true }).fill('owner'); await page.keyboard.press('Enter')
     await page.getByRole('button', { name: 'Search people' }).click(); await expect(page.getByRole('heading', { name: /people found/ })).toBeVisible(); await shot(page, 'apollo-results')
+    await page.getByRole('tab', { name: 'Credits & accounts' }).click(); await page.waitForTimeout(500); await shot(page, 'apollo-credits')
   })
   await step('onboarding', async () => {
     await nav(page, 'Onboarding'); await expect(page.getByRole('heading', { name: 'Client onboarding', level: 1 })).toBeVisible(); await shot(page, 'onboarding-empty')
@@ -118,11 +131,16 @@ test('app screens', async ({ page }) => {
     await routeFunction(client, 'client-portal', request => onboarding.portal(request))
     await client.goto(url); await client.waitForTimeout(1500); await shot(client, 'portal'); await client.close()
   })
-  await step('integrations', async () => { await nav(page, 'Integrations'); await page.waitForTimeout(500); await shot(page, 'integrations') })
+  await step('integrations', async () => {
+    await nav(page, 'Integrations'); await page.waitForTimeout(500); await shot(page, 'integrations')
+    await page.locator('.integration-card').first().hover(); await page.waitForTimeout(300); await shot(page, 'integrations-hover')
+    await page.getByRole('button', { name: 'View Hosted inquiry form guide' }).click(); await page.waitForTimeout(600); await shot(page, 'integrations-detail')
+  })
   await step('settings', async () => { await nav(page, 'Settings'); await page.waitForTimeout(500); await shot(page, 'settings') })
   await step('business report', async () => {
     await nav(page, 'Leads'); await page.getByLabel('View Avery Stone').first().click(); await page.getByRole('button', { name: 'Business report' }).click()
     const report = page.locator('dialog#business-report'); await expect(report).toBeVisible(); await shot(page, 'report-start')
     await report.getByRole('button', { name: 'Analyze business' }).click(); await expect(report.locator('.br-state')).toHaveText('Completed', { timeout: 90000 }); await shot(page, 'report-done')
+    for (const [tab, name] of [[/^Findings/, 'report-findings'], [/^Opportunities/, 'report-opportunities'], [/^Evidence/, 'report-evidence'], [/^Details/, 'report-details']] as const) { await report.getByRole('tab', { name: tab }).click(); await page.waitForTimeout(300); await shot(page, name) }
   })
 })

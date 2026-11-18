@@ -5,6 +5,7 @@ import { blankItem, cleanItem, conflict, installStarterTemplates, itemError, loa
 import { Icon } from './Icon'
 import { Modal } from './Modal'
 import { ItemFields } from './OnboardingItemFields'
+import { Glyph } from './OnboardingReadiness'
 interface TemplatesProps { workspace: WorkspaceSummary; templates: TemplateSummary[]; onChanged: (message: string) => void; onUse: (templateId: string) => void }
 /** Owners and admins manage templates; everyone can start a request from one. The database enforces both. */
 export function OnboardingTemplates({workspace,templates,onChanged,onUse}:TemplatesProps){
@@ -26,14 +27,14 @@ export function OnboardingTemplates({workspace,templates,onChanged,onUse}:Templa
     <div className="settings-heading"><div><h2 id="ob-templates-title">Onboarding templates</h2><p>Each template is the checklist copied into a new onboarding. Editing a template never changes requests already created.</p></div>
       {canManage&&<button className="secondary" disabled={!!busy} onClick={()=>setEditing(newTemplate())}><Icon name="plus" size={16}/> New template</button>}</div>
     {error&&<div className="auth-alert" role="alert"><p>{error}</p></div>}
-    {templates.length===0?<div className="ob-empty"><h3>No templates yet</h3>
+    {templates.length===0?<div className="ob-empty"><span className="ob-empty-icon" aria-hidden="true"><Icon name="grid" size={24}/></span><h3>No templates yet</h3>
       <p>Start with LeadFlow’s four starter templates for paid advertising, SEO, social media management and email marketing, then adjust them to how your agency works.</p>
       {canManage?<button className="primary" disabled={!!busy} onClick={()=>act('install',async()=>`${await installStarterTemplates(workspace.id)} starter templates added.`)}>{busy==='install'?'Adding templates…':'Add the starter templates'}</button>
         :<p className="settings-note">Ask a workspace owner or admin to add templates. You can still start an onboarding from a blank checklist.</p>}
     </div>:<>
       {canManage&&missingStarters>0&&<p className="settings-note">Some starter templates aren’t in this workspace. <button className="text-button" disabled={!!busy} onClick={()=>act('install',async()=>`${await installStarterTemplates(workspace.id)} starter templates added.`)}>Add the missing starter templates</button></p>}
       <ul className="ob-template-grid">{templates.map(template=><li key={template.id} className={template.archived?'ob-template archived':'ob-template'}>
-        <div className="ob-template-head"><strong>{template.name}</strong>{template.archived?<span className="ob-tag">Archived</span>:template.starterKey&&<span className="ob-tag">Starter</span>}</div>
+        <div className="ob-template-head"><span className={`ob-template-icon ob-service-${template.serviceType}`} aria-hidden="true"><Glyph name={template.serviceType} size={20}/></span><strong>{template.name}</strong>{template.archived?<span className="ob-tag">Archived</span>:template.starterKey&&<span className="ob-tag">Starter</span>}</div>
         <p>{template.description||'No description.'}</p>
         <dl className="ob-template-meta"><div><dt>Service</dt><dd>{serviceLabels[template.serviceType]}</dd></div><div><dt>Items</dt><dd>{template.itemCount} ({template.requiredCount} required)</dd></div><div><dt>Updated</dt><dd>{dateLabel(template.updatedAt)}</dd></div></dl>
         <div className="ob-template-actions">

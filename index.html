@@ -7,6 +7,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#06130e" />
     <title>LeadFlow — Know what every lead needs before the first call</title>
+    <script>
+      (function () {
+        try {
+          var path = location.pathname.replace(/\/+$/, '') || '/'
+          if (!/^\/(app(\/.*)?|login|signup|client-portal)$/.test(path)) return
+          var stored = localStorage.getItem('leadflow.theme')
+          var dark = stored === 'dark' || (stored !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+          document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light')
+        } catch (error) {}
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>

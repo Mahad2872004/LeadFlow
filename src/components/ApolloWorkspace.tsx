@@ -1,12 +1,15 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, type CSSProperties } from 'react'
 import type { WorkspaceSummary } from '../lib/backend'
-import { accountLabel, apolloStatus, leadLists, remainingOf, type ApolloStatus, type FilterValues, type LeadList, type SearchKind } from '../lib/apollo'
+import { accountLabel, apolloStatus, leadLists, remainingOf, type ApolloAccount, type ApolloStatus, type FilterValues, type LeadList, type SearchKind } from '../lib/apollo'
 import type { LeadOrigin } from '../lib/discovery'
 import type { Lead } from '../lib/model'
 import { ApolloCredits } from './ApolloCredits'
 import { ApolloSaved } from './ApolloSaved'
 import { ApolloSearch } from './ApolloSearch'
+import { Icon } from './Icon'
 import './Apollo.css'
+/** Share of this cycle's allowance still left, 0–100, for the decorative credits ring. */
+const leftPercent = (account: ApolloAccount) => account.monthlyAllowance ? Math.max(0, Math.min(100, Math.round(remainingOf(account) / account.monthlyAllowance * 100))) : 0
 type View = 'people' | 'organizations' | 'saved' | 'credits'
 interface WorkspaceProps { workspace: WorkspaceSummary; leads: Lead[]; origins: LeadOrigin[]; blocked: boolean; onImported: (message: string) => Promise<void> }
 const accountKey = (workspaceId: string) => `leadflow.apollo.account.${workspaceId}`
@@ -42,7 +45,7 @@ export function ApolloWorkspace({workspace,leads,origins,blocked,onImported}:Wor
       <div className="dv-tabs" role="tablist" aria-label="Apollo views">{views.map(([id,label])=><button key={id} role="tab" aria-selected={view===id} className={view===id?'active':''} onClick={()=>setView(id)}>{label}</button>)}</div>
       <div className="ap-account-picker">
         <label>Apollo account<select value={account?.id??''} onChange={event=>select(event.target.value)}>{usable.map(item=><option key={item.id} value={item.id} disabled={!item.active}>{accountLabel(item)}{item.active?'':' (off)'}</option>)}</select></label>
-        {account&&<span className={`ap-remaining${remainingOf(account)<5?' low':''}`} title="Credits left this cycle in LeadFlow’s ledger">{Number(remainingOf(account).toFixed(2))} / {account.monthlyAllowance} credits left</span>}
+        {account&&<span className={`ap-remaining${remainingOf(account)<5?' low':''}`} style={{'--ap-left':leftPercent(account)} as CSSProperties} title="Credits left this cycle in LeadFlow’s ledger">{Number(remainingOf(account).toFixed(2))} / {account.monthlyAllowance} credits left</span>}
       </div>
     </div>
     {!account?<div className="error-banner">No Apollo account is switched on. Switch one on in Credits & accounts.</div>:<>
@@ -58,10 +61,11 @@ export function ApolloWorkspace({workspace,leads,origins,blocked,onImported}:Wor
 }
 function NotEnabled({reason,canManage,workspaceId}:{reason:ApolloStatus['reason'];canManage:boolean;workspaceId:string}){
   return <section className="panel dv-setup" aria-labelledby="ap-setup-title"><div className="dv-setup-copy">
+    <span className="dv-setup-icon" aria-hidden="true"><Icon name="link" size={22}/></span>
     <p className="eyebrow">APOLLO NOT CONNECTED</p>
     <h2 id="ap-setup-title">{reason==='no_accounts'?'No Apollo API key has been added yet':reason==='keys_unreadable'?'The Apollo API key couldn’t be read':'Apollo isn’t switched on for this workspace'}</h2>
     <p>Apollo search and contact reveals run on the server with your own Apollo API key. Until it’s connected, you can still import a CSV file or add businesses yourself.</p>
     {canManage&&<p className="dv-setup-detail">{reason==='keys_unreadable'?<>The <code>APOLLO_API_KEYS</code> secret is set, but no key could be read from it. Set it to <code>primary:YOUR_KEY</code> on one line, with no spaces inside the key, and reload this page.</>:reason==='no_accounts'?<>Set the <code>APOLLO_API_KEYS</code> secret for the <code>apollo</code> function, for example <code>primary:YOUR_KEY</code>, and add this workspace to <code>APOLLO_WORKSPACE_IDS</code>.</>
       :<>Add this workspace’s ID to the <code>APOLLO_WORKSPACE_IDS</code> secret: <code>{workspaceId}</code></>} See the Apollo setup guide (docs/APOLLO.md).</p>}
-  </div></section>
+  </div><div className="dv-setup-art" aria-hidden="true"><i/><i/><i/></div></section>
 }

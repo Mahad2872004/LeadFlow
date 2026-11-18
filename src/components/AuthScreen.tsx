@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 import { authErrorMessage, emailRedirect, isEmail, loadAuthSettings, resendConfirmation, type AuthSettings } from '../lib/auth'
 import { AppLink } from './AppLink'
 import { Icon } from './Icon'
+import { ThemeToggle } from './ThemeToggle'
 import './Workspace.css'
 type Errors = Partial<Record<'email' | 'password' | 'confirm', string>>
 export function Field({label,error,hint,...input}:{label:string;error?:string;hint?:string}&InputHTMLAttributes<HTMLInputElement>){
@@ -22,7 +23,7 @@ export function AuthScreen({mode,notice}:{mode:'sign-in'|'sign-up';notice:string
       <small>Workspace data is private to its members and protected in the database.</small>
     </section>
     <section className="auth-main">
-      <a href="/" className="text-button auth-back">← Back to LeadFlow</a>
+      <div className="auth-back"><a href="/" className="text-button">← Back to LeadFlow</a><ThemeToggle/></div>
       <div className="auth-card">{mode==='sign-in'?<SignIn notice={notice} search={search}/>:<SignUp search={search}/>}</div>
     </section>
   </main>

@@ -4,7 +4,7 @@ import { dateLabel } from '../lib/format'
 import type { Lead } from '../lib/model'
 import { blankItem, cleanItem, conflict, describeEvent, handOff, issueLink, itemError, itemStateLabels, kindLabels, loadRequest, portalLink, reminderBlockText, reminderIntervals, removeItem, reviewItem, revokeLinks, saveItem, serviceLabels, serviceTypes, setStatus, statusLabels, updateRequest,
   type Decision, type ItemDefinition, type Member, type RequestChanges, type RequestDetail, type RequestItem, type ReminderRecord, type ResponseValue, type ServiceType } from '../lib/onboarding'
-import { ReadinessBadge, ReadinessProgress } from './OnboardingReadiness'
+import { Glyph, ReadinessBadge, ReadinessProgress, ReadinessRing } from './OnboardingReadiness'
 import { Icon } from './Icon'
 import { Modal } from './Modal'
 import { ItemFields } from './OnboardingItemFields'
@@ -71,9 +71,11 @@ export function OnboardingRequest({workspace,requestId,members,leads,onBack}:Req
     decision==='accept'?`${item.title} accepted.`:decision==='request_changes'?`Changes requested on ${item.title}. The client will see your message.`:decision==='not_required'?`${item.title} marked not required.`:`${item.title} restored.`)
   const status=(transition:'activate'|'pause'|'resume'|'cancel',message:string,reason?:string)=>run(()=>setStatus(workspace.id,detail.id,transition,detail.version,reason),message)
   const events=allEvents?detail.events:detail.events.slice(0,40)
+  const resolved=detail.readiness.requiredAccepted+detail.readiness.requiredWaived,toReview=detail.items.filter(item=>item.state==='submitted').length
   return <div className="ob-detail">
     {back}
     <header className="panel ob-detail-head">
+      <span className={`ob-hero-icon ob-service-${detail.serviceType}`} aria-hidden="true"><Glyph name={detail.serviceType} size={22}/></span>
       <div><p className="eyebrow">{serviceLabels[detail.serviceType].toUpperCase()} · {statusLabels[detail.status].toUpperCase()}</p><h2>{detail.title}</h2><p>{detail.clientName}{detail.contactName?` · ${detail.contactName}`:''} · Owner: {ownerName}</p></div>
       <div className="ob-head-actions">
         {detail.status==='draft'&&<button className="primary" disabled={busy} onClick={()=>status('activate','Opened. Share the client link so they can start.')}>Open to client</button>}
@@ -82,6 +84,13 @@ export function OnboardingRequest({workspace,requestId,members,leads,onBack}:Req
         {open&&<button className="secondary" disabled={busy} onClick={()=>setDialog({kind:'details'})}>Edit details</button>}
         <button className="text-button" disabled={busy} onClick={()=>run(async()=>{},'Showing the latest responses.')}>Check for updates</button>
         {open&&canCancel&&<button className="text-button ob-danger" disabled={busy} onClick={()=>setDialog({kind:'cancel'})}>Cancel onboarding</button>}
+      </div>
+      <div className="ob-hero-stats" aria-hidden="true">
+        <span className="ob-hero-readiness"><ReadinessRing percent={detail.readiness.percent}/><span><small>Status</small><ReadinessBadge state={detail.readiness.state}/></span></span>
+        <span className="ob-hero-fact"><small>Required done</small><b>{resolved}<i>/{detail.readiness.requiredTotal}</i></b></span>
+        <span className="ob-hero-fact"><small>To review</small><b>{toReview}</b></span>
+        <span className="ob-hero-fact"><small>Kickoff</small><b>{detail.targetKickoffDate?dateLabel(detail.targetKickoffDate):'Not set'}</b></span>
+        <span className="ob-hero-fact"><small>Inputs due</small><b>{detail.dueDate?dateLabel(detail.dueDate):'Not set'}</b></span>
       </div>
     </header>
     {busy&&<p role="status" className="sr-only">Saving…</p>}
@@ -103,7 +112,7 @@ export function OnboardingRequest({workspace,requestId,members,leads,onBack}:Req
           <div className="settings-heading"><div><h2 id="ob-checklist-title">Client checklist</h2><p>{detail.templateName?`Copied from “${detail.templateName}”. Changes here affect only this client.`:'Built for this client.'}</p></div>
             {open&&<button className="secondary" disabled={busy} onClick={()=>setDialog({kind:'item',item:blankItem()})}><Icon name="plus" size={16}/> Add item</button>}</div>
           {detail.items.length===0&&<div className="ob-empty"><p>No items yet. Add what you need from the client before delivery can start.</p></div>}
-          {sections.map(([section,items])=><div key={section}><h3 className="ob-section-title">{section}</h3><ul className="ob-items">{items.map(item=><li key={item.id} id={`item-${item.id}`} className={`ob-item ob-item-${item.state}`}>
+          {sections.map(([section,items])=>{const done=items.filter(item=>item.state==='accepted'||item.state==='not_required').length;return <div key={section} className="ob-section"><div className="ob-section-head"><h3 className="ob-section-title">{section}</h3><span className="ob-section-count" aria-hidden="true"><i><b style={{width:`${Math.round(100*done/items.length)}%`}}/></i>{done}/{items.length}</span></div><ul className="ob-items">{items.map(item=><li key={item.id} id={`item-${item.id}`} className={`ob-item ob-item-${item.state}`}>
             <div className="ob-item-head"><div><strong>{item.title}</strong><div className="ob-item-tags"><span className="ob-tag">{item.required?'Required':'Optional'}</span><span className="ob-tag">{kindLabels[item.kind]}</span>{item.dueDate&&<span className="ob-tag">Due {dateLabel(item.dueDate)}</span>}{item.overdue&&<span className="ob-tag ob-tag-overdue">Overdue</span>}</div></div>
               <span className={`ob-state ob-state-${item.state}`}>{itemStateLabels[item.state]}</span></div>
             {item.guidance&&<p className="ob-guidance">{item.guidance}</p>}
@@ -119,7 +128,7 @@ export function OnboardingRequest({workspace,requestId,members,leads,onBack}:Req
               <button className="text-button" disabled={busy} onClick={()=>setDialog({kind:'item',item:{id:item.id,section:item.section,title:item.title,guidance:item.guidance,kind:item.kind,options:item.options,required:item.required,dueDate:item.dueDate,internalNote:item.internalNote,locked:!!item.response||item.hasDraft}})}>Edit item</button>
               {!item.response&&<button className="text-button ob-danger" disabled={busy} onClick={()=>run(()=>removeItem(workspace.id,detail.id,item.id,detail.version),`${item.title} removed.`)}>Remove</button>}
             </div>}
-          </li>)}</ul></div>)}
+          </li>)}</ul></div>})}
         </section>
         <section className="panel ob-panel" aria-labelledby="ob-activity-title">
           <div className="settings-heading"><div><h2 id="ob-activity-title">Activity</h2><p>Submissions, reviews, reminders and status changes for this onboarding.</p></div><span className="soft-tag">{detail.events.length} events</span></div>
@@ -131,7 +140,7 @@ export function OnboardingRequest({workspace,requestId,members,leads,onBack}:Req
         <section className="panel ob-panel" aria-labelledby="ob-link-title">
           <div className="settings-heading"><div><h2 id="ob-link-title"><Icon name="link" size={18}/> Client link</h2><p>A private link to this checklist only. The client doesn’t need an account.</p></div></div>
           {newLink&&<NewLink token={newLink.token} expiresAt={newLink.expiresAt}/>}
-          {sharedLinks.length>0?<ul className="ob-link-list">{sharedLinks.map(link=><li key={link.id}><span>Created {when(link.createdAt)}<br/>Expires {when(link.expiresAt)} · {link.lastUsedAt?`last opened ${when(link.lastUsedAt)}`:'not opened yet'}</span>{open&&<button className="text-button ob-danger" disabled={busy} onClick={()=>run(()=>revokeLinks(workspace.id,detail.id,link.id),'Link revoked. It stops working immediately.').then(ok=>{if(ok)setNewLink(null)})}>Revoke</button>}</li>)}</ul>
+          {sharedLinks.length>0?<ul className="ob-link-list">{sharedLinks.map(link=><li key={link.id}><span className="ob-link-icon" aria-hidden="true"><Glyph name="lock" size={16}/></span><span>Created {when(link.createdAt)}<br/>Expires {when(link.expiresAt)} · {link.lastUsedAt?`last opened ${when(link.lastUsedAt)}`:'not opened yet'}</span>{open&&<button className="text-button ob-danger" disabled={busy} onClick={()=>run(()=>revokeLinks(workspace.id,detail.id,link.id),'Link revoked. It stops working immediately.').then(ok=>{if(ok)setNewLink(null)})}>Revoke</button>}</li>)}</ul>
             :<p className="ob-muted">{open?'No active link. Create one to share with the client.':'No active link.'}</p>}
           {reminderLinks.length>0&&<p className="ob-muted">Reminder emails carry their own private links ({reminderLinks.length} active). Revoking all links stops those too.</p>}
           {open&&<div className="ob-link-controls">
@@ -168,8 +177,8 @@ export function OnboardingRequest({workspace,requestId,members,leads,onBack}:Req
 }
 function NewLink({token,expiresAt}:{token:string;expiresAt:string}){
   const [feedback,setFeedback]=useState(''),url=portalLink(token)
-  return <div className="ob-new-link"><label>Copy this link now<input readOnly value={url} onFocus={event=>event.currentTarget.select()}/></label>
-    <button className="secondary" onClick={async()=>{try{await navigator.clipboard.writeText(url);setFeedback('Copied to clipboard.')}catch{setFeedback('Copy unavailable. Select the link and copy it manually.')}}}>Copy link</button>
+  return <div className="ob-new-link"><label><Glyph name="lock" size={14}/>Copy this link now<input readOnly value={url} onFocus={event=>event.currentTarget.select()}/></label>
+    <button className="secondary" onClick={async()=>{try{await navigator.clipboard.writeText(url);setFeedback('Copied to clipboard.')}catch{setFeedback('Copy unavailable. Select the link and copy it manually.')}}}><Glyph name="copy" size={16}/>Copy link</button>
     {feedback&&<p role="status">{feedback}</p>}
     <p className="ob-hint">Expires {when(expiresAt)}. LeadFlow keeps only a fingerprint of this link, so it can’t show it again. If it’s lost, replace it.</p></div>
 }

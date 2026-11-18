@@ -5,6 +5,11 @@ import { dateLabel } from '../lib/format'
 import { Modal } from './Modal'
 const creditTypes: [string, string][] = [['lead_credit', 'Email credits'], ['direct_dial_credit', 'Mobile credits'], ['export_credit', 'Export credits']]
 const percent = (used: number, total: number) => total ? Math.min(100, Math.round(used / total * 1000) / 10) : 0
+/** Decorative initials for an account's tile, such as "PR" for "primary". */
+const initialsOf = (name: string) => {
+  const words = name.replace(/[^\p{L}\p{N}]+/gu, ' ').trim().split(' ').filter(Boolean)
+  return (words.length > 1 ? words[0].charAt(0) + words[1].charAt(0) : (words[0] ?? '').slice(0, 2)).toUpperCase() || '?'
+}
 const when = (value: string | null) => value ? `${dateLabel(value)}, ${new Date(value).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}` : 'Never'
 interface CreditsProps { workspace: WorkspaceSummary; accounts: ApolloAccount[]; selected: string; onSelect: (id: string) => void; onChanged: () => void }
 /** Apollo accounts, their credit usage (LeadFlow's ledger and Apollo's own figures), and the credit history. */
@@ -39,7 +44,7 @@ export function ApolloCredits({workspace,accounts,selected,onSelect,onChanged}:C
     <p className="ap-help ap-note">Each account is used on its own; LeadFlow never switches accounts for you. Totals are for reference. Apollo’s terms don’t allow opening extra self-serve accounts to get around credit limits.</p>
     <div className="ap-account-grid">{accounts.map(account=>{const used=account.used,left=remainingOf(account),pct=percent(used,account.monthlyAllowance)
       return <article key={account.id} className={`panel ap-account${account.id===selected?' current':''}${!account.configured?' missing':''}`} aria-labelledby={`ap-acct-${account.id}`}>
-        <header><div><h3 id={`ap-acct-${account.id}`}>{account.nickname||account.id}</h3><small>{account.id}{account.nickname&&account.nickname!==account.id?'':''} · added {dateLabel(account.createdAt)}</small></div>
+        <header><span className="dv-avatar is-org" data-tone={account.id===selected?0:2} aria-hidden="true">{initialsOf(account.nickname||account.id)}</span><div><h3 id={`ap-acct-${account.id}`}>{account.nickname||account.id}</h3><small>{account.id}{account.nickname&&account.nickname!==account.id?'':''} · added {dateLabel(account.createdAt)}</small></div>
           <span className={`dv-badge ${!account.configured?'dv-invalid':account.active?'dv-new':'dv-possible'}`}>{!account.configured?'Key removed':account.active?'Active':'Switched off'}</span></header>
         <div className="ap-meter" role="img" aria-label={`${used} of ${account.monthlyAllowance} credits used, ${pct}%`}><i style={{width:`${pct}%`}} className={pct>=90?'high':undefined}/></div>
         <dl className="ap-figures">

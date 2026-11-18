@@ -1,14 +1,14 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { accessDenied, type WorkspaceSummary } from '../lib/backend'
 import { localDate } from '../lib/dates'
-import { dateLabel } from '../lib/format'
+import { dateLabel, initials } from '../lib/format'
 import type { Lead } from '../lib/model'
 import { createRequest, loadOverview, nextAction, readinessLabels, readinessStates, serviceLabels, serviceTypes, type Overview, type ReadinessState, type ServiceType } from '../lib/onboarding'
 import { useAuth, useWorkspaces } from '../lib/session'
 import { Icon } from './Icon'
 import { MetricCard } from './MetricCard'
 import { Modal } from './Modal'
-import { ReadinessBadge, ReadinessProgress } from './OnboardingReadiness'
+import { Glyph, ReadinessBadge, ReadinessProgress } from './OnboardingReadiness'
 import { OnboardingRequest } from './OnboardingRequest'
 import { OnboardingTemplates } from './OnboardingTemplates'
 import './Onboarding.css'
@@ -51,15 +51,15 @@ export function ClientOnboarding({workspace,leads,startLead}:OnboardingProps){
     {notice&&<div className="toast" role="status">✓ {notice}</div>}
     <div className="ob-toolbar">
       <div className="ob-tabs" role="tablist" aria-label="Client onboarding views">
-        <button role="tab" aria-selected={tab==='requests'} className={tab==='requests'?'active':''} onClick={()=>setTab('requests')}>Requests <span className="number-tag">{requests.length}</span></button>
-        <button role="tab" aria-selected={tab==='templates'} className={tab==='templates'?'active':''} onClick={()=>setTab('templates')}>Templates <span className="number-tag">{overview.templates.filter(template=>!template.archived).length}</span></button>
+        <button role="tab" aria-selected={tab==='requests'} className={tab==='requests'?'active':''} onClick={()=>setTab('requests')}><Icon name="clipboard" size={16}/>Requests <span className="number-tag">{requests.length}</span></button>
+        <button role="tab" aria-selected={tab==='templates'} className={tab==='templates'?'active':''} onClick={()=>setTab('templates')}><Icon name="grid" size={16}/>Templates <span className="number-tag">{overview.templates.filter(template=>!template.archived).length}</span></button>
       </div>
       <div className="ob-toolbar-actions"><button className="text-button" onClick={()=>reload('Showing the latest responses.')}>Check for updates</button><button className="primary" onClick={()=>setCreating({})}><Icon name="plus" size={17}/> New onboarding</button></div>
     </div>
     {tab==='templates'?<OnboardingTemplates workspace={workspace} templates={overview.templates} onChanged={reload} onUse={templateId=>{setTab('requests');setCreating({templateId})}}/>:<>
       <div className="stats ob-stats">
         <MetricCard label="In progress" value={current.length} hint="Drafts, open and paused" icon="clipboard" onClick={()=>show({})}/>
-        <MetricCard label="Waiting on client" value={requests.filter(request=>request.readiness.state==='waiting_on_client').length} hint="Required items not yet provided" icon="users" onClick={()=>show({state:'waiting_on_client'})}/>
+        <MetricCard label="Waiting on client" value={requests.filter(request=>request.readiness.state==='waiting_on_client').length} hint="Required items not yet provided" icon="users" meter={requests.filter(request=>request.readiness.state==='waiting_on_client').length/Math.max(1,current.length)} onClick={()=>show({state:'waiting_on_client'})}/>
         <MetricCard label="Items to review" value={current.reduce((sum,request)=>sum+request.counts.awaitingReview,0)} hint="Submitted by clients" icon="check" onClick={()=>show({state:'awaiting_review'})}/>
         <MetricCard label="Overdue items" value={current.reduce((sum,request)=>sum+request.counts.overdue,0)} hint="Required and past their due date" icon="clock" onClick={()=>show({due:'overdue'})}/>
         <MetricCard label="Ready for handoff" value={requests.filter(request=>request.readiness.state==='ready').length} hint="Every required item resolved" icon="arrow" accent onClick={()=>show({state:'ready'})}/>
@@ -75,16 +75,19 @@ export function ClientOnboarding({workspace,leads,startLead}:OnboardingProps){
           <span className="results" role="status">{visible.length} of {requests.length}</span>
           {filtered&&<button className="text-button" onClick={()=>setFilters(noFilters)}>Clear filters</button>}
         </div>}
-        {requests.length===0?<div className="ob-empty"><h3>Start your first client onboarding</h3>
+        {requests.length===0?<div className="ob-empty"><span className="ob-empty-icon" aria-hidden="true"><Icon name="clipboard" size={26}/></span><h3>Start your first client onboarding</h3>
           <p>Create an onboarding when a client signs. Pick a service template, adjust the checklist for this client, then share one private link. You’ll see exactly which required items are blocking delivery.</p>
           <div className="welcome-actions"><button className="primary" onClick={()=>setCreating({})}><Icon name="plus" size={17}/> New onboarding</button>{overview.templates.length===0&&<button className="secondary" onClick={()=>setTab('templates')}>Set up templates</button>}</div></div>
-        :visible.length===0?<div className="ob-empty"><p>No onboarding requests match these filters.</p><button className="secondary" onClick={()=>setFilters(noFilters)}>Clear filters</button></div>
+        :visible.length===0?<div className="ob-empty ob-empty-compact"><span className="ob-empty-icon" aria-hidden="true"><Icon name="search" size={22}/></span><p>No onboarding requests match these filters.</p><button className="secondary" onClick={()=>setFilters(noFilters)}>Clear filters</button></div>
         :<ul className="ob-list">{visible.map(request=><li key={request.id}><button className="ob-row" onClick={()=>setOpenId(request.id)} aria-label={`Open ${request.title} for ${request.clientName}`}>
+          <span className={`ob-row-icon ob-service-${request.serviceType}`} aria-hidden="true"><Glyph name={request.serviceType} size={20}/></span>
           <span className="ob-row-main"><strong>{request.title}</strong><small>{request.clientName} · {serviceLabels[request.serviceType]}</small></span>
           <span className="ob-row-status"><ReadinessBadge state={request.readiness.state}/><ReadinessProgress readiness={request.readiness}/></span>
-          <span className="ob-row-counts"><span>{request.counts.requiredOutstanding} required outstanding</span><span>{request.counts.awaitingReview} to review</span>{request.counts.overdue>0&&<span className="ob-overdue">{request.counts.overdue} overdue</span>}</span>
-          <span className="ob-row-meta"><span><small>Owner</small>{ownerName(request.ownerId)}</span><span><small>Target kickoff</small>{request.targetKickoffDate?dateLabel(request.targetKickoffDate):'Not set'}</span></span>
+          <span className="ob-row-counts"><span>{request.counts.requiredOutstanding} required outstanding</span><span>{request.counts.awaitingReview} to review</span>{request.counts.overdue>0&&<span className="ob-overdue">{request.counts.overdue} overdue</span>}
+            {request.dueDate&&<span className={request.dueDate<today&&['draft','active','paused'].includes(request.status)?'ob-row-due is-late':'ob-row-due'}><Icon name="calendar" size={14}/>Inputs due {dateLabel(request.dueDate)}</span>}</span>
+          <span className="ob-row-meta"><span><small>Owner</small><b className="ob-avatar" aria-hidden="true">{initials(ownerName(request.ownerId))}</b>{ownerName(request.ownerId)}</span><span><small>Target kickoff</small>{request.targetKickoffDate?dateLabel(request.targetKickoffDate):'Not set'}</span></span>
           <span className="ob-row-next"><small>Next action</small>{nextAction(request)}</span>
+          <span className="ob-row-go" aria-hidden="true"><Icon name="arrow" size={16}/></span>
         </button></li>)}</ul>}
       </section>
     </>}
