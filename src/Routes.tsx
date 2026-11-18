@@ -1,6 +1,7 @@
 import { Suspense, lazy, useEffect } from 'react'
 import { usePathname } from './lib/navigation'
 import { signupOpen } from './marketing/access'
+import { isThemedPath, watchTheme } from './lib/theme'
 const Dashboard=lazy(()=>import('./Dashboard'))
 const InquiryPage=lazy(()=>import('./components/InquiryPage'))
 const ClientPortal=lazy(()=>import('./components/ClientPortal'))
@@ -11,6 +12,9 @@ export default function Routes(){
  const appPage=path==='/app'||path.startsWith('/app/')
  const privatePage=appPage||path==='/login'||path==='/signup'
  const portalPage=path==='/client-portal'
+ const themed=isThemedPath(path)
+ // Dark mode covers the app, its sign-in pages and the client portal; the marketing site and inquiry form stay light.
+ useEffect(()=>themed?watchTheme():undefined,[themed])
  useEffect(()=>{
   if(privatePage){const [title,description]=authMeta[path]??['Workspace — LeadFlow','Sign in to your private LeadFlow workspace.'];document.title=title;document.querySelector('meta[name="description"]')?.setAttribute('content',description)}
   if(path==='/inquiry'){document.title='Send an inquiry — LeadFlow';document.querySelector('meta[name="description"]')?.setAttribute('content','Tell us about your project through the LeadFlow inquiry form.')}

@@ -1,145 +1,528 @@
-/* Lead discovery. Uses the dashboard palette and components from App.css. */
-.dv-toolbar{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:20px;flex-wrap:wrap}
-.dv-tabs{display:inline-flex;gap:4px;padding:4px;background:#eef3ef;border-radius:10px;max-width:100%;overflow-x:auto}
-.dv-tabs button{border:0;background:none;border-radius:7px;padding:9px 14px;min-height:40px;font-size:13px;font-weight:550;color:#4d6656;white-space:nowrap}
-.dv-tabs button.active{background:#fff;color:var(--ink);box-shadow:0 1px 3px #173e2314}
+/* Lead discovery: view tabs, the business search builder, results, CSV import, search history and setup states.
+   Builds on tokens in src/index.css and primitives in src/App.css. Apollo (Apollo.css) reuses the shared pieces here:
+   .dv-tabs, .dv-badge and its tones, .dv-table, .dv-biz/.dv-avatar, .dv-name, .dv-check, .dv-summary, .dv-actionbar,
+   .dv-history, .dv-detail, .dv-setup and .dv-spinner.
+   Overrides of App.css primitives use compound selectors (.panel.dv-results, .dv-form.panel select) so they win whatever
+   order the stylesheets load in.
+   Sections: page & tabs · shared pieces · search builder · progress & problems · results · dialogs · CSV import ·
+   history · setup states · motion · responsive */
 
-/* Search form */
-.dv-form{padding:0}
-.dv-form-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;padding:22px 24px 6px}
-.dv-form-head h2{margin:0 0 6px;font-size:18px;color:var(--ink)}.dv-form-head p{margin:0;font-size:13px;color:var(--muted);line-height:1.6;max-width:640px}
-.dv-provider{margin:0;min-width:180px}
-.dv-section{border:0;border-top:1px solid #eef2ef;margin:16px 0 0;padding:18px 24px 4px;min-width:0}
-.dv-section:disabled{opacity:.7}
-.dv-section legend{float:left;width:100%;display:flex;align-items:center;gap:9px;font-size:13px;font-weight:650;color:var(--ink);margin-bottom:14px}
-.dv-section legend .muted{font-weight:400}
-.dv-step{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:#e4f0e8;color:#256644;font-size:11px;font-weight:700}
-.dv-row{clear:both;display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:0 16px;align-items:start;max-width:1100px}
-.dv-locations{clear:both;list-style:none;margin:0;padding:0;display:grid;gap:10px}
-.dv-location{display:grid;grid-template-columns:minmax(140px,.9fr) minmax(150px,1.2fr) minmax(140px,1fr) minmax(110px,.7fr) 40px;gap:0 12px;align-items:end;padding:12px 12px 0;border:1px solid var(--line);border-radius:9px;background:#fbfcfb}
-.dv-location label{margin-bottom:12px}.dv-location label .muted{font-weight:400}
-.dv-remove{margin-bottom:14px}
-.dv-location-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 0 12px}
-.dv-location-foot .field-help{margin:0}
-.dv-refine{align-items:end}
-.dv-checks{display:flex;flex-wrap:wrap;gap:6px 18px;padding-bottom:16px;grid-column:span 2}
-.dv-check{display:inline-flex!important;align-items:center;gap:9px;min-height:40px;margin:0!important;font-size:13px!important;color:#3f5a48!important;cursor:pointer}
-.dv-check input{display:inline-block!important;width:18px!important;height:18px;margin:0!important;accent-color:#3f8561;flex-shrink:0;cursor:pointer}
-.dv-form-error{margin:0 24px 8px}
-.dv-form-foot{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:16px 24px 20px;border-top:1px solid #eef2ef;background:#fbfcfb}
-.dv-notes{font-size:12px;color:var(--muted);max-width:680px}.dv-notes summary{cursor:pointer;min-height:32px;display:inline-flex;align-items:center;color:#317252;font-weight:500}
-.dv-notes ul{margin:6px 0 0;padding-left:18px;line-height:1.6}
-
-/* Progress and problems */
-.dv-progress{position:relative;display:flex;align-items:center;gap:14px;padding:18px 24px}
-.dv-progress strong{font-size:14px;color:var(--ink)}.dv-progress p{margin:4px 0 0;font-size:12px;color:var(--muted)}
-.dv-spinner{width:22px;height:22px;border-radius:50%;border:3px solid #dbe8df;border-top-color:#3d8a62;animation:dv-spin .9s linear infinite;flex-shrink:0}
-.dv-progress-bar{position:absolute;left:0;bottom:0;height:3px;width:30%;background:#3d8a62;animation:dv-slide 1.6s ease-in-out infinite}
-@keyframes dv-spin{to{transform:rotate(360deg)}}
-@keyframes dv-slide{0%{left:-30%}100%{left:100%}}
-.dv-problem{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:18px 24px;background:#fffaf0;border-color:#f0e2c4}
-.dv-problem strong{color:#7a5413;font-size:14px}.dv-problem p{margin:4px 0 0;font-size:13px;color:#7a5f2d;line-height:1.55}
-.dv-inline-error{margin:0 24px 16px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
-
-/* Results. Visible overflow lets the selection bar stick to the bottom of the screen (hidden overflow would pin it to the panel). */
-.dv-results{overflow:visible}
-.dv-results-head p{line-height:1.6}.dv-results-head p a{color:#3e6f55}
-.dv-warnings{margin:0 24px 14px;padding:10px 14px 10px 30px;background:#f6f8f3;border:1px solid #e6ebdf;border-radius:8px;font-size:12px;color:#5c6f4f;line-height:1.6}
-.dv-summary{margin:0 24px 16px;padding:12px 14px;background:#edf6f0;border:1px solid #d1e6d8;border-radius:8px;font-size:13px;color:#2f6a48;line-height:1.6}
-.dv-summary ul{margin:6px 0 0;padding-left:18px}
-.dv-filters{flex-wrap:wrap}.dv-inline{white-space:nowrap}
-.dv-table td{white-space:normal;vertical-align:top}
-.dv-table tbody tr:hover{background:#fafcf9}
-.dv-table tr.dv-selected{background:#f1f7f2}
-.dv-select{width:44px}.dv-select input{width:18px;height:18px;accent-color:#3f8561;cursor:pointer;margin-top:3px}
-.dv-name{border:0;background:none;padding:0;text-align:left;color:inherit;display:block;max-width:300px}
-.dv-name strong{display:block;font-size:13px;font-weight:600;color:var(--ink);overflow-wrap:anywhere}.dv-name small{display:block;margin-top:4px;font-size:11px}
-.dv-name:hover strong{text-decoration:underline;text-underline-offset:3px}
-.dv-contacts{display:grid;gap:4px;max-width:260px;overflow-wrap:anywhere}.dv-contacts a{color:#317252}
-.dv-fresh{display:block;margin-top:6px;font-size:11px}
-.dv-actions{white-space:nowrap}.dv-actions .text-button+.text-button{margin-left:14px}
-.dv-badge{display:inline-flex;align-items:center;font-size:11px;font-weight:600;padding:3px 9px;border-radius:999px;white-space:nowrap}
-.dv-new{background:#e8f2ec;color:#2d6b49}
-.dv-possible{background:#fff1dc;color:#845414}
-.dv-existing{background:#e6edf7;color:#355782}
-.dv-invalid{background:#fbe9e4;color:#9b3b27}
-.dv-more{display:flex;justify-content:center;padding:16px}
-.dv-actionbar{position:sticky;bottom:12px;z-index:3;display:flex;align-items:center;gap:16px;margin:0 16px 16px;padding:10px 12px 10px 18px;border-radius:10px;background:#21503c;color:#e6f1ea;box-shadow:0 10px 30px #173e2333;font-size:13px;transform:translateY(12px);opacity:0;pointer-events:none;transition:opacity .15s,transform .15s}
-.dv-actionbar.visible{transform:none;opacity:1;pointer-events:auto}
-.dv-actionbar strong{color:#fff}.dv-actionbar .text-button{color:#cfe6d7}.dv-actionbar .primary{margin-left:auto;background:#fff;color:#21503c;border-color:#fff}
-.dv-blocked{margin:0 24px 16px}
-
-/* Detail and review dialogs */
-.dv-detail dl{display:grid;grid-template-columns:auto 1fr;gap:10px 18px;margin:0;font-size:13px}.dv-detail dl>div{display:contents}
-.dv-detail dt{color:var(--muted)}.dv-detail dd{margin:0;overflow-wrap:anywhere;color:var(--ink)}
-.dv-copy{margin-left:10px;min-height:24px}
-.dv-match{padding:9px 12px;border-radius:8px;font-size:13px;margin-bottom:16px}
-.dv-verify{font-size:12px;margin:16px 0 0}
-.dv-review{list-style:none;margin:0;padding:0;max-height:45vh;overflow:auto;border-top:1px solid var(--line)}
-.dv-review li{border-bottom:1px solid var(--line);padding:6px 0}
-.dv-review .dv-check{align-items:flex-start;padding:6px 0}.dv-review .dv-check input{margin-top:2px!important}
-.dv-review strong{display:block;color:var(--ink)}.dv-review small{display:block;margin-top:3px;font-size:12px}
-
-/* CSV import */
-.dv-steps{display:flex;gap:6px;list-style:none;margin:0;padding:0 24px 18px;flex-wrap:wrap}
-.dv-steps li{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);padding:6px 12px 6px 6px;border-radius:999px;background:#f5f8f5}
-.dv-steps li span{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:#e3e9e4;font-size:11px;font-weight:700;color:#5b7464}
-.dv-steps li.current{background:#e4f0e8;color:#256644;font-weight:600}.dv-steps li.current span{background:#3d8a62;color:#fff}
-.dv-steps li.done span{background:#cfe3d6;color:#256644}
-.dv-csv-body{padding:0 24px 22px}
-.dv-drop{display:flex!important;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:180px;border:2px dashed #cfdcd3;border-radius:12px;background:#fbfcfb;color:var(--muted)!important;font-size:13px!important;text-align:center;cursor:pointer;margin:0!important;transition:border-color .15s,background .15s}
-.dv-drop svg{color:#5e8d73}.dv-drop strong{font-size:15px;color:var(--ink)}
-.dv-drop:hover,.dv-drop.dragging,.dv-drop:focus-within{border-color:#3d8a62;background:#f1f7f2}
-.dv-csv-hint{font-size:12px;line-height:1.6;margin-top:14px}
-.dv-file{font-size:13px;color:var(--ink);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.dv-map td{white-space:normal}.dv-map select{min-height:38px;border:1px solid var(--line);border-radius:6px;padding:6px 8px;background:#fff;font-size:13px;min-width:200px}
-.dv-counts{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
-.dv-count{display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-width:120px;padding:10px 14px;border:1px solid var(--line);border-radius:9px;background:#fff;font-size:12px;color:var(--muted)}
-.dv-count strong{font-size:20px;color:var(--ink);font-variant-numeric:tabular-nums}
-.dv-count.active{border-color:#3d8a62;box-shadow:inset 0 0 0 1px #3d8a62}
-.dv-count-review strong{color:#845414}.dv-count-existing strong{color:#355782}.dv-count-invalid strong{color:#9b3b27}
-.dv-include{margin-bottom:10px!important}
-.dv-preview{max-height:420px;overflow:auto;border:1px solid var(--line);border-radius:9px}
-.dv-preview td{white-space:normal;vertical-align:top}.dv-preview th{position:sticky;top:0}
-.dv-sub{display:block;margin-top:4px;font-size:11px}
-.dv-skipped{margin:0 0 8px;padding-left:18px;font-size:13px;line-height:1.7}
-.dv-done-actions{justify-content:flex-start}
-
-/* History and setup */
-.dv-history{list-style:none;margin:0;padding:0}
-.dv-history li{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:16px;align-items:center;padding:16px 24px;border-top:1px solid var(--line)}
-.dv-history-main strong{display:block;font-size:13px;color:var(--ink);overflow-wrap:anywhere}.dv-history-main small{display:block;margin-top:4px;font-size:11px}
-.dv-run-completed{background:#e8f2ec;color:#2d6b49}.dv-run-failed{background:#fbe9e4;color:#9b3b27}.dv-run-running,.dv-run-interrupted{background:#eef1ef;color:#4f6457}
-.dv-setup{padding:30px 32px;background:linear-gradient(120deg,#f4f8f2,#fff)}
-.dv-setup h2{font-size:21px;color:var(--ink);max-width:640px;line-height:1.35}.dv-setup p{font-size:13px;line-height:1.7;color:var(--muted);max-width:680px}
-.dv-setup-detail{background:#fff;border:1px solid var(--line);border-radius:8px;padding:10px 12px}
-.dv-setup .welcome-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
-
-@media(max-width:1150px){
-  .dv-location{grid-template-columns:repeat(2,minmax(0,1fr));position:relative;padding-right:52px}.dv-remove{position:absolute;top:6px;right:6px;margin:0}
-  .dv-checks{grid-column:1/-1}
+.dv {
+  --dv-track: #e9efec;
+  --dv-selected: #eef7f2;
+  --dv-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2356645e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m7 10 5 5 5-5'/%3E%3C/svg%3E");
+  --dv-tick: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 12.5 4 4 8-9'/%3E%3C/svg%3E");
+  min-width: 0;
 }
-@media(max-width:700px){
-  .dv-table,.dv-table tbody{display:block;width:100%}.dv-table thead{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
-  .dv-table tr{display:grid;grid-template-columns:32px minmax(0,1fr);gap:8px 12px;padding:16px;border-top:1px solid var(--line)}
-  .dv-table td{display:block;padding:0;border:0;grid-column:2}.dv-table td.dv-select{grid-column:1;grid-row:1/span 4;width:auto}
-  .dv-table td[data-label]::before{content:attr(data-label);display:block;font-size:10px;letter-spacing:.8px;text-transform:uppercase;color:#7b8b80;margin-bottom:3px}
-  .dv-table td[data-label="Business"]::before{display:none}
-  .dv-actions .text-button{min-height:40px}
+
+/* ---------- Page & tabs ---------- */
+.dv-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 16px; margin-bottom: 20px }
+.dv-toolbar .dv-tabs {
+  display: inline-flex; gap: 2px; max-width: 100%; padding: 4px; overflow-x: auto;
+  border: 1px solid var(--lf-line); border-radius: 13px; background: var(--dv-track, var(--lf-track));
+  box-shadow: inset 0 1px 2px rgba(10, 24, 19, .05);
+  scrollbar-width: none;
 }
-@media(max-width:580px){
-  .dv-toolbar{align-items:stretch}.dv-toolbar>.secondary{width:100%}
-  .dv-form-head{flex-direction:column;padding:20px 16px 4px}.dv-section{padding:16px 16px 2px}
-  .dv-location{grid-template-columns:minmax(0,1fr)}
-  .dv-form-foot{flex-direction:column-reverse;align-items:stretch;padding:16px}.dv-form-foot .primary{width:100%}
-  .dv-problem{flex-direction:column;align-items:flex-start;padding:16px}
-  .dv-warnings,.dv-summary{margin-inline:16px}.dv-inline-error{margin-inline:16px}
-  .dv-actionbar{margin-inline:8px;gap:10px;padding-left:14px}.dv-actionbar .primary{padding-inline:12px}
-  .dv-csv-body{padding:0 16px 18px}.dv-steps{padding:0 16px 16px}.dv-steps li{font-size:11px}
-  .dv-count{min-width:calc(50% - 4px);flex:1}
-  .dv-history li{grid-template-columns:1fr auto;padding:16px}.dv-history li .secondary{grid-column:1/-1}
-  .dv-setup{padding:22px 18px}
-  .dv-detail dl,.lead-business{grid-template-columns:1fr;gap:2px}.dv-detail dd,.lead-business dd{margin-bottom:10px}
+.dv-toolbar .dv-tabs::-webkit-scrollbar { display: none }
+.dv-toolbar .dv-tabs button {
+  display: inline-flex; flex-shrink: 0; align-items: center; justify-content: center; gap: 8px;
+  min-height: 38px; padding: 0 15px; border: 0; border-radius: 9px; background: none;
+  color: var(--lf-muted); font-size: 13.5px; font-weight: 550; white-space: nowrap;
 }
-@media(prefers-reduced-motion:reduce){.dv-spinner,.dv-progress-bar{animation:none}.dv-actionbar{transition:none}}
-.dv-soon{margin-left:8px;font-size:10px;font-weight:650;letter-spacing:.3px;padding:2px 7px;border-radius:999px;background:#f6efdb;color:#7a6220}
+.dv-toolbar .dv-tabs button svg { color: var(--lf-faint); transition: color .15s }
+.dv-toolbar .dv-tabs button:hover { background: var(--lf-glass); color: var(--lf-ink) }
+.dv-toolbar .dv-tabs button:hover svg { color: var(--lf-muted) }
+.dv-toolbar .dv-tabs button.active {
+  background: var(--lf-surface); color: var(--lf-ink); font-weight: 600;
+  box-shadow: 0 0 0 1px rgba(10, 24, 19, .05), 0 1px 2px rgba(10, 24, 19, .08), 0 6px 14px -8px rgba(10, 24, 19, .25);
+  animation: dv-tab-in .4s var(--lf-ease);
+}
+.dv-toolbar .dv-tabs button.active svg { color: var(--lf-brand) }
+.dv-toolbar .dv-tabs button:focus-visible { outline-offset: -2px }
+.dv-soon { padding: 1px 7px; border: 1px solid var(--lf-warning-line); border-radius: 999px; background: var(--lf-warning-soft); color: var(--lf-warning); font-size: 11px; font-weight: 650; line-height: 1.5 }
+
+/* ---------- Shared pieces (also used by Apollo) ---------- */
+/* Status pills */
+.dv-badge { display: inline-flex; align-items: center; gap: 6px; padding: 2px 9px 2px 8px; border: 1px solid var(--lf-line); border-radius: 999px; background: var(--lf-subtle); color: var(--lf-muted); font-size: 12px; font-weight: 600; line-height: 1.5; white-space: nowrap }
+.dv-badge::before { content: ''; flex-shrink: 0; width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: .8 }
+.dv-new, .dv-run-completed { border-color: var(--lf-success-line); background: var(--lf-success-soft); color: var(--lf-success) }
+.dv-possible { border-color: var(--lf-warning-line); background: var(--lf-warning-soft); color: var(--lf-warning) }
+.dv-existing { border-color: var(--lf-info-line); background: var(--lf-info-soft); color: var(--lf-info) }
+.dv-invalid, .dv-run-failed { border-color: var(--lf-danger-line); background: var(--lf-danger-soft); color: var(--lf-danger) }
+.dv-run-running, .dv-run-interrupted { border-color: var(--lf-line); background: var(--lf-subtle); color: var(--lf-muted) }
+.dv-run-running::before { animation: lf-pulse 1s ease-in-out infinite }
+
+/* Initials tiles (decorative) */
+.dv-avatar {
+  display: inline-grid; flex-shrink: 0; place-items: center; width: 36px; height: 36px; border-radius: 10px;
+  background: linear-gradient(145deg, #e8f6ef, #d4ece0); color: #0d5f42;
+  font-size: 12.5px; font-weight: 700; letter-spacing: .02em; line-height: 1;
+  box-shadow: inset 0 0 0 1px rgba(10, 24, 19, .06); user-select: none;
+}
+.dv-avatar[data-tone="1"] { background: linear-gradient(145deg, #edf2fc, #dbe5f7); color: #2c5592 }
+.dv-avatar[data-tone="2"] { background: linear-gradient(145deg, #f4effc, #e5dbf5); color: #5b3b8c }
+.dv-avatar[data-tone="3"] { background: linear-gradient(145deg, #fff5e6, #fbe6c4); color: #7a4c00 }
+.dv-avatar[data-tone="4"] { background: linear-gradient(145deg, #e8f6f7, #d0ebee); color: #1b5f6b }
+.dv-biz { display: flex; align-items: center; gap: 12px; min-width: 0 }
+
+/* Name buttons in result tables */
+.dv-name { display: block; min-width: 0; max-width: 300px; padding: 0; border: 0; background: none; color: inherit; text-align: left }
+.dv-name strong { display: block; color: var(--lf-ink); font-size: 14px; font-weight: 600; line-height: 1.35; overflow-wrap: anywhere }
+.dv-name small { display: block; margin-top: 2px; color: var(--lf-muted); font-size: 12.5px; line-height: 1.4 }
+.dv-name:hover strong { color: var(--lf-brand-strong); text-decoration: underline; text-decoration-color: rgba(14, 122, 85, .35); text-underline-offset: 3px }
+
+/* Checkbox labels and the custom checkbox they share */
+.dv-check { display: inline-flex; align-items: center; gap: 10px; min-height: 40px; margin: 0; color: var(--lf-text); font-size: 13.5px; font-weight: 500; line-height: 1.4; cursor: pointer }
+:is(.dv-check, .dv-select) > input[type=checkbox] {
+  -webkit-appearance: none; appearance: none;
+  display: inline-block; flex-shrink: 0; width: 18px; height: 18px; margin: 0;
+  border: 1.5px solid #b1bfb8; border-radius: 5px; background: var(--lf-surface) center / 12px no-repeat;
+  cursor: pointer; transition: background-color .15s, border-color .15s, box-shadow .15s;
+}
+:is(.dv-check, .dv-select) > input[type=checkbox]:hover:not(:disabled) { border-color: var(--lf-brand) }
+:is(.dv-check, .dv-select) > input[type=checkbox]:checked { border-color: var(--lf-brand); background-color: var(--lf-brand); background-image: var(--dv-tick) }
+:is(.dv-check, .dv-select) > input[type=checkbox]:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--lf-brand-ring) }
+:is(.dv-check, .dv-select) > input[type=checkbox]:disabled { border-color: var(--lf-line); background-color: var(--lf-subtle); cursor: not-allowed }
+:is(.dv-check, .dv-select) > input[type=checkbox]:checked:disabled { border-color: #9cbcad; background-color: #9cbcad }
+
+/* Callouts */
+.dv-summary { position: relative; margin: 0 0 16px; padding: 12px 16px 12px 46px; border: 1px solid var(--lf-success-line); border-radius: 12px; background: var(--lf-success-soft); color: var(--lf-success); font-size: 13.5px; line-height: 1.6; overflow-wrap: anywhere }
+.dv-summary::before { content: ''; position: absolute; top: 12px; left: 14px; width: 22px; height: 22px; border-radius: 50%; background: var(--lf-brand) var(--dv-tick) center / 12px no-repeat; box-shadow: 0 0 0 3px rgba(14, 122, 85, .12) }
+.dv-summary strong { color: #07563a; font-weight: 650 }
+.dv-summary ul { margin: 6px 0 0; padding-left: 18px }
+.panel .dv-summary { margin: 0 22px 16px }
+.error-banner.dv-inline-error { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 0 0 16px }
+.panel .error-banner.dv-inline-error { margin: 0 22px 16px }
+.error-banner.dv-inline-error .secondary { min-height: 36px; margin: 0 }
+.dv-spinner { flex-shrink: 0; width: 22px; height: 22px; border: 2.5px solid var(--lf-brand-soft); border-top-color: var(--lf-brand); border-radius: 50%; animation: dv-spin .8s linear infinite }
+
+/* Floating bulk-action bar: collapsed until something is selected, then it sticks to the bottom of the screen. */
+.dv-actionbar {
+  position: sticky; bottom: 16px; z-index: 6;
+  display: flex; align-items: center; gap: 8px;
+  width: min(760px, calc(100% - 32px)); max-height: 0; margin: 0 auto; padding: 0 8px 0 10px; overflow: hidden;
+  border-radius: 14px; color: var(--lf-night-text); font-size: 13.5px;
+  background: radial-gradient(60% 140% at 0% 0%, color-mix(in srgb, var(--lf-glow-emerald) 22%, transparent), transparent 70%), linear-gradient(160deg, var(--lf-night-2), var(--lf-accent-bg));
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .07), 0 4px 12px -4px rgba(6, 19, 14, .35), 0 22px 44px -18px rgba(6, 19, 14, .7);
+  opacity: 0; transform: translateY(14px) scale(.98); pointer-events: none;
+  transition: opacity .2s var(--lf-ease), transform .35s var(--lf-ease), max-height .3s var(--lf-ease), padding .3s var(--lf-ease), margin .3s var(--lf-ease);
+}
+.dv-actionbar.visible { max-height: 200px; margin: 6px auto 16px; padding: 8px 8px 8px 10px; overflow: visible; opacity: 1; transform: none; pointer-events: auto }
+.dv-actionbar > span:first-child { display: inline-flex; align-items: center; gap: 8px; padding-right: 4px; color: var(--lf-night-muted); font-weight: 500; white-space: nowrap }
+.dv-actionbar > span:first-child strong { display: inline-grid; place-items: center; min-width: 28px; height: 28px; padding: 0 8px; border-radius: 8px; background: var(--lf-lime); color: var(--lf-on-lime); font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums }
+.dv-actionbar .text-button { min-height: 36px; padding: 0 10px; border-radius: 9px; color: var(--lf-night-text) }
+.dv-actionbar .text-button:hover:not(:disabled) { background: rgba(255, 255, 255, .08); color: #fff; text-decoration: none }
+.dv-actionbar .primary { min-height: 38px; margin-left: auto; background: var(--lf-lime); color: var(--lf-on-lime); box-shadow: 0 8px 22px -10px color-mix(in srgb, var(--lf-lime) 70%, transparent) }
+.dv-actionbar .primary:hover:not(:disabled) { background: var(--lf-lime-hover) }
+.dv-actionbar :focus-visible { outline-color: var(--lf-lime) }
+
+/* ---------- Search builder ---------- */
+.dv-form-head {
+  display: flex; align-items: flex-start; gap: 14px; padding: 22px 24px 20px; border-bottom: 1px solid var(--lf-line);
+  background: radial-gradient(50% 140% at 100% 0%, color-mix(in srgb, var(--lf-glow-mint) 13%, transparent), transparent 70%), linear-gradient(180deg, var(--lf-surface), #fbfdfc);
+}
+.dv-form-icon { display: grid; flex-shrink: 0; place-items: center; width: 42px; height: 42px; border-radius: 12px; color: #fff; background: linear-gradient(145deg, #17a572, #0a5a3e); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .28), 0 8px 18px -8px rgba(10, 90, 62, .7) }
+.dv-form-head > div { flex: 1; min-width: 0 }
+.dv-form-head h2 { margin: 1px 0 4px; font-size: 18.5px; letter-spacing: -.025em }
+.dv-form-head p { max-width: 640px; margin: 0; color: var(--lf-muted); font-size: 13.5px; line-height: 1.55 }
+.dv-form-head > .soft-tag { flex-shrink: 0; gap: 7px; margin-top: 2px; padding: 4px 11px; border-color: var(--lf-line); background: var(--lf-surface); color: var(--lf-text); box-shadow: var(--lf-shadow-xs) }
+.dv-form-head > .soft-tag::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: #22a873; box-shadow: 0 0 0 3px rgba(34, 168, 115, .16) }
+.dv-form.panel .dv-form-head .dv-provider { flex-shrink: 0; min-width: 200px; margin: 0 }
+
+/* Numbered steps on a rail: number in the left column, fields on the right. */
+.dv-section { position: relative; min-width: 0; margin: 0; padding: 22px 24px 8px 78px; border: 0 }
+.dv-section:disabled { opacity: .6 }
+.dv-section::before { content: ''; position: absolute; top: 0; bottom: 0; left: 37px; width: 2px; background: var(--lf-line) }
+.dv-section:first-of-type::before { top: 36px }
+.dv-section:last-of-type::before { bottom: auto; height: 36px }
+.dv-section:only-of-type::before { display: none }
+.dv-section + .dv-section::after { content: ''; position: absolute; top: 0; right: 24px; left: 78px; height: 1px; background: var(--lf-line) }
+.dv-section legend { float: left; display: flex; align-items: center; gap: 8px; width: 100%; margin: 0 0 14px; padding: 0; color: var(--lf-ink); font-size: 15px; font-weight: 650; letter-spacing: -.01em; line-height: 28px }
+.dv-section legend .muted { color: var(--lf-faint); font-size: 13px; font-weight: 500 }
+.dv-step {
+  position: absolute; top: 22px; left: 24px; z-index: 1;
+  display: grid; place-items: center; width: 28px; height: 28px; border: 1px solid var(--lf-success-line); border-radius: 9px;
+  background: var(--lf-brand-soft); color: var(--lf-brand-strong); font-size: 12.5px; font-weight: 700; letter-spacing: 0;
+  box-shadow: $1var(--lf-surface); transition: background-color .2s, color .2s, border-color .2s, box-shadow .2s;
+}
+.dv-section:focus-within .dv-step { border-color: transparent; background: var(--lf-accent-bg); color: var(--lf-lime); box-shadow: $1var(--lf-surface), 0 0 0 8px var(--lf-brand-ring) }
+.dv-row { clear: both; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(250px, 100%), 1fr)); gap: 0 16px; align-items: start; max-width: 1040px }
+.dv-row .field-help { margin: 6px 0 0; font-weight: 400 }
+
+/* Big, clean inputs */
+.dv-form.panel label:not(.dv-check) { margin-bottom: 16px; color: var(--lf-text); font-size: 13px; font-weight: 600 }
+.dv-form.panel label:not(.dv-check) .muted { color: var(--lf-faint); font-weight: 450 }
+.dv-form.panel input:not([type=checkbox]):not([type=radio]), .dv-form.panel select { min-height: 44px; margin-top: 7px; padding: 10px 13px; border-color: var(--lf-line-strong); border-radius: 11px; background-color: var(--lf-surface); font-size: 14.5px; box-shadow: var(--lf-shadow-xs) }
+.dv-form.panel select { -webkit-appearance: none; appearance: none; padding-right: 40px; background-image: var(--dv-chevron); background-repeat: no-repeat; background-position: right 12px center; background-size: 17px; cursor: pointer }
+.dv-form.panel input:not([type=checkbox]):not([type=radio]):hover:not(:focus), .dv-form.panel select:hover:not(:focus) { border-color: #a6b6ae }
+.dv-form.panel input:not([type=checkbox]):not([type=radio]):focus, .dv-form.panel select:focus { border-color: var(--lf-brand); box-shadow: 0 0 0 4px var(--lf-brand-ring) }
+
+/* Location cards */
+.dv-locations { clear: both; display: grid; gap: 10px; margin: 0; padding: 0; list-style: none }
+.dv-location {
+  position: relative; display: grid; grid-template-columns: minmax(150px, .9fr) minmax(160px, 1.2fr) minmax(150px, 1fr) minmax(120px, .7fr) 44px;
+  gap: 0 12px; align-items: end; padding: 14px 14px 0; border: 1px solid var(--lf-line); border-radius: 14px;
+  background: linear-gradient(180deg, var(--lf-surface-2), #f6f9f7);
+}
+.dv-location label { min-width: 0 }
+.icon-button.dv-remove { width: 44px; height: 44px; margin-bottom: 16px; border-color: var(--lf-line); background: var(--lf-surface); color: var(--lf-muted); font-size: 13px }
+.icon-button.dv-remove:hover:not(:disabled) { border-color: var(--lf-danger-line); background: var(--lf-danger-soft); color: var(--lf-danger) }
+.dv-location-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 16px; padding: 10px 0 14px }
+.dv-location-foot .field-help { margin: 0; color: var(--lf-faint) }
+.dv-location-foot .text-button { min-height: 36px }
+
+/* Refine: contact details as chip toggles (the real checkboxes, restyled) */
+.dv-row.dv-refine { grid-template-columns: minmax(0, 1fr) repeat(2, minmax(150px, 210px)); align-items: end }
+.dv-checks { display: flex; flex-wrap: wrap; align-self: end; gap: 8px; padding-bottom: 16px }
+.dv-checks .dv-check {
+  min-height: 44px; padding: 0 16px 0 13px; border: 1px solid var(--lf-line-strong); border-radius: 999px;
+  background: var(--lf-surface); color: var(--lf-text); font-weight: 550; box-shadow: var(--lf-shadow-xs);
+  transition: background-color .15s, border-color .15s, color .15s, box-shadow .15s;
+}
+.dv-checks .dv-check:hover { border-color: #95a69e }
+.dv-checks .dv-check:has(input:checked) { border-color: var(--lf-brand); background: var(--lf-brand-soft); color: var(--lf-brand-strong); box-shadow: inset 0 0 0 1px var(--lf-brand) }
+.dv-checks .dv-check:has(input:focus-visible) { box-shadow: 0 0 0 4px var(--lf-brand-ring) }
+.dv-checks .dv-check > input[type=checkbox] { border-radius: 50% }
+.field-error.dv-form-error { margin: 0 24px 14px 78px; padding: 10px 12px; border: 1px solid var(--lf-danger-line); border-radius: 10px; background: var(--lf-danger-soft) }
+
+/* Search action bar */
+.dv-form-foot {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  margin-top: 8px; padding: 16px 24px; border-top: 1px solid var(--lf-line);
+  background: linear-gradient(180deg, var(--lf-surface-2), var(--lf-tint));
+}
+.dv-form-foot .primary { min-height: 46px; padding: 0 24px; border-radius: 12px; font-size: 15px }
+.dv-form-foot .primary svg { color: var(--lf-lime) }
+.dv-notes { min-width: 0; max-width: 680px; color: var(--lf-muted); font-size: 13px }
+.dv-notes summary { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; color: var(--lf-text); font-weight: 600; cursor: pointer; list-style: none; user-select: none }
+.dv-notes summary::-webkit-details-marker { display: none }
+.dv-notes summary::before { content: ''; width: 18px; height: 18px; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2356645e' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M12 11v5M12 8h.01'/%3E%3C/svg%3E") center / contain no-repeat }
+.dv-notes summary::after { content: ''; width: 14px; height: 14px; background: var(--dv-chevron) center / contain no-repeat; transition: transform .2s var(--lf-ease) }
+.dv-notes summary:hover { color: var(--lf-ink) }
+.dv-notes[open] summary::after { transform: rotate(180deg) }
+.dv-notes ul { margin: 6px 0 4px; padding-left: 20px; line-height: 1.65 }
+
+/* ---------- Progress & problems ---------- */
+.panel.dv-progress { position: relative; display: flex; align-items: center; gap: 16px; padding: 18px 22px; border-color: var(--lf-success-line); background: radial-gradient(40% 140% at 0% 50%, color-mix(in srgb, var(--lf-glow-mint) 14%, transparent), transparent 70%), var(--lf-surface) }
+.dv-progress .dv-spinner { width: 30px; height: 30px; border-width: 3px }
+.dv-progress strong { color: var(--lf-ink); font-size: 14.5px; font-weight: 650 }
+.dv-progress p { margin: 3px 0 0; color: var(--lf-muted); font-size: 13px; line-height: 1.5 }
+.dv-progress-bar { position: absolute; bottom: 0; left: 0; width: 35%; height: 3px; border-radius: 3px; background: linear-gradient(90deg, transparent, var(--lf-brand), var(--lf-mint), transparent); animation: dv-slide 1.4s ease-in-out infinite }
+.panel.dv-problem { display: flex; align-items: center; gap: 14px; padding: 16px 20px; border-color: var(--lf-warning-line); background: var(--lf-warning-soft) }
+.panel.dv-problem::before { content: ''; flex-shrink: 0; width: 38px; height: 38px; border-radius: 11px; background: var(--lf-surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23855200' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z'/%3E%3Cpath d='M12 9v4M12 17h.01'/%3E%3C/svg%3E") center / 18px no-repeat; box-shadow: inset 0 0 0 1px var(--lf-warning-line) }
+.dv-problem > div { flex: 1; min-width: 0 }
+.dv-problem strong { color: #6b4200; font-size: 14.5px; font-weight: 650 }
+.dv-problem p { margin: 3px 0 0; color: #7a5413; font-size: 13.5px; line-height: 1.55 }
+.dv-problem .secondary { flex-shrink: 0 }
+
+/* ---------- Results ---------- */
+/* Visible overflow lets the selection bar stick to the bottom of the screen (hidden overflow would pin it to the panel). */
+.panel.dv-results { overflow: visible }
+.dv-results-head p { line-height: 1.6 }
+.dv-results-head p a { color: var(--lf-brand); font-weight: 500; text-decoration: none }
+.dv-results-head p a:hover { text-decoration: underline; text-underline-offset: 3px }
+.dv-results-head h2 .number-tag { border-color: var(--lf-success-line); background: var(--lf-brand-soft); color: var(--lf-brand-strong) }
+.dv-warnings { margin: 0 22px 14px; padding: 10px 14px 10px 32px; border: 1px solid var(--lf-line); border-radius: 12px; background: var(--lf-subtle); color: var(--lf-text); font-size: 13px; line-height: 1.6 }
+.filters.dv-filters { flex-wrap: wrap }
+.dv-check.dv-inline { white-space: nowrap }
+.dv-blocked { margin: 0 22px 16px; font-size: 13px }
+.dv-more { display: flex; justify-content: center; padding: 14px 16px 18px; border-top: 1px solid var(--lf-line) }
+
+/* Table */
+.dv-table > tbody > tr > td { white-space: normal; vertical-align: middle }
+.dv-table > tbody > tr { transition: background-color .15s }
+.dv-table > tbody > tr:hover { background: var(--lf-hover) }
+.dv-table > tbody > tr.dv-selected { background: var(--dv-selected, var(--lf-tint)) }
+.dv-table > tbody > tr.dv-selected > td:first-child { box-shadow: inset 3px 0 0 var(--lf-brand) }
+.dv-table th.dv-select, .dv-table td.dv-select { width: 52px; min-width: 52px; padding-right: 12px }
+.dv-select > input[type=checkbox] { display: block }
+.dv-contacts { display: grid; gap: 3px; max-width: 260px; font-size: 13px; line-height: 1.45; overflow-wrap: anywhere }
+.dv-contacts a { color: var(--lf-brand); font-weight: 550; text-decoration: none }
+.dv-contacts a:hover { text-decoration: underline; text-underline-offset: 3px }
+.dv-contacts .muted { color: var(--lf-faint) }
+.dv-fresh { display: flex; align-items: center; gap: 7px; margin-top: 7px; color: var(--lf-muted); font-size: 12px; white-space: nowrap }
+.dv-fresh::before { content: ''; flex-shrink: 0; width: 6px; height: 6px; border-radius: 50%; background: var(--lf-line-strong) }
+.dv-fresh[data-fresh=recent]::before { background: #22a873; box-shadow: 0 0 0 3px rgba(34, 168, 115, .15) }
+.dv-fresh[data-fresh=old]::before { background: #e0a43a; box-shadow: 0 0 0 3px rgba(224, 164, 58, .18) }
+.dv-table > tbody > tr > td.dv-actions { white-space: nowrap; text-align: right }
+.dv-actions .text-button { min-height: 32px; padding: 0 12px; border: 1px solid var(--lf-line-strong); border-radius: 9px; background: var(--lf-surface); color: var(--lf-ink); font-size: 13px; box-shadow: var(--lf-shadow-xs) }
+.dv-actions .text-button:hover:not(:disabled) { border-color: #95a69e; color: var(--lf-ink); text-decoration: none }
+.dv-actions .text-button + .text-button { margin-left: 4px; border-color: transparent; background: none; color: var(--lf-muted); box-shadow: none }
+.dv-actions .text-button + .text-button:hover:not(:disabled) { border-color: transparent; background: var(--lf-subtle); color: var(--lf-ink) }
+
+/* ---------- Dialogs: details, duplicate review ---------- */
+:is(.dv-detail dl, dl.dv-detail) { display: grid; grid-template-columns: minmax(110px, max-content) minmax(0, 1fr); margin: 0; overflow: hidden; border: 1px solid var(--lf-line); border-radius: 12px; font-size: 13.5px }
+:is(.dv-detail dl, dl.dv-detail) > div { display: contents }
+:is(.dv-detail dl, dl.dv-detail) dt { padding: 10px 14px; border-bottom: 1px solid var(--lf-line); background: var(--lf-surface-2); color: var(--lf-muted); font-size: 12.5px; font-weight: 550 }
+:is(.dv-detail dl, dl.dv-detail) dd { min-width: 0; margin: 0; padding: 10px 14px; border-bottom: 1px solid var(--lf-line); color: var(--lf-ink); overflow-wrap: anywhere }
+:is(.dv-detail dl, dl.dv-detail) > div:last-child > * { border-bottom: 0 }
+.text-button.dv-copy { min-height: 24px; margin-left: 8px; padding: 0 8px; border-radius: 6px; background: var(--lf-subtle); color: var(--lf-brand-strong); font-size: 12px; vertical-align: 1px }
+.text-button.dv-copy:hover:not(:disabled) { background: var(--lf-brand-soft); text-decoration: none }
+.dv-match { margin: 0 0 14px; padding: 10px 14px; border-width: 1px; border-style: solid; border-radius: 10px; font-size: 13.5px; font-weight: 550; line-height: 1.5 }
+.dv-match::before { content: ''; display: inline-block; width: 8px; height: 8px; margin-right: 9px; border-radius: 50%; background: currentColor; vertical-align: 1px }
+.muted.dv-verify { margin: 14px 0 0; font-size: 12.5px; line-height: 1.55 }
+.dv-review { max-height: 45vh; margin: 0; padding: 0; overflow: auto; border: 1px solid var(--lf-line); border-radius: 12px; list-style: none }
+.dv-review li + li { border-top: 1px solid var(--lf-line) }
+.dv-review .dv-check { display: flex; align-items: flex-start; width: 100%; padding: 12px 14px; transition: background-color .15s }
+.dv-review .dv-check:hover { background: var(--lf-hover) }
+.dv-review .dv-check > input[type=checkbox] { margin-top: 1px }
+.dv-review strong { display: block; color: var(--lf-ink); font-weight: 600 }
+.dv-review small { display: block; margin-top: 2px; color: var(--lf-muted); font-size: 12.5px }
+
+/* ---------- CSV import ---------- */
+/* Stepper */
+.dv-steps { display: flex; align-items: center; margin: 0; padding: 4px 22px 20px; list-style: none }
+.dv-steps li { display: flex; flex: 1; align-items: center; gap: 10px; min-width: 0; color: var(--lf-faint); font-size: 13px; font-weight: 550; white-space: nowrap }
+.dv-steps li:last-child { flex: 0 0 auto }
+.dv-steps li::after { content: ''; flex: 1; min-width: 16px; height: 2px; margin: 0 6px 0 4px; border-radius: 2px; background: var(--lf-line) }
+.dv-steps li:last-child::after { display: none }
+.dv-steps li > span { display: grid; flex-shrink: 0; place-items: center; width: 28px; height: 28px; border: 1.5px solid var(--lf-line-strong); border-radius: 50%; background: var(--lf-surface); color: var(--lf-muted); font-size: 12px; font-weight: 700; transition: background-color .2s, border-color .2s, box-shadow .2s }
+.dv-steps li.current { color: var(--lf-ink); font-weight: 650 }
+.dv-steps li.current > span { border-color: var(--lf-accent-bg); background: var(--lf-accent-bg); color: var(--lf-lime); box-shadow: 0 0 0 4px var(--lf-brand-ring) }
+.dv-steps li.done { color: var(--lf-text) }
+.dv-steps li.done > span { border-color: var(--lf-brand); background: var(--lf-brand); color: #fff }
+.dv-steps li.done::after { background: linear-gradient(90deg, var(--lf-brand), #7fd3ad) }
+.dv-csv-body { padding: 0 22px 22px }
+.dv-csv-body .dv-summary { margin: 0 0 14px }
+.dv-csv-body .error-banner.dv-inline-error { margin: 14px 0 0 }
+.dv-csv-body > .muted { margin: 10px 0 0; font-size: 12.5px }
+
+/* Drop zone */
+.dv-drop {
+  position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  min-height: 236px; margin: 0; padding: 32px 24px; border: 2px dashed #c4d3cb; border-radius: 18px;
+  background: radial-gradient(55% 75% at 50% 0%, color-mix(in srgb, var(--lf-glow-mint) 14%, transparent), transparent 70%), var(--lf-surface-2);
+  color: var(--lf-muted); font-size: 13.5px; font-weight: 450; text-align: center; cursor: pointer;
+  transition: border-color .2s, background-color .2s, box-shadow .2s;
+}
+.dv-drop-icon { display: grid; place-items: center; width: 60px; height: 60px; margin-bottom: 8px; border-radius: 18px; background: var(--lf-surface); color: var(--lf-brand); box-shadow: 0 0 0 1px var(--lf-line), 0 12px 26px -12px rgba(10, 24, 19, .32); transition: transform .3s var(--lf-ease), box-shadow .3s }
+.dv-drop strong { color: var(--lf-ink); font-size: 16.5px; font-weight: 650; letter-spacing: -.015em }
+.dv-drop:hover, .dv-drop.dragging { border-color: var(--lf-brand); background-color: #f1f9f5 }
+.dv-drop:hover .dv-drop-icon, .dv-drop.dragging .dv-drop-icon { transform: translateY(-3px); box-shadow: 0 0 0 1px var(--lf-success-line), 0 16px 30px -12px rgba(10, 90, 62, .4) }
+.dv-drop.dragging { border-style: solid; box-shadow: 0 0 0 5px var(--lf-brand-ring) }
+.dv-drop:focus-within { border-color: var(--lf-brand); box-shadow: 0 0 0 4px var(--lf-brand-ring) }
+.dv-csv-hint { line-height: 1.6 }
+
+/* Column mapping */
+.dv-file { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin: 0 0 14px; padding: 10px 12px 10px 52px; position: relative; border: 1px solid var(--lf-line); border-radius: 12px; background: var(--lf-subtle); color: var(--lf-muted); font-size: 13.5px }
+.dv-file::before { content: ''; position: absolute; top: 50%; left: 12px; width: 30px; height: 30px; margin-top: -15px; border-radius: 9px; background: var(--lf-surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230e7a55' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z'/%3E%3Cpath d='M14 3v5h5M9 13h6M9 17h4'/%3E%3C/svg%3E") center / 16px no-repeat; box-shadow: inset 0 0 0 1px var(--lf-line) }
+.dv-file strong { color: var(--lf-ink); font-weight: 650 }
+.dv-file .text-button { margin-left: auto }
+.dv-csv-body > .table-scroll { border: 1px solid var(--lf-line); border-radius: 12px }
+.dv-csv-body > .table-scroll th { border-top: 0 }
+.dv-csv-body > .table-scroll th:first-child, .dv-csv-body > .table-scroll td:first-child { padding-left: 16px }
+.dv-map > tbody > tr > td { white-space: normal; vertical-align: middle }
+.dv-map > tbody > tr > td:first-child { color: var(--lf-ink); font-weight: 550 }
+.dv-map > tbody > tr > td:first-child small { font-size: 12px; font-weight: 450 }
+.dv-map > tbody > tr > td:last-child { color: var(--lf-muted); font-family: var(--lf-mono); font-size: 12.5px; overflow-wrap: anywhere }
+.dv-map select {
+  -webkit-appearance: none; appearance: none; min-width: 210px; min-height: 38px; padding: 0 34px 0 11px;
+  border: 1px solid var(--lf-line-strong); border-radius: 9px; background: var(--lf-surface) var(--dv-chevron) no-repeat right 10px center / 16px;
+  color: var(--lf-ink); font-size: 13.5px; cursor: pointer;
+}
+.dv-map select:focus { border-color: var(--lf-brand); box-shadow: 0 0 0 3px var(--lf-brand-ring); outline: none }
+.dv-map select:has(option[value="-1"]:checked) { border-style: dashed; color: var(--lf-faint) }
+.dv-map select option { color: var(--lf-ink) }
+
+/* Review: counts as filter cards, then rows coloured by severity */
+.dv-counts { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; margin-bottom: 14px }
+.dv-count { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-width: 0; padding: 12px 14px; border: 1px solid var(--lf-line); border-radius: 12px; background: var(--lf-surface); color: var(--lf-muted); font-size: 12.5px; font-weight: 550; text-align: left; box-shadow: var(--lf-shadow-xs) }
+.dv-count::before { content: ''; position: absolute; top: 15px; right: 14px; width: 8px; height: 8px; border-radius: 50%; background: var(--lf-line-strong) }
+.dv-count strong { color: var(--lf-ink); font-size: 24px; font-weight: 650; letter-spacing: -.03em; line-height: 1.2; font-variant-numeric: tabular-nums }
+.dv-count:hover { border-color: var(--lf-line-strong) }
+.dv-count.active { border-color: var(--lf-ink); box-shadow: 0 0 0 1px var(--lf-ink), var(--lf-shadow) }
+.dv-count-all::before { background: var(--lf-accent-bg) }
+.dv-count-ready::before { background: #22a873 }
+.dv-count-review::before { background: #e0a43a }
+.dv-count-existing::before { background: #6d93d6 }
+.dv-count-invalid::before { background: #d0705d }
+.dv-count-review strong { color: var(--lf-warning) }
+.dv-count-existing strong { color: var(--lf-info) }
+.dv-count-invalid strong { color: var(--lf-danger) }
+.dv-check.dv-include { display: flex; width: 100%; margin: 0 0 12px; padding: 8px 12px; border: 1px solid var(--lf-warning-line); border-radius: 10px; background: var(--lf-warning-soft); color: #6b4200; font-weight: 550 }
+.table-scroll.dv-preview { max-height: 440px; overflow: auto }
+.dv-preview th { position: sticky; top: 0; z-index: 1 }
+.dv-preview td { white-space: normal; vertical-align: top }
+.dv-preview td:first-child { color: var(--lf-faint); font-family: var(--lf-mono); font-size: 12.5px }
+.dv-preview tr[data-status] > td:first-child { box-shadow: inset 3px 0 0 #34c58c }
+.dv-preview tr[data-status=review] { background: #fffcf4 }
+.dv-preview tr[data-status=review] > td:first-child { box-shadow: inset 3px 0 0 #e0a43a }
+.dv-preview tr[data-status=existing] { background: #f8fafe }
+.dv-preview tr[data-status=existing] > td:first-child { box-shadow: inset 3px 0 0 #6d93d6 }
+.dv-preview tr[data-status=invalid] { background: #fff8f6 }
+.dv-preview tr[data-status=invalid] > td:first-child { box-shadow: inset 3px 0 0 #d0705d }
+.dv-preview tr[data-status=invalid] .dv-sub { color: var(--lf-danger) }
+.dv-sub { display: block; margin-top: 4px; color: var(--lf-muted); font-size: 12px; line-height: 1.45 }
+
+/* Done */
+.dv-skipped { margin: 0 0 8px; padding: 0; overflow: hidden; border: 1px solid var(--lf-line); border-radius: 12px; font-size: 13.5px; list-style: none }
+.dv-skipped li { padding: 9px 14px; line-height: 1.5 }
+.dv-skipped li + li { border-top: 1px solid var(--lf-line) }
+.dv-skipped li .muted { margin-right: 6px; font-family: var(--lf-mono); font-size: 12px }
+.modal-actions.dv-done-actions { justify-content: flex-start }
+
+/* ---------- History: a timeline of search cards ---------- */
+.dv-history { position: relative; z-index: 0; margin: 0; padding: 2px 22px 22px; list-style: none }
+.dv-history li {
+  position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 16px; align-items: center;
+  margin-left: 44px; padding: 14px 16px; border: 1px solid var(--lf-line); border-radius: 14px; background: var(--lf-surface);
+  transition: border-color .15s, box-shadow .2s;
+}
+.dv-history li + li { margin-top: 10px }
+.dv-history li:hover { border-color: var(--lf-line-strong); box-shadow: var(--lf-shadow) }
+.dv-history li::before {
+  content: ''; position: absolute; top: 50%; left: -44px; width: 30px; height: 30px; margin-top: -15px; border-radius: 10px;
+  background: var(--lf-brand-soft) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230e7a55' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='10.5' cy='10.5' r='6.5'/%3E%3Cpath d='m16 16 5 5'/%3E%3C/svg%3E") center / 14px no-repeat;
+  box-shadow: $1var(--lf-surface), inset 0 0 0 1px var(--lf-success-line);
+}
+.dv-history li::after { content: ''; position: absolute; top: -11px; bottom: -11px; left: -30px; z-index: -1; width: 2px; background: var(--lf-line) }
+.dv-history li:first-child::after { top: 50% }
+.dv-history li:last-child::after { bottom: 50% }
+.dv-history li:only-child::after { display: none }
+.dv-history li:has(.dv-run-failed)::before { background-color: var(--lf-danger-soft); background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a8321d' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 8v5M12 16.5h.01'/%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3C/svg%3E"); box-shadow: $1var(--lf-surface), inset 0 0 0 1px var(--lf-danger-line) }
+.dv-history li:has(.dv-run-running, .dv-run-interrupted)::before { background-color: var(--lf-subtle); background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2356645e' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M12 7v5l3 2'/%3E%3C/svg%3E"); box-shadow: $1var(--lf-surface), inset 0 0 0 1px var(--lf-line) }
+.dv-history-main { min-width: 0 }
+.dv-history-main strong { display: block; color: var(--lf-ink); font-size: 14px; font-weight: 600; line-height: 1.4; overflow-wrap: anywhere }
+.dv-history-main small { display: block; margin-top: 3px; color: var(--lf-muted); font-size: 12.5px; line-height: 1.5 }
+.dv-history .secondary { min-height: 36px; padding: 0 14px; font-size: 13.5px }
+
+/* ---------- Setup and coming-soon states ---------- */
+.panel.dv-setup {
+  display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(260px, .8fr); gap: 32px; align-items: center; padding: 32px;
+  background: radial-gradient(50% 90% at 0% 0%, color-mix(in srgb, var(--lf-glow-mint) 12%, transparent), transparent 70%), var(--lf-surface);
+}
+.dv-setup-copy { min-width: 0 }
+.dv-setup-icon { display: grid; place-items: center; width: 50px; height: 50px; margin-bottom: 18px; border-radius: 15px; color: #fff; background: linear-gradient(145deg, #17a572, #0a5a3e); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .28), 0 10px 22px -10px rgba(10, 90, 62, .7) }
+.dv-setup .eyebrow { margin-bottom: 8px }
+.dv-setup h2 { max-width: 560px; margin: 0 0 10px; font-size: 23px; letter-spacing: -.03em; line-height: 1.25 }
+.dv-setup-copy > p:not(.eyebrow):not(.dv-setup-detail) { max-width: 600px; margin: 0 0 10px; color: var(--lf-muted); font-size: 14px; line-height: 1.65 }
+.dv-setup-detail { max-width: 600px; margin: 14px 0 0; padding: 12px 14px; border: 1px solid var(--lf-line); border-radius: 12px; background: var(--lf-subtle); color: var(--lf-text); font-size: 13px; line-height: 1.65; overflow-wrap: anywhere }
+.dv-setup-detail code { padding: 1px 6px; border: 1px solid var(--lf-line); border-radius: 6px; background: var(--lf-surface); color: var(--lf-ink); font-family: var(--lf-mono); font-size: 12px }
+.dv-setup .welcome-actions { margin-top: 22px }
+/* Decorative preview: three result cards on a night surface, the middle one "matched". */
+.dv-setup-art {
+  position: relative; isolation: isolate; display: grid; align-content: center; gap: 10px;
+  min-height: 250px; padding: 28px; overflow: hidden; border-radius: 16px;
+  background: radial-gradient(80% 70% at 100% 0%, color-mix(in srgb, var(--lf-glow-emerald) 32%, transparent), transparent 70%), radial-gradient(60% 50% at 0% 100%, color-mix(in srgb, var(--lf-glow-lime) 10%, transparent), transparent 70%), linear-gradient(160deg, var(--lf-night), var(--lf-night-2));
+}
+.dv-setup-art::before { content: ''; position: absolute; inset: 0; z-index: -1; background-image: linear-gradient(color-mix(in srgb, var(--lf-grid-line) 6%, transparent) 1px, transparent 1px), linear-gradient(90deg, color-mix(in srgb, var(--lf-grid-line) 6%, transparent) 1px, transparent 1px); background-size: 26px 26px; -webkit-mask-image: radial-gradient(ellipse 80% 70% at 100% 0%, #000, transparent 75%); mask-image: radial-gradient(ellipse 80% 70% at 100% 0%, #000, transparent 75%) }
+.dv-setup-art i { position: relative; display: block; height: 56px; border: 1px solid color-mix(in srgb, var(--lf-night-ink) 12%, transparent); border-radius: 12px; background: rgba(255, 255, 255, .05); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px) }
+.dv-setup-art i::before { content: ''; position: absolute; top: 50%; left: 12px; width: 32px; height: 32px; margin-top: -16px; border-radius: 9px; background: color-mix(in srgb, var(--lf-night-ink) 12%, transparent) }
+.dv-setup-art i::after { content: ''; position: absolute; top: 15px; right: 16px; left: 56px; height: 26px; background: linear-gradient(rgba(227, 237, 232, .34), rgba(227, 237, 232, .34)) 0 0 / 58% 8px no-repeat, linear-gradient(rgba(227, 237, 232, .14), rgba(227, 237, 232, .14)) 0 16px / 36% 7px no-repeat, linear-gradient(rgba(94, 224, 168, .3), rgba(94, 224, 168, .3)) 100% 2px / 44px 16px no-repeat }
+.dv-setup-art i:nth-child(2) { margin-left: 22px; border-color: color-mix(in srgb, var(--lf-lime) 40%, transparent); background: color-mix(in srgb, var(--lf-lime) 8%, transparent); box-shadow: 0 18px 40px -18px rgba(0, 0, 0, .7) }
+.dv-setup-art i:nth-child(2)::before { background: var(--lf-lime) }
+.dv-setup-art i:nth-child(3) { opacity: .55 }
+
+/* ---------- Motion ---------- */
+@keyframes dv-spin { to { transform: rotate(360deg) } }
+@keyframes dv-slide { from { transform: translateX(-100%) } to { transform: translateX(290%) } }
+@keyframes dv-tab-in { from { transform: scale(.94); box-shadow: none } to { transform: none } }
+@media (prefers-reduced-motion: reduce) {
+  .dv-spinner, .dv-progress-bar, .dv-run-running::before, .dv-toolbar .dv-tabs button.active { animation: none }
+  .dv-actionbar, .dv-drop, .dv-drop-icon, .dv-step, .dv-history li { transition: none }
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1150px) {
+  .dv-location { grid-template-columns: repeat(2, minmax(0, 1fr)); padding-right: 64px }
+  .icon-button.dv-remove { position: absolute; top: 12px; right: 12px; margin: 0 }
+  .dv-row.dv-refine { grid-template-columns: repeat(2, minmax(0, 1fr)) }
+  .dv-checks { grid-column: 1 / -1 }
+  .dv-counts { grid-template-columns: repeat(3, minmax(0, 1fr)) }
+}
+@media (max-width: 850px) {
+  .panel.dv-setup { grid-template-columns: minmax(0, 1fr); gap: 24px }
+  .dv-setup-art { min-height: 0; padding: 20px }
+}
+@media (max-width: 700px) {
+  .dv-table, .dv-table > tbody { display: block; width: 100% }
+  .dv-table > thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%) }
+  .dv-table > tbody > tr { position: relative; display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 12px 12px; padding: 16px; border-top: 1px solid var(--lf-line) }
+  .dv-table > tbody > tr > td { display: block; grid-column: 2; min-width: 0; padding: 0; border: 0; font-size: 13.5px; white-space: normal }
+  .dv-table > tbody > tr > td.dv-select { grid-column: 1; grid-row: 1 / span 4; width: auto; min-width: 0; padding: 9px 0 0 }
+  .dv-table > tbody > tr > td[data-label]::before { content: attr(data-label); display: block; margin-bottom: 3px; color: var(--lf-faint); font-size: 11px; font-weight: 650; letter-spacing: .06em; text-transform: uppercase }
+  .dv-table > tbody > tr > td:has(.dv-name)::before { display: none }
+  .dv-table > tbody > tr.dv-selected > td:first-child { box-shadow: none }
+  .dv-table > tbody > tr.dv-selected { box-shadow: inset 3px 0 0 var(--lf-brand) }
+  .dv-table > tbody > tr > td.dv-actions { display: flex; gap: 6px; text-align: left }
+  .dv-actions .text-button { min-height: 40px }
+  .dv-counts { grid-template-columns: repeat(2, minmax(0, 1fr)) }
+  .dv-count-all { grid-column: 1 / -1 }
+}
+@media (max-width: 640px) {
+  .dv-toolbar { flex-direction: column; align-items: stretch }
+  .dv-toolbar .dv-tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)) }
+  .dv-toolbar .dv-tabs button { flex-shrink: 1; min-width: 0; padding: 0 10px }
+  .dv-toolbar .dv-tabs button:last-child:nth-child(odd) { grid-column: 1 / -1 }
+  .dv-toolbar > .secondary { width: 100% }
+  .dv-form-head { flex-wrap: wrap; padding: 18px 16px 16px }
+  .dv-form-icon { width: 38px; height: 38px }
+  .dv-form-head > div { flex-basis: calc(100% - 52px) }
+  .dv-form-head > .soft-tag, .dv-form.panel .dv-form-head .dv-provider { margin-left: 52px }
+  .dv-section { padding: 18px 16px 4px }
+  .dv-section::before { display: none }
+  .dv-section + .dv-section::after { left: 16px; right: 16px }
+  .dv-step { position: static; flex-shrink: 0; box-shadow: none }
+  .dv-section:focus-within .dv-step { box-shadow: 0 0 0 3px var(--lf-brand-ring) }
+  .dv-form.panel input:not([type=checkbox]):not([type=radio]), .dv-form.panel select { font-size: 16px }
+  .dv-location { grid-template-columns: minmax(0, 1fr); padding-right: 14px }
+  .icon-button.dv-remove { position: static; width: 100%; margin: 0 0 14px }
+  .dv-row.dv-refine { grid-template-columns: minmax(0, 1fr) }
+  .dv-checks .dv-check { min-height: 42px }
+  .field-error.dv-form-error { margin: 0 16px 12px }
+  .dv-form-foot { flex-direction: column-reverse; align-items: stretch; padding: 16px }
+  .dv-form-foot .primary { width: 100% }
+  .panel.dv-progress { padding: 16px }
+  .panel.dv-problem { flex-wrap: wrap; padding: 16px }
+  .dv-problem .secondary { width: 100% }
+  .panel .dv-summary, .panel .error-banner.dv-inline-error, .dv-warnings, .dv-blocked { margin-inline: 16px }
+  .dv-actionbar { flex-wrap: wrap; width: calc(100% - 16px) }
+  .dv-csv-body { padding: 0 16px 18px }
+  .dv-csv-body .dv-summary, .dv-csv-body .error-banner.dv-inline-error { margin-inline: 0 }
+  .dv-steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); padding: 2px 8px 18px }
+  .dv-steps li { position: relative; flex-direction: column; gap: 6px; font-size: 12px; text-align: center; white-space: normal }
+  .dv-steps li::after { position: absolute; top: 13px; right: calc(-50% + 20px); left: calc(50% + 20px); margin: 0 }
+  .dv-drop { min-height: 200px; padding: 26px 16px }
+  .dv-file { padding-left: 50px }
+  .dv-file .text-button { margin-left: 0 }
+  .dv-map select { min-width: 160px }
+  .dv-history { padding: 2px 16px 16px }
+  .dv-history li { grid-template-columns: minmax(0, 1fr) auto; gap: 10px 12px; margin-left: 40px; padding: 14px }
+  .dv-history li::before { top: 14px; left: -40px; margin-top: 0 }
+  .dv-history li::after { left: -26px }
+  .dv-history li:first-child::after { top: 29px }
+  .dv-history li:last-child::after { bottom: calc(100% - 29px) }
+  .dv-history li .secondary { grid-column: 1 / -1; width: 100% }
+  .panel.dv-setup { padding: 22px 18px }
+  .dv-setup h2 { font-size: 20px }
+  :is(.dv-detail dl, dl.dv-detail) { grid-template-columns: minmax(0, 1fr) }
+  :is(.dv-detail dl, dl.dv-detail) dt { padding-bottom: 2px; border-bottom: 0; background: none }
+  :is(.dv-detail dl, dl.dv-detail) dd { padding-top: 0 }
+  dl.lead-business { grid-template-columns: minmax(0, 1fr); gap: 2px }
+  dl.lead-business dd { margin-bottom: 10px }
+}
+
+/* ---------- Dark theme: pastel surfaces (generated from the light values above; update both together) ---------- */
+:root[data-theme="dark"] .dv-avatar { background: linear-gradient(145deg, rgba(105, 196, 151, 0.14), rgba(105, 189, 147, 0.14)); color: rgb(163, 194, 183) }
+:root[data-theme="dark"] .dv-avatar[data-tone="1"] { background: linear-gradient(145deg, rgba(105, 147, 230, 0.14), rgba(105, 147, 222, 0.14)); color: rgb(175, 190, 214) }
+:root[data-theme="dark"] .dv-avatar[data-tone="2"] { background: linear-gradient(145deg, rgba(152, 105, 227, 0.14), rgba(147, 105, 213, 0.14)); color: rgb(193, 181, 211) }
+:root[data-theme="dark"] .dv-avatar[data-tone="3"] { background: linear-gradient(145deg, rgba(255, 195, 105, 0.14), rgba(245, 191, 105, 0.14)); color: rgb(204, 187, 158) }
+:root[data-theme="dark"] .dv-avatar[data-tone="4"] { background: linear-gradient(145deg, rgba(105, 196, 203, 0.14), rgba(105, 191, 201, 0.14)); color: rgb(168, 194, 199) }
+:root[data-theme="dark"] .dv-form-head { background: radial-gradient(50% 140% at 100% 0%, color-mix(in srgb, var(--lf-glow-mint) 13%, transparent), transparent 70%), linear-gradient(180deg, var(--lf-surface), var(--lf-surface-2)) }
+:root[data-theme="dark"] .dv-location { background: linear-gradient(180deg, var(--lf-surface-2), var(--lf-surface-2)) }
+:root[data-theme="dark"] .dv-drop:hover, :root[data-theme="dark"] .dv-drop.dragging { background-color: var(--lf-surface-2) }
+:root[data-theme="dark"] .dv-preview tr[data-status=review] { background: rgba(255, 214, 105, 0.14) }
+:root[data-theme="dark"] .dv-preview tr[data-status=existing] { background: var(--lf-surface-2) }
+:root[data-theme="dark"] .dv-preview tr[data-status=invalid] { background: var(--lf-surface-2) }
+
+:root[data-theme="dark"] .dv-form-foot .primary svg { color: currentColor }
+
+/* ---------- Dark theme: light surfaces in rgba, custom properties and interactive states (generated; update with their light values) ---------- */
+:root[data-theme="dark"] .dv { --dv-track: var(--lf-track); --dv-selected: var(--lf-surface-2) }
+:root[data-theme="dark"] .dv-setup-art i::after { background: linear-gradient(rgba(105, 159, 132, .14), rgba(105, 159, 132, .14)) 0 0 / 58% 8px no-repeat, linear-gradient(rgba(227, 237, 232, .14), rgba(227, 237, 232, .14)) 0 16px / 36% 7px no-repeat, linear-gradient(rgba(94, 224, 168, .3), rgba(94, 224, 168, .3)) 100% 2px / 44px 16px no-repeat }
+
+/* ---------- Dark theme: text colours written for light surfaces, mapped to semantic tokens (generated) ---------- */
+:root[data-theme="dark"] .dv-summary strong { color: var(--lf-success) }
+:root[data-theme="dark"] .dv-problem strong { color: var(--lf-warning) }
+:root[data-theme="dark"] .dv-problem p { color: var(--lf-warning) }
+:root[data-theme="dark"] .dv-check.dv-include { color: var(--lf-warning) }

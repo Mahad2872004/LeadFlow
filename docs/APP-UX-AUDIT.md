@@ -60,4 +60,80 @@ Severity: **High** blocks the screen's main job or the brand promise. **Medium**
 
 ## Implementation status
 
-See the revamp notes in the pull request and [MARKETING.md](MARKETING.md). The foundation is in place: `index.css`, `App.css`, `Workspace.css`, the shell, the Overview copy and the sign-in story. The feature areas are being restyled in parallel on top of it.
+Implemented on branch `feat/app-revamp`, 19 November 2026.
+
+**Foundation**
+- `src/index.css` holds the shared tokens. Inter is loaded in `main.tsx`.
+- `App.css` and `Workspace.css` are rewritten as readable, sectioned files.
+
+**Shell**
+- The sidebar navigation is grouped into Pipeline, Grow and Workspace.
+- The topbar has a save-state chip.
+- A ⌘K / Ctrl+K command menu (`CommandPalette.tsx`) jumps to pages, runs actions and opens leads.
+
+**Overview**
+- A greeting with the date and a one-line summary.
+- Metric cards with 14-day sparklines and pipeline-share meters (`lib/insights.ts`).
+- A pipeline funnel with percentages and win rate.
+- A "Next best action" panel with up to three more suggestions. These come from fixed rules over the pipeline data, not AI, and are labelled as suggestions.
+- Recent activity next to "On your radar".
+
+**Leads**
+- A Table / Board toggle. `LeadBoard.tsx` shows status columns with inline status changes.
+- Lead details open in a side panel (`Modal variant="drawer"`), which becomes a bottom sheet on phones.
+
+**Feature areas**
+- **Discovery and Apollo:** stepped search builder, chip toggles, result avatars, bulk action bar and credits ring.
+- **Business report:** dark header band, ring gauges, severity bar, AI summary card, priority-railed opportunities with a segmented review control, and the agency services card grid.
+- **Onboarding and portal:** request cards with readiness bars, a dark request hero with a readiness ring, status-railed checklist items, and a branded portal with progress tiles.
+- **Integrations and inquiry form:** hub hero, app tiles, status pills, stepper guides, syntax-coloured code blocks and secure credential cards. The inquiry form uses a split brand/form card.
+
+**Unchanged**
+- Text, labels, roles and test-relied class names. Additions are decorative and `aria-hidden`.
+- Every animation has a `prefers-reduced-motion` opt-out.
+
+**Dark mode**
+
+Scope:
+- Dark mode covers the app, its sign-in pages and the client portal.
+- The marketing site and the embeddable inquiry form always stay light. The inquiry form sits inside customers' own websites.
+
+How a visitor picks a theme:
+- It follows the device setting until the user chooses.
+- The topbar and sign-in toggle (sun/moon) switches between light and dark.
+- ⌘K also offers "Match system theme".
+- The choice is stored per browser as `leadflow.theme` in `localStorage`.
+
+How it works:
+- `src/lib/theme.ts` sets `<html data-theme>`.
+- An inline script in `index.html` applies the theme before the first paint, so dark mode never flashes white.
+- **Design direction:**
+  - The base UI is neutral graphite, with clear elevation steps between background, surfaces and raised elements.
+  - Primary buttons are near-white with dark text. Emerald is used only for links, focus, success and status.
+  - The signature green gradient cards keep their light-theme look: gradient, soft glow, fine grid, mint eyebrow and lime call to action.
+  - The base never gets a green tint, a glow or a texture. Green everywhere is what made the first dark version feel generic and "AI-generated".
+- The card list lives in `src/index.css`, after the dark tokens. Add any new card with a `var(--lf-night)` background to it.
+- `src/index.css` defines every token for both themes, including these semantic ones:
+  - surfaces: `--lf-surface`, `--lf-surface-2`, `--lf-tint`, `--lf-track`, `--lf-overlay`, `--lf-glass`;
+  - actions: `--lf-primary-*` (ink in light, lime in dark), `--lf-accent-bg` (dark chips) and `--lf-on-lime`.
+- Native controls follow through `color-scheme`.
+
+Rules for future edits:
+- Use these tokens, not hex values, for anything on a light surface.
+- The block at the end of each feature stylesheet headed "Dark theme: pastel surfaces" was generated from that file's light pastel colours. If you change one of those colours, update its dark counterpart too.
+
+Test coverage: `tests/theme.spec.ts` checks the system default, the toggle, persistence and the "Match system theme" command, and that the marketing site and inquiry form stay light. To review every screen in dark mode, run `SCREENS_THEME=dark npx playwright test --config playwright.screens.config.ts`.
+
+Adding `SCREENS_AUDIT=1` also writes `audit.json` (helper: `tests/support/contrast.ts`) with two lists:
+- text below 3:1 contrast against the background actually rendered behind it;
+- large light surfaces.
+
+Expect some intentional or false-positive results:
+- Near-white and lime buttons, and the always-light inquiry form, are intentional.
+- Gradient backgrounds are averaged, so text over a fading gradient can be a false positive. Confirm on the screenshot.
+
+The screenshot run also covers every business report tab, a hovered integration card, an integration's detail view and Apollo's credits tab.
+
+When restyling, also check light colours written in `rgba()`, in local custom properties (such as `--dv-track`) and in `:hover` states. Each needs a dark counterpart; the generated blocks at the end of each stylesheet show the pattern.
+
+**Screenshots:** `tests/screens.spec.ts` with `playwright.screens.config.ts` captures every screen at 1440 and 390 px for visual review. It isn't part of `npm test`.

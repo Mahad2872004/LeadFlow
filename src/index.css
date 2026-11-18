@@ -1,5 +1,7 @@
 /* LeadFlow design tokens, shared by the dashboard, the public inquiry form and the client portal.
-   The marketing site keeps its own scoped tokens in src/marketing/Marketing.css; the palettes match. */
+   The marketing site keeps its own scoped tokens in src/marketing/Marketing.css; the palettes match.
+   Dark mode: <html data-theme="dark"> (set by index.html and src/lib/theme.ts on themed routes) swaps the values below.
+   Use tokens, not hex values, for anything that sits on a light surface, so both themes stay correct. */
 :root {
   color-scheme: light;
   --lf-font: 'Inter Variable', Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
@@ -8,14 +10,28 @@
   /* Surfaces and text */
   --lf-bg: #f5f7f6;
   --lf-surface: #fff;
+  --lf-surface-2: #fbfcfb;
   --lf-subtle: #f1f5f3;
   --lf-hover: #f6f9f7;
+  --lf-tint: #eef7f2;
+  --lf-track: #e9efec;
+  --lf-overlay: rgba(10, 24, 19, .05);
+  --lf-glass: rgba(255, 255, 255, .82);
+  --lf-glass-canvas: rgba(245, 247, 246, .82);
   --lf-line: #e2e8e5;
   --lf-line-strong: #cbd5d0;
   --lf-ink: #0a1813;
   --lf-text: #2b3833;
   --lf-muted: #56645e;
   --lf-faint: #85928c;
+
+  /* Actions. Accent = the dark chip/button surface; text on lime is always dark. */
+  --lf-primary-bg: #0a1813;
+  --lf-primary-fg: #fff;
+  --lf-primary-hover: #1b3129;
+  --lf-accent-bg: #0a1813;
+  --lf-accent-hover: #1b3129;
+  --lf-on-lime: #0a1813;
 
   /* Brand */
   --lf-brand: #0e7a55;
@@ -24,11 +40,19 @@
   --lf-brand-ring: rgba(14, 122, 85, .2);
   --lf-mint: #5ee0a8;
   --lf-lime: #c4f26a;
+  --lf-lime-hover: #d3f78c;
   --lf-night: #06130e;
   --lf-night-2: #0b1f17;
   --lf-night-line: rgba(214, 255, 236, .1);
   --lf-night-text: #e3ede8;
   --lf-night-muted: #9fb3aa;
+  --lf-night-edge: transparent;
+  /* Decoration on the dark "night" panels: tinted glows and grid lines. Dark mode switches these off. */
+  --lf-night-ink: #d6ffec;
+  --lf-grid-line: #d6ffec;
+  --lf-glow-mint: #5ee0a8;
+  --lf-glow-emerald: #2ecc8c;
+  --lf-glow-lime: #c4f26a;
 
   /* Meaning */
   --lf-danger: #a8321d;
@@ -42,6 +66,7 @@
   --lf-info-line: #d3dfef;
   --lf-ai: #5b3b8c;
   --lf-ai-soft: #f3eefb;
+  --lf-ai-line: #e0d4f3;
   --lf-success: #0b6b48;
   --lf-success-soft: #e6f5ed;
   --lf-success-line: #c4e8d6;
@@ -57,11 +82,109 @@
   --lf-shadow-pop: 0 2px 8px rgba(10, 24, 19, .08), 0 40px 100px -24px rgba(6, 19, 14, .45);
   --lf-ease: cubic-bezier(.16, 1, .3, 1);
 }
-html { color-scheme: light }
+
+/* Dark theme: neutral graphite with clear elevation steps, one restrained emerald accent, near-white primary
+   actions, and no glows or textures. Elevation: bg < surface < surface-2 < subtle < accent. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --lf-bg: #0e0f11;
+  --lf-surface: #16171a;
+  --lf-surface-2: #1a1b1f;
+  --lf-subtle: #1d1e22;
+  --lf-hover: #1f2024;
+  --lf-tint: rgba(255, 255, 255, .035);
+  --lf-track: #27282d;
+  --lf-overlay: rgba(255, 255, 255, .05);
+  --lf-glass: rgba(22, 23, 26, .85);
+  --lf-glass-canvas: rgba(14, 15, 17, .85);
+  --lf-line: #26272c;
+  --lf-line-strong: #36383e;
+  --lf-ink: #ededef;
+  --lf-text: #c5c6cb;
+  --lf-muted: #8f9199;
+  --lf-faint: #7c7f87;
+
+  --lf-primary-bg: #ededef;
+  --lf-primary-fg: #0e0f11;
+  --lf-primary-hover: #fff;
+  --lf-accent-bg: #2a2b30;
+  --lf-accent-hover: #33353b;
+  --lf-on-lime: #0e0f11;
+
+  --lf-brand: #4cc38a;
+  --lf-brand-strong: #6fd5a4;
+  --lf-brand-soft: rgba(76, 195, 138, .12);
+  --lf-brand-ring: rgba(76, 195, 138, .35);
+  --lf-mint: #4cc38a;
+  /* "Lime" highlights become near-white: calm and monochrome rather than neon. */
+  --lf-lime: #ededef;
+  --lf-lime-hover: #fff;
+  /* Former dark-green panels become ordinary raised surfaces with a hairline edge. */
+  --lf-night: #16171a;
+  --lf-night-2: #16171a;
+  --lf-night-line: rgba(255, 255, 255, .08);
+  --lf-night-text: #ededef;
+  --lf-night-muted: #9a9ca4;
+  --lf-night-edge: #26272c;
+  --lf-night-ink: #fff;
+  --lf-grid-line: transparent;
+  --lf-glow-mint: transparent;
+  --lf-glow-emerald: transparent;
+  --lf-glow-lime: transparent;
+
+  --lf-danger: #ef8a78;
+  --lf-danger-soft: rgba(239, 138, 120, .1);
+  --lf-danger-line: rgba(239, 138, 120, .28);
+  --lf-warning: #e2b05e;
+  --lf-warning-soft: rgba(226, 176, 94, .1);
+  --lf-warning-line: rgba(226, 176, 94, .28);
+  --lf-info: #8aaef2;
+  --lf-info-soft: rgba(138, 174, 242, .1);
+  --lf-info-line: rgba(138, 174, 242, .28);
+  --lf-ai: #b6a0ee;
+  --lf-ai-soft: rgba(182, 160, 238, .1);
+  --lf-ai-line: rgba(182, 160, 238, .28);
+  --lf-success: #4cc38a;
+  --lf-success-soft: rgba(76, 195, 138, .1);
+  --lf-success-line: rgba(76, 195, 138, .28);
+
+  --lf-shadow-xs: 0 1px 2px rgba(0, 0, 0, .3);
+  --lf-shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px -12px rgba(0, 0, 0, .5);
+  --lf-shadow-lg: 0 2px 6px rgba(0, 0, 0, .35), 0 24px 56px -20px rgba(0, 0, 0, .6);
+  --lf-shadow-pop: 0 0 0 1px rgba(255, 255, 255, .06), 0 24px 70px -20px rgba(0, 0, 0, .7);
+}
+
 body {
   margin: 0;
   font-family: var(--lf-font);
   font-feature-settings: 'cv11', 'ss01';
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Dark theme: the signature gradient cards keep their light-theme look (green-black gradient, soft glow, fine grid,
+   mint eyebrow, lime call to action). Everything else stays neutral graphite. Tokens set here are inherited by the
+   card's contents. Add new gradient cards (those with a var(--lf-night) background) to this list. */
+:root[data-theme="dark"] :is(
+  .stat-4, .focus-card, .auth-story, .panel.welcome-panel,
+  .dv-actionbar, .dv-setup-art, .ap-totals > div:nth-child(4),
+  dialog#business-report > .modal-head, .br-top, .br-launch, .br-pre,
+  .ob-empty-icon, .panel.ob-detail-head, .portal-head,
+  .integrations-hub .integration-hero, .integration-hero-link, .logo-api, .logo-webhook, .logo-examples, .integration-credential-icon
+) {
+  --lf-night: #06130e;
+  --lf-night-2: #0b1f17;
+  --lf-night-line: rgba(214, 255, 236, .1);
+  --lf-night-text: #e3ede8;
+  --lf-night-muted: #9fb3aa;
+  --lf-night-edge: rgba(214, 255, 236, .12);
+  --lf-night-ink: #d6ffec;
+  --lf-grid-line: #d6ffec;
+  --lf-glow-mint: #5ee0a8;
+  --lf-glow-emerald: #2ecc8c;
+  --lf-glow-lime: #c4f26a;
+  --lf-mint: #5ee0a8;
+  --lf-lime: #c4f26a;
+  --lf-lime-hover: #d3f78c;
+  --lf-on-lime: #0a1813;
 }

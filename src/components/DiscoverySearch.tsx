@@ -54,6 +54,7 @@ export function DiscoverySearch({workspace,providers,leads,origins,blocked,initi
   return <>
     <form className="panel dv-form" onSubmit={submit} aria-labelledby="dv-form-title" noValidate>
       <div className="dv-form-head">
+        <span className="dv-form-icon" aria-hidden="true"><Icon name="compass" size={20}/></span>
         <div><h2 id="dv-form-title">Who are you looking for?</h2><p>Describe your ideal customer. Results come from {provider.label}; nothing is added to LeadFlow until you choose.</p></div>
         {configured.length>1?<label className="dv-provider">Source<select value={provider.id} onChange={event=>{setProviderId(event.target.value);setCriteria(defaultCriteria(configured.find(item=>item.id===event.target.value)!.capabilities))}}>{configured.map(item=><option key={item.id} value={item.id}>{item.label}</option>)}</select></label>
           :<span className="soft-tag">Source · {provider.label}</span>}
@@ -107,6 +108,11 @@ export function DiscoverySearch({workspace,providers,leads,origins,blocked,initi
 }
 
 const rowsPerPage=25
+/** Decorative initials tile: up to two letters, and one of five tones picked from the name. */
+const initialsOf=(name:string)=>name.replace(/[^\p{L}\p{N}]+/gu,' ').trim().split(' ').slice(0,2).map(word=>word.charAt(0)).join('').toUpperCase()||'?'
+const toneOf=(name:string)=>[...name].reduce((sum,char)=>sum+(char.codePointAt(0)??0),0)%5
+/** How old the source record was when the search ran: recent (under a year), old, or unknown. */
+const freshnessOf=(business:DiscoveredBusiness,fetchedAt:string)=>!business.sourceUpdatedAt?'unknown':Date.parse(fetchedAt)-Date.parse(business.sourceUpdatedAt)<365*864e5?'recent':'old'
 const contactLinks=(business:DiscoveredBusiness)=>[business.website&&'website',business.phone&&'phone',business.email&&'email'].filter(Boolean) as ContactFilter[]
 function DuplicateBadge({match}:{match:DuplicateMatch|null}){
   if(!match)return <span className="dv-badge dv-new">New</span>
@@ -175,10 +181,10 @@ function Results({workspace,result,provider,leads,origins,blocked,onImported}:{w
         <thead><tr><th className="dv-select"><input type="checkbox" aria-label="Select all shown businesses" checked={allShownSelected} disabled={showExcluded} onChange={event=>setSelected(current=>{const next=new Set(current);for(const business of shown.filter(selectable)){if(event.target.checked)next.add(business.id);else next.delete(business.id)}return next})}/></th><th>Business</th><th>Contact</th><th>Location</th><th>Data</th><th><span className="sr-only">Actions</span></th></tr></thead>
         <tbody>{shown.map(business=>{const match=matches.get(business.id)??null;const website=normalizeWebsite(business.website);return <tr key={business.id} className={selected.has(business.id)?'dv-selected':undefined}>
           <td className="dv-select"><input type="checkbox" aria-label={`Select ${business.name}`} checked={selected.has(business.id)} disabled={!selectable(business)} onChange={event=>toggle(business.id,event.target.checked)}/></td>
-          <td data-label="Business"><button className="dv-name" onClick={()=>setDetail(business)}><strong>{business.name}</strong><small>{business.category}</small></button></td>
+          <td data-label="Business"><div className="dv-biz"><span className="dv-avatar" data-tone={toneOf(business.name)} aria-hidden="true">{initialsOf(business.name)}</span><button className="dv-name" onClick={()=>setDetail(business)}><strong>{business.name}</strong><small>{business.category}</small></button></div></td>
           <td data-label="Contact"><div className="dv-contacts">{website&&<a href={website} target="_blank" rel="noopener noreferrer nofollow">{domainOf(website)}</a>}{business.phone&&<span>{business.phone}</span>}{business.email&&<span>{business.email}</span>}{!contactLinks(business).length&&<span className="muted">No public contact details</span>}</div></td>
           <td data-label="Location">{[business.address,business.city,business.postcode].filter(Boolean).join(', ')||<span className="muted">{business.matchedLocation}</span>}</td>
-          <td data-label="Data"><DuplicateBadge match={match}/><small className="dv-fresh">{updated(business)}</small></td>
+          <td data-label="Data"><DuplicateBadge match={match}/><small className="dv-fresh" data-fresh={freshnessOf(business,result.fetchedAt)}>{updated(business)}</small></td>
           <td className="dv-actions"><button className="text-button" onClick={()=>setDetail(business)}>Details</button><button className="text-button" onClick={()=>exclude(business,!excluded.has(business.id))}>{excluded.has(business.id)?'Restore':'Exclude'}</button></td>
         </tr>})}</tbody>
       </table>{visible.length===0&&<div className="empty"><h3>Nothing matches these filters</h3><p>Clear the filter or show excluded businesses.</p></div>}</div>
