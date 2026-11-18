@@ -3,8 +3,8 @@ import type { PGlite } from '@electric-sql/pglite'
 import { createDatabase } from './support/database'
 import { mockSupabase, signIn } from './support/supabase'
 
-// Dark mode: follows the system by default, can be switched and remembered, and never reaches the marketing site
-// or the embeddable inquiry form.
+// Dark mode: follows the system by default, can be switched and remembered, covers the marketing site and the app with one
+// shared choice, and never reaches the embeddable inquiry form.
 const owner = { id: '11111111-1111-4111-8111-111111111111', email: 'owner@example.com', password: 'test-password' }
 let db: PGlite | undefined
 test.afterEach(async () => { await db?.close(); db = undefined })
@@ -42,12 +42,26 @@ test('the app follows the system theme until the user picks one, and remembers t
   expect(await page.evaluate(() => localStorage.getItem('leadflow.theme'))).toBeNull()
 })
 
-test('the marketing site and the inquiry form stay light', async ({ page }) => {
+test('the marketing site follows the theme with its own switch, shared with the app; the inquiry form stays light', async ({ page }) => {
+  const background = () => page.evaluate(() => getComputedStyle(document.querySelector('.marketing')!).backgroundColor)
   await page.emulateMedia({ colorScheme: 'dark' })
-  await page.addInitScript(() => localStorage.setItem('leadflow.theme', 'dark'))
   await page.goto('/')
   await expect(page.locator('main h1')).toBeVisible()
-  expect(await theme(page)).toBeNull()
+  expect(await theme(page)).toBe('dark')
+  expect(await background()).toBe('rgb(5, 14, 10)')
+  await page.getByRole('button', { name: 'Switch to light theme' }).click()
+  expect(await theme(page)).toBe('light')
+  expect(await background()).toBe('rgb(248, 250, 249)')
+  // The choice is remembered across pages and applies before the page renders.
+  await page.goto('/pricing')
+  await expect(page.locator('main h1')).toBeVisible()
+  expect(await theme(page)).toBe('light')
+  await page.getByRole('button', { name: 'Switch to dark theme' }).click()
+  expect(await page.evaluate(() => localStorage.getItem('leadflow.theme'))).toBe('dark')
+  await page.emulateMedia({ colorScheme: 'light' })
+  await page.goto('/login')
+  await expect(page.getByRole('heading', { name: 'Sign in to LeadFlow' })).toBeVisible()
+  expect(await theme(page)).toBe('dark')
   await page.goto('/inquiry')
   await expect(page.getByRole('heading', { name: 'A good project starts with a conversation.' })).toBeVisible()
   expect(await theme(page)).toBeNull()

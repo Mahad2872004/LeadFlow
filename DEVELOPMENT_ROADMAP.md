@@ -1,6 +1,6 @@
 # LeadFlow development roadmap
 
-Updated 19 October 2026 after M5 audit/research. This canonical file was absent before M5. Earlier completion claims are qualified below by actual repository and verification evidence; they are not blanket production-readiness claims.
+Updated 19 October 2026 after M5 audit/research; M8 added 19 November 2026. This canonical file was absent before M5. Earlier completion claims are qualified below by actual repository and verification evidence; they are not blanket production-readiness claims.
 
 ## M1 — Lead-management UI
 
@@ -148,6 +148,45 @@ Details, configuration, security and limitations: [docs/BUSINESS-INTELLIGENCE.md
 
 **Next:** set `GEMINI_API_KEY` (and `APIFY_API_TOKEN` if wanted); schedule the worker; push the frontend; then analyze two or three real leads and review the findings by hand.
 
+## M8 — Contact intelligence and AI outreach
+
+**Status: implemented and verified locally with simulated websites, DNS, Apollo data and Gemini, 19 November 2026. The same day, migration `202611190001` was applied to the hosted project and the `outreach` and `analysis-worker` functions were deployed; boot, origin, sign-in and anonymous-access checks passed live ([hosted rollout](docs/OUTREACH.md#hosted-rollout-19-november-2026)). The frontend is not deployed and no real contact search or draft has been run.** Gemini remains the only AI provider.
+
+**Contacts (lead → Contacts):**
+- **Discovery:** a background job (website → verify) reads the latest business report's page evidence, plus up to 5 team, about and contact pages, respecting robots.txt.
+- **What's extracted:** published email links, phone links and WhatsApp links; people only when a name and a job title appear together; business channels (contact page and form, booking page, social, LinkedIn company page, address).
+- **Statuses:** emails get honest statuses from mail-server (MX) checks; phones are normalized with libphonenumber-js.
+- **Confidence:** explainable and rule-based, with reasons and limitations.
+- **Provenance:** every value keeps its source page, method and date, and the evidence ID when it came from the report.
+- **Merging:** never duplicates, and never overwrites confirmed or edited details. Differences become suggestions.
+- **Managing contacts:** add, edit, confirm, set primary and preferred, check again, delete (remembered as hashes, so it isn't collected again), and erase a lead's contact data.
+- **Apollo decision-makers:** found through the existing `apollo` function and credit ledger; only the workspace's own Apollo records are copied.
+
+**Outreach (lead → Outreach):**
+- **Drafts:** email, WhatsApp, LinkedIn invitation note (200 characters, LinkedIn Help) and LinkedIn message.
+- **Choices:** a recommended opportunity and five distinct angles, each explained.
+- **Grounding:** drafts are grounded in M7 findings, with claims linked to finding and evidence IDs and source URLs. Without evidence, the draft is an honest general introduction.
+- **Refused drafts:** drafts claiming lost customers, internal processes, guaranteed results, invented earlier contact or pressure are refused before saving.
+- **Prompt injection:** untrusted text is fenced.
+- **Versions:** edits, regeneration (only after confirmation if you edited), compare and restore.
+- **Status:** changed only by a person. "Mark as sent" adds a lead activity entry; reminders become ordinary follow-up tasks. Follow-up drafts only after the first message is sent.
+- **Settings → Outreach:** agency identity, tone, length, objective, call to action, words to avoid, case-study links and follow-up intervals; each member's own sender details; and usage.
+
+**Platform:**
+- Migration `202611190001` with a rollback; Edge Function `outreach`.
+- `analysis-worker` also continues contact searches on the existing schedule.
+- Usage recorded per provider, with credits only when reported.
+- Monthly, concurrency, recent-search and rate limits; idempotent generation.
+
+**Not built:** sending email or WhatsApp, inbox or reply sync, LinkedIn automation or invitations, bulk outreach, scheduled sequences, paid email verification, a workspace-wide outreach board.
+
+Details, configuration, security and limitations: [docs/OUTREACH.md](docs/OUTREACH.md).
+
+**Next:**
+1. Deploy the frontend.
+2. Fill in Settings → Outreach.
+3. Run contact searches and drafts on two or three real leads, and review each detail and draft by hand.
+
 ## Production readiness and controlled beta (formerly listed as M7; not scheduled)
 
 **Status: not started; contingent on M6 and evidence.**
@@ -180,6 +219,21 @@ Use consented, bounded beta accounts with a named operator and support channel. 
 Next steps: apply `202610200002` and `202610200003`, deploy `submit-inquiry`, then the frontend; hosted two-account verification; a decision on opening public sign-up; then invitations and member management. See [docs/MULTI-TENANCY.md](docs/MULTI-TENANCY.md).
 
 ## Current verification ledger
+
+**M8 contact intelligence and outreach, 19 November 2026 (local).** All passed:
+- `npm run lint` (no warnings), `npx tsc -b`, `npm run check:edge` and `npm run build`;
+- the new `npm run test:outreach`;
+- `test:db`, `test:m3`, `test:integrations`, `test:tenancy` (exact grant list updated), `test:onboarding`, `test:discovery`, `test:apollo` and `test:analysis` (which now rolls back M8 before M7);
+- `npx playwright test`: 45/45, including 2 new outreach tests;
+- `npm run test:production`: 45/45.
+
+Websites, DNS (including MX records), Apollo data and Gemini were simulated; no external service was contacted, nothing was billed and no message was sent. LinkedIn's 200-character invitation-note limit was checked on LinkedIn Help on 19 November 2026.
+
+**Found and fixed by these tests:**
+- a job title ("Practice Manager") accepted as a person's name;
+- a table alias clashing with a PL/pgSQL variable in `outreach_context`;
+- an array-append type ambiguity in `save_lead_contact`;
+- version comparisons interleaving words instead of grouping changes.
 
 **M7 business intelligence, 8 November 2026 (local).** All passed:
 - `npm run lint`, `npx tsc -b`, `npm run check:edge` and `npm run build`;

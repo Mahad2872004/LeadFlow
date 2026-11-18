@@ -8,8 +8,8 @@ const key = 'leadflow.theme'
 const changeEvent = 'leadflow:theme'
 const media = () => typeof window !== 'undefined' && window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null
 
-/** The app, its sign-in pages and the client portal are themed. The marketing site and the embeddable inquiry form stay light. */
-export const isThemedPath = (path: string) => /^\/(app(\/.*)?|login|signup|client-portal)$/.test(path.replace(/\/+$/, '') || '/')
+/** Everything is themed except the inquiry form, which businesses embed in their own websites and so stays light. */
+export const isThemedPath = (path: string) => (path.replace(/\/+$/, '') || '/') !== '/inquiry'
 
 export function readPreference(): ThemePreference {
   try { const value = localStorage.getItem(key); return value === 'light' || value === 'dark' ? value : 'system' } catch { return 'system' }

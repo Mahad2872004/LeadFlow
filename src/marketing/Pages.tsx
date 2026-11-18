@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { Glyph, type GlyphName } from './Glyph'
 import { featureStatus, type StatusKind } from './content'
 import { CTA, EvidenceLabels, Eyebrow, Intro, Note, ProductPreview, ReportPreview, Status, TextLink } from './shared'
-import { CodeSample, FindVisual, FollowVisual, OnboardVisual, PitchVisual } from './visuals'
+import { CodeSample, FindVisual, FollowVisual, OnboardVisual, OutreachVisual, PitchVisual } from './visuals'
 import { signupOpen } from './access'
 
 function Stage({ eyebrow, title, text, points, visual, status, reverse = false, id }: { eyebrow: string; title: ReactNode; text: string; points: string[]; visual: ReactNode; status?: [StatusKind, string]; reverse?: boolean; id?: string }) {
@@ -65,7 +65,17 @@ export function Features() {
           'Start from 11 editable starter services, from website redesign to workflow automation',
         ]}
         visual={<PitchVisual />} />
-      <Stage eyebrow="04 · Follow through" title="Keep every conversation moving." status={['available', 'Available']}
+      <Stage eyebrow="04 · Reach out" id="outreach" title={<>Reach the right person. <em>Say only what you saw.</em></>} status={['available', 'Available']}
+        text="Open a lead’s Contacts and Outreach tabs. LeadFlow finds who to talk to on the business’s own website, then drafts a first message based on the business report, for you to review and send."
+        points={[
+          'Contacts from the website’s contact, team and about pages, the business report and the lead itself; Apollo decision-makers if you use Apollo',
+          'Every detail shows its source, an honest email status and a confidence level with its reasons. Confirmed and edited details are never overwritten',
+          'Email, WhatsApp and LinkedIn drafts in five distinct angles, with a recommended opportunity. Each statement links to the finding behind it',
+          'Drafts that claim lost customers, promise results or invent earlier contact are refused. Every edit is a version you can compare and restore',
+          'Copy a draft or open it in your own email or WhatsApp, then mark it as sent and add a follow-up reminder. LeadFlow never sends messages for you',
+        ]}
+        visual={<OutreachVisual />} />
+      <Stage eyebrow="05 · Follow through" title="Keep every conversation moving." reverse status={['available', 'Available']}
         text="A pipeline you can read at a glance, and a list of what needs doing today."
         points={[
           'Five statuses: New, Contacted, Qualified, Converted and Lost, with search and combined filters',
@@ -74,7 +84,7 @@ export function Features() {
           'Hosted inquiry form and website embeds, with email notifications through Resend when configured',
         ]}
         visual={<FollowVisual />} />
-      <Stage eyebrow="05 · Onboard" title="Start the work with everything you need." reverse status={['beta', 'Beta']}
+      <Stage eyebrow="06 · Onboard" title="Start the work with everything you need." status={['beta', 'Beta']}
         text="When a lead becomes a client, turn the handover into a checklist instead of an email thread."
         points={[
           'Templates for paid advertising, SEO, social media management and email marketing',
@@ -84,7 +94,7 @@ export function Features() {
         visual={<OnboardVisual />} />
     </div>
     <section className="mk-wrap mk-section">
-      <Note title="What is not included yet">Team invitations, automatic client follow-up messages or outreach from reports, advanced analytics, a general lead export, and two-way CRM sync are not current features. Activity history is a working record, not an immutable audit log.</Note>
+      <Note title="What is not included yet">Sending messages from LeadFlow (drafts are copied or opened in your own email or WhatsApp), scheduled follow-up sequences, LinkedIn automation, team invitations, advanced analytics, a general lead export, and two-way CRM sync are not current features. Activity history is a working record, not an immutable audit log.</Note>
     </section>
   </>
 }
@@ -114,9 +124,9 @@ const methodGroups: { title: string; text: string; items: [GlyphName, string, St
     text: 'The services behind lead discovery, business reports and alerts.',
     items: [
       ['mail', 'Email notifications', 'setup', 'Resend configuration', 'Notify a business inbox after a new inquiry is stored. Sender verification and server-side configuration are required.'],
-      ['users', 'Apollo.io', 'setup', 'Your Apollo key', 'Search people and companies, then reveal emails and phone numbers after seeing the credit cost. Keys stay server-side.'],
+      ['users', 'Apollo.io', 'setup', 'Your Apollo key', 'Search people and companies, reveal emails and phone numbers after seeing the credit cost, and look up decision-makers from a lead’s Contacts. Keys stay server-side.'],
       ['compass', 'Business directory', 'setup', 'Operator setup', 'Search OpenStreetMap business data through directory servers your deployment configures. CSV import works without it.'],
-      ['gauge', 'PageSpeed Insights & Gemini', 'setup', 'Optional keys','Speed measurements and the AI summary in business reports. Without keys, LeadFlow reads pages itself and says what isn’t set up.'],
+      ['gauge', 'PageSpeed Insights & Gemini', 'setup', 'Optional keys', 'Speed measurements, the AI summary in business reports, and AI outreach drafts. Without keys, LeadFlow reads pages itself and says what isn’t set up.'],
       ['database', 'CRM synchronization', 'planned', 'Planned', 'Native CRM connections and two-way data sync are not implemented.'],
     ],
   },
@@ -168,7 +178,7 @@ export function Integrations() {
 }
 
 const solutions: { name: string; title: string; text: string; flow: string[]; icon: GlyphName; status?: string }[] = [
-  { name: 'Independent agencies', title: 'Pitch with proof, not guesses.', text: 'Search for businesses in a niche, run a business report on each website, and open with the opportunity that matches your services. Qualify the lead, then schedule the scope conversation.', flow: ['Directory search', 'Business report', 'Opportunity', 'Qualified', 'Scope follow-up'], icon: 'sparkles' },
+  { name: 'Independent agencies', title: 'Pitch with proof, not guesses.', text: 'Search for businesses in a niche, run a business report on each website, and open with the opportunity that matches your services, in a drafted message to the right contact that says only what the report found. Qualify the lead, then schedule the scope conversation.', flow: ['Directory search', 'Business report', 'Outreach draft', 'Qualified', 'Scope follow-up'], icon: 'sparkles' },
   { name: 'Consultants', title: 'Make room for discovery.', text: 'Keep a contact’s goals and service interest together before the first call. Record the lead’s progress and set a reminder to reconnect.', flow: ['New inquiry', 'Contacted', 'Discovery follow-up'], icon: 'users' },
   { name: 'Service businesses', title: 'Give every request a next step.', text: 'Review incoming requests, separate new opportunities from active conversations, and make a task for the ones that need attention.', flow: ['New request', 'Review', 'Follow-up task'], icon: 'calendar' },
   { name: 'Small teams', title: 'A focused starting point.', text: 'Workspaces have owner, admin, and member roles, and records stay with the workspace. Inviting teammates from the app and assigning leads are planned.', flow: ['Workspace roles today', 'Invitations planned'], icon: 'grid', status: 'Invitations planned' },
@@ -197,7 +207,7 @@ export function Solutions() {
 }
 
 const plans = [
-  { name: 'Individual', tag: 'For a focused personal pipeline.', status: ['available', 'Capabilities available'] as [StatusKind, string], items: ['Lead records, pipeline and follow-ups', 'Business reports and opportunity matching', 'CSV import with duplicate review', 'Hosted form and website embeds'], note: 'Current capabilities; packaging proposed', featured: true },
+  { name: 'Individual', tag: 'For a focused personal pipeline.', status: ['available', 'Capabilities available'] as [StatusKind, string], items: ['Lead records, pipeline and follow-ups', 'Business reports and opportunity matching', 'Contacts and AI outreach drafts', 'CSV import with duplicate review', 'Hosted form and website embeds'], note: 'Current capabilities; packaging proposed', featured: true },
   { name: 'Studio', tag: 'For a growing practice.', status: ['planned', 'Planned'] as [StatusKind, string], items: ['Proposed shared workspace', 'Proposed team invitations', 'Proposed roles and assignment'], note: 'Team features are planned', featured: false },
   { name: 'Connected', tag: 'For more connected operations.', status: ['planned', 'Planned'] as [StatusKind, string], items: ['Existing inbound API foundation', 'Proposed expanded workflows', 'Proposed advanced reporting'], note: 'Expanded capabilities are planned', featured: false },
 ]

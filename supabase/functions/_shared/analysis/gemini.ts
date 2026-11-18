@@ -7,27 +7,40 @@ export const defaultGeminiModel = 'gemini-3.6-flash'
 const endpoint = 'https://generativelanguage.googleapis.com/v1beta/models'
 const blocked = ['SAFETY', 'RECITATION', 'BLOCKLIST', 'PROHIBITED_CONTENT', 'SPII', 'LANGUAGE', 'IMAGE_SAFETY']
 
+/** The Gemini model ANALYSIS_AI_MODEL names, or the default. */
+export const geminiModel = (env: (name: string) => string | undefined) => /^gemini-[a-z0-9.-]{2,60}$/.test(env('ANALYSIS_AI_MODEL') ?? '') ? env('ANALYSIS_AI_MODEL')! : defaultGeminiModel
 /** Returns null when GEMINI_API_KEY (or GOOGLE_API_KEY) isn't set: the report then has rule-based findings only. ANALYSIS_AI_MODEL picks the Gemini model. */
 export function geminiClient(env: (name: string) => string | undefined, fetcher: typeof fetch = fetch): AiClient | null {
   const apiKey = (env('GEMINI_API_KEY') || env('GOOGLE_API_KEY') || '').trim()
   if (!apiKey) return null
-  const model = /^gemini-[a-z0-9.-]{2,60}$/.test(env('ANALYSIS_AI_MODEL') ?? '') ? env('ANALYSIS_AI_MODEL')! : defaultGeminiModel
-  return async ({ system, user, schema, maxTokens }) => {
-    let response: Response
+  const model = geminiModel(env)
+  // generationConfig.thinkingConfig.thinkingLevel (MINIMAL, LOW, MEDIUM, HIGH) applies to Gemini 3 and later, per the generateContent
+  // reference (checked 19 November 2026). Earlier models reject it, so it is only sent to those.
+  const thinkingModel = /^gemini-([3-9]|\d{2,})(\.|-)/.test(model)
+  return async ({ system, user, schema, maxTokens, thinking, timeoutMs }) => {
+    const send = (withThinking: boolean) => fetcher(`${endpoint}/${model}:generateContent`, {
+      method: 'POST', signal: AbortSignal.timeout(timeoutMs ?? 110_000),
+      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: system }] },
+        contents: [{ role: 'user', parts: [{ text: user }] }],
+        generationConfig: { responseMimeType: 'application/json', responseJsonSchema: schema, maxOutputTokens: maxTokens,
+          ...(withThinking ? { thinkingConfig: { thinkingLevel: thinking!.toUpperCase() } } : {}) },
+      }),
+    })
+    let response: Response, body: Record<string, any> | null
     try {
-      response = await fetcher(`${endpoint}/${model}:generateContent`, {
-        method: 'POST', signal: AbortSignal.timeout(110_000),
-        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
-        body: JSON.stringify({
-          systemInstruction: { parts: [{ text: system }] },
-          contents: [{ role: 'user', parts: [{ text: user }] }],
-          generationConfig: { responseMimeType: 'application/json', responseJsonSchema: schema, maxOutputTokens: maxTokens },
-        }),
-      })
+      const withThinking = !!thinking && thinkingModel
+      response = await send(withThinking)
+      body = await response.json().catch(() => null) as Record<string, any> | null
+      // A model that refuses the thinking level gets the request again without it, as before the setting existed.
+      if (withThinking && response.status === 400 && /thinking/i.test(String(body?.error?.message ?? ''))) {
+        response = await send(false)
+        body = await response.json().catch(() => null) as Record<string, any> | null
+      }
     } catch (error) {
       throw new ProviderError((error as Error).name === 'TimeoutError' ? 'timeout' : 'unavailable', (error as Error).name === 'TimeoutError' ? 'The AI service took too long to answer.' : 'The AI service couldn’t be reached.')
     }
-    const body = await response.json().catch(() => null) as Record<string, any> | null
     if (!response.ok) {
       const message = String(body?.error?.message ?? ''), status = String(body?.error?.status ?? '')
       // Google answers an invalid key with 400 INVALID_ARGUMENT ("API key not valid") as well as 401/403.

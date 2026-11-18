@@ -1,4 +1,4 @@
--- Schedules LeadFlow's background workers (email and business analysis) with Supabase Cron. Hosted operations only: this is not a migration,
+-- Schedules LeadFlow's background workers (email, business analysis and contact searches) with Supabase Cron. Hosted operations only: this is not a migration,
 -- because local tests run without pg_cron. Safe to re-run: cron.schedule replaces a job with the same name.
 -- Prerequisite: a Vault secret named leadflow_worker_secret holding the same value as the Edge Function
 -- secret NOTIFICATION_WORKER_SECRET (docs/CLIENT-ONBOARDING.md#reminder-scheduler). No secret is stored here.
@@ -25,7 +25,8 @@ select cron.schedule('leadflow-retry-notifications', '7,22,37,52 * * * *', $job$
     timeout_milliseconds := 60000)
 $job$);
 
--- Business analyses nobody is watching (the open report advances its own). Every 2 minutes; each call runs due steps for about 100 seconds.
+-- Business analyses and contact searches nobody is watching (an open report or contacts tab advances its own). Every 2 minutes;
+-- each call runs due steps for about 100 seconds, analyses first.
 select cron.schedule('leadflow-analysis-worker', '*/2 * * * *', $job$
   select net.http_post(
     url := 'https://fzgxpwmqzmvgmijviaar.supabase.co/functions/v1/analysis-worker',

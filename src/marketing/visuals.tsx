@@ -194,6 +194,31 @@ export function PitchVisual() {
   )
 }
 
+export function OutreachVisual() {
+  return (
+    <div className="mk-mock mk-outreach" role="img" aria-label="Illustration: a contact found on the business’s website with a likely valid email, and an email draft whose observation is linked to a finding in the report">
+      <div className="mk-mock-head"><div><strong>Contacts &amp; outreach</strong><small>Harbor Dental · Austin, TX</small></div><span className="mk-badge is-green">2 contacts</span></div>
+      <div className="mk-contact-row">
+        <span className="mk-avatar">AS</span>
+        <span><strong>Dr. Avery Stone</strong><small>Owner · named on the About page</small></span>
+        <span className="mk-badge is-green">High confidence</span>
+      </div>
+      <div className="mk-contact-row">
+        <span className="mk-avatar"><Glyph name="mail" size={14} /></span>
+        <span><strong>hello@harbor-dental.example</strong><small>Email link on the Contact page</small></span>
+        <span className="mk-badge is-amber">Likely valid</span>
+      </div>
+      <div className="mk-draft">
+        <div className="mk-draft-top"><span className="mk-chip"><Glyph name="mail" size={13} />Email</span><span className="mk-chip is-soft">Consultative</span><span className="mk-chip is-soft">Version 2 · edited</span></div>
+        <p className="mk-draft-subject">A question about booking at Harbor Dental</p>
+        <p>Hi Avery, I couldn’t find an online booking option on the pages I looked at. How do new patients book today?</p>
+        <p className="mk-draft-basis"><span className="mk-type mk-type-observed">Observed</span>Based on: no online booking option found</p>
+      </div>
+      <div className="mk-mock-foot"><span><Glyph name="lock" size={13} />You review and send it. Nothing is sent from LeadFlow.</span><span className="mk-fake-button is-ghost">Copy</span></div>
+    </div>
+  )
+}
+
 export function FollowVisual() {
   const stages = [['New', 6, 'new'], ['Contacted', 4, 'contacted'], ['Qualified', 3, 'qualified'], ['Converted', 2, 'converted']] as const
   const tasks = [

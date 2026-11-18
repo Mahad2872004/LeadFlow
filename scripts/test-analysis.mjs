@@ -321,9 +321,10 @@ assert.ok(/analysis [0-9a-f-]{36} validate -> crawl \(saved\)/.test(logText),'Lo
 
 // 13. Rollback removes everything M7 added and keeps leads; the migration re-applies.
 const leadCount=await op('select count(*)::int from public.leads')
-await actAs(db,null,'postgres');await db.exec(readFileSync('supabase/rollbacks/202611080001_business_intelligence.down.sql','utf8'))
+// M8 (contacts and outreach) builds on these tables, so it is rolled back first and re-applied after.
+await actAs(db,null,'postgres');await db.exec(readFileSync('supabase/rollbacks/202611190001_outreach_intelligence.down.sql','utf8'));await db.exec(readFileSync('supabase/rollbacks/202611080001_business_intelligence.down.sql','utf8'))
 assert.equal(await op("select to_regclass('leadflow_private.business_analyses')"),null);assert.equal(await op('select count(*)::int from public.leads'),leadCount)
-await db.exec(readFileSync('supabase/migrations/202611080001_business_intelligence.sql','utf8'))
+await db.exec(readFileSync('supabase/migrations/202611080001_business_intelligence.sql','utf8'));await db.exec(readFileSync('supabase/migrations/202611190001_outreach_intelligence.sql','utf8'))
 assert.deepEqual(await as(owner,'select public.agency_services_for($1)',[W]),[])
 
 printLog('PASS Business intelligence: exact grants and private tables; SSRF protection for URLs, IP forms, internal names, every resolved address and every redirect; HTML extraction and signature-based technology detection; the service catalog with role checks; starting with idempotency, reuse of running analyses, recent-report protection and per-workspace limits; the full pipeline through the worker (direct crawl, robots, sitemap, broken links, social, PageSpeed with one retry, Gemini interpretation, matching); evidence on every finding, capped confidence for absence and AI findings, invalid AI output dropped, website text fenced against prompt injection; opportunity review and verification with workspace isolation; history and previous-report links; cancellation and leases; Apify start, polling, normalization, duplicates and malformed items, usage with reported cost, and fallbacks for credit, failed runs, missing actors, page budgets and missing tokens; unreachable, blocked and timing-out sites explained and retried, never read as having no website; secrets kept out of logs; rollback and re-apply. Embedded PostgreSQL; every outside service simulated.')

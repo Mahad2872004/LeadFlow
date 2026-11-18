@@ -35,3 +35,7 @@ verify_jwt = false
 [functions.analysis-worker]
 # Called by Supabase Cron with the x-worker-secret header.
 verify_jwt = false
+
+[functions.outreach]
+# Callers are checked by passing their token to the database (analysis_member_role).
+verify_jwt = false

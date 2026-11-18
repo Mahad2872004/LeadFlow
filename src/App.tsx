@@ -5,7 +5,7 @@ import { ActivityTimeline } from './components/ActivityTimeline'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { LeadForm } from './components/LeadForm'
 import { Modal } from './components/Modal'
-import { changeStatus, createLead, createTask, statuses, today, toggleTask, updateLead, sources, type Data, type Lead, type LeadInput } from './lib/model'
+import { activity, changeStatus, createLead, createTask, statuses, today, toggleTask, updateLead, sources, type Data, type Lead, type LeadInput } from './lib/model'
 import { isData, STORAGE_KEY } from './lib/storage'
 import { accessDenied, loadWorkspace, saveWorkspace, type WorkspaceSummary } from './lib/backend'
 import { useAuth, useWorkspaces } from './lib/session'
@@ -25,6 +25,9 @@ import { LeadProvenance } from './components/LeadProvenance'
 import { duplicateIndex, forgetOrigins, reasonLabels } from './lib/discovery'
 import { BusinessReport } from './components/BusinessReport'
 import { AgencyServices } from './components/AgencyServices'
+import { LeadContacts } from './components/LeadContacts'
+import { OutreachStudio } from './components/OutreachStudio'
+import { OutreachSettings } from './components/OutreachSettings'
 import { CommandPalette, type Command } from './components/CommandPalette'
 import { LeadBoard } from './components/LeadBoard'
 import { navigation } from './lib/pages'
@@ -34,6 +37,8 @@ import { setPreference } from './lib/theme'
 const isMac=typeof navigator!=='undefined'&&/Mac|iPhone|iPad/.test(navigator.userAgent)
 
 
+type LeadTab='report'|'contacts'|'outreach'
+const leadTabs:[LeadTab,string][]=[['report','Business report'],['contacts','Contacts'],['outreach','Outreach']]
 const blank:LeadInput={name:'',email:'',phone:'',company:'',service:'',source:'',message:''}
 const headings:Record<Page,[string,string]>={
  Overview:['Overview','Your pipeline, follow-ups and opportunities at a glance.'],
@@ -74,8 +79,10 @@ function App({workspace,page,onPageChange:setPage,initialNotice}:{workspace:Work
  const [lists,setLists]=useState<LeadList[]>([]),[listFilter,setListFilter]=useState('')
  const [modal,setModal]=useState<'lead'|'edit'|'task'|'reset'|'import'|null>(null)
  const [selected,setSelected]=useState<string|null>(null)
- // The lead whose business intelligence report is open.
+ // The lead whose business report, contacts or outreach is open, and the contact to write to.
  const [reportLead,setReportLead]=useState<string|null>(null)
+ const [leadTab,setLeadTab]=useState<LeadTab>('report')
+ const [outreachContact,setOutreachContact]=useState<string|null>(null)
  const [formError,setFormError]=useState('')
  const [notice,setNotice]=useState<string[]>(()=>initialNotice?[initialNotice]:[])
  const [showNotices,setShowNotices]=useState(false)
@@ -168,7 +175,7 @@ function App({workspace,page,onPageChange:setPage,initialNotice}:{workspace:Work
  {dataPage&&data.leads.length===0&&(page==='Overview'?<section className="panel welcome-panel"><div><p className="eyebrow">GETTING STARTED</p><h2>{workspace.name} is ready for its first lead</h2><p>{emptyHint}</p></div><div className="welcome-actions"><button className="primary" onClick={()=>openModal('lead')}><Icon name="plus" size={17}/> Add your first lead</button><button className="secondary" onClick={()=>setPage('Integrations')}>Connect your website</button></div></section>:<p>{emptyHint}</p>)}
  <div className="page-heading"><div>{page==='Overview'&&<p className="page-kicker">{longDayLabel(day)}</p>}<h1>{title}</h1><p>{description}</p></div>{dataPage&&<div className="page-actions">{page==='Overview'&&<button className="secondary" onClick={()=>navigateTo('Discovery')}><Icon name="compass" size={17}/> Find businesses</button>}<button className="primary" onClick={()=>openModal(page==='Follow-ups'?'task':'lead')}><Icon name="plus" size={17}/> {page==='Follow-ups'?'Add follow-up':'Add lead'}</button></div>}</div>
  {page==='Integrations'&&<IntegrationsHub workspaceId={workspace.id} role={workspace.role}/>}
- {page==='Settings'&&<><WorkspaceSettings workspace={workspace}/><AgencyServices workspace={workspace}/></>}
+ {page==='Settings'&&<><WorkspaceSettings workspace={workspace}/><AgencyServices workspace={workspace}/><OutreachSettings workspace={workspace}/></>}
  {page==='Onboarding'&&<ClientOnboarding workspace={workspace} leads={data.leads} startLead={onboardingLead}/>}
  {page==='Discovery'&&<LeadDiscovery workspace={workspace} leads={data.leads} blocked={busy||!!pending} onImported={async message=>{forgetOrigins(workspace.id);await reload();setNotice(n=>[message,...n].slice(0,20))}} onAddLead={()=>openModal('lead')}/>}
  {page==='Overview'&&<DashboardOverview day={day} leads={data.leads} tasks={data.tasks} onLeads={showLeads} onFollowUps={showDueTasks} onOpenLead={setSelected} onPlan={leadId=>openModal('task',leadId)} onDiscovery={()=>navigateTo('Discovery')}/>}
@@ -181,8 +188,15 @@ function App({workspace,page,onPageChange:setPage,initialNotice}:{workspace:Work
  {modal==='task'&&<Modal title="Plan a follow-up" onClose={()=>setModal(null)}>{data.leads.length===0?<div className="empty"><p>Add a lead before scheduling a follow-up.</p><button className="primary" onClick={()=>openModal('lead')}>Add lead</button></div>:<form onSubmit={async e=>{e.preventDefault();try{const saved=await commit(createTask(data,taskLead,taskDue,taskNotes),'Follow-up scheduled.');if(saved)setModal(null)}catch(err){setFormError(err instanceof Error?err.message:'Unable to create task.')}}}><label>Lead *<select value={taskLead} required onChange={e=>setTaskLead(e.target.value)}>{data.leads.map(l=><option key={l.id} value={l.id}>{l.name} · {l.company||l.email}</option>)}</select></label><label>Due date *<input type="date" required min="0001-01-01" max="9999-12-31" aria-describedby="due-date-help" value={taskDue} onChange={e=>setTaskDue(e.target.value)}/></label><p id="due-date-help" className="muted">Dates use your local calendar. Past dates are allowed and marked overdue; tasks due today become overdue tomorrow.</p><label>Notes *<textarea required maxLength={2000} rows={4} placeholder="What’s the next step?" value={taskNotes} onChange={e=>setTaskNotes(e.target.value)}/></label>{formError&&<p role="alert" className="field-error">{formError}</p>}<div className="modal-actions"><button type="button" className="secondary" onClick={()=>setModal(null)}>Cancel</button><button className="primary">Schedule follow-up</button></div></form>}</Modal>}
  {modal==='reset'&&<Modal title="Reset your demo workspace?" onClose={()=>setModal(null)}><p>This replaces all leads, follow-ups, and activity in <strong>{workspace.name}</strong> with fresh fictional sample data, for everyone in this workspace. Browser demo records remain untouched. This cannot be undone.</p><div className="modal-actions"><button className="secondary" onClick={()=>setModal(null)}>Keep my data</button><button className="primary" onClick={async()=>{if(!await commit(sampleData(),'Demo data restored.',true))return;setResetVersion(value=>value+1);setShowNotices(false);setSourceFilter('All sources');setTaskFilter('Open');setSearch('');setFilter('All statuses');setSelected(null);setModal(null)}}>Reset demo data</button></div></Modal>}
  {modal==='import'&&<Modal title="Import browser data?" onClose={()=>setModal(null)}><p>Copy {legacy?.leads.length} leads, {legacy?.tasks.length} follow-ups, and their history into {workspace.name}. The original browser data will be kept. No existing server records will be merged or replaced.</p><div className="modal-actions"><button className="secondary" onClick={()=>setModal(null)}>Cancel</button><button className="primary" onClick={async()=>{if(legacy&&data.leads.length===0&&await commit(legacy,'Browser data imported.'))setModal(null)}}>Confirm import</button></div></Modal>}
- {activeLead&&!modal&&<Modal variant="drawer" title={activeLead.name} onClose={()=>setSelected(null)}><div className="lead-summary"><div className="lead-hero"><span className={'avatar avatar-lg tone-'+(activeLead.name.length%4)} aria-hidden="true">{activeLead.name.split(' ').map(part=>part[0]).slice(0,2).join('')}</span><div><span className={'status '+activeLead.status.toLowerCase()}>{activeLead.status}</span><p>{activeLead.company||'Independent contact'} · {activeLead.service}</p></div></div><div className="lead-contact">{activeLead.email&&<a href={`mailto:${activeLead.email}`}>{activeLead.email}</a>}{activeLead.phone&&<p><a href={`tel:${activeLead.phone}`}>{activeLead.phone}</a></p>}<p className="muted">Source: {activeLead.source}</p></div><LeadProvenance workspaceId={workspace.id} lead={activeLead}/><p className="message">{activeLead.message||'No message provided.'}</p><div className="lead-actions"><button className="primary" onClick={()=>openModal('task',activeLead.id)}>＋ Add follow-up</button><button className="secondary" onClick={()=>openModal('edit')}>Edit lead</button><button className="secondary" onClick={()=>{setReportLead(activeLead.id);setSelected(null)}}>Business report</button><button className="secondary" onClick={()=>{setOnboardingLead(activeLead);setSelected(null);setPage('Onboarding')}}>Start client onboarding</button></div></div><h3>Follow-ups</h3>{taskList(data.tasks.filter(t=>t.leadId===activeLead.id))}<h3>Activity history</h3><ActivityTimeline activities={data.activities.filter(a=>a.leadId===activeLead.id)}/></Modal>}
- {reportTarget&&!modal&&<Modal id="business-report" title={`Business report · ${reportTarget.company||reportTarget.name}`} onClose={()=>{setSelected(reportTarget.id);setReportLead(null)}}><BusinessReport workspace={workspace} lead={reportTarget} onEditLead={()=>{setSelected(reportTarget.id);setReportLead(null);openModal('edit')}}/></Modal>}
+ {activeLead&&!modal&&<Modal variant="drawer" title={activeLead.name} onClose={()=>setSelected(null)}><div className="lead-summary"><div className="lead-hero"><span className={'avatar avatar-lg tone-'+(activeLead.name.length%4)} aria-hidden="true">{activeLead.name.split(' ').map(part=>part[0]).slice(0,2).join('')}</span><div><span className={'status '+activeLead.status.toLowerCase()}>{activeLead.status}</span><p>{activeLead.company||'Independent contact'} · {activeLead.service}</p></div></div><div className="lead-contact">{activeLead.email&&<a href={`mailto:${activeLead.email}`}>{activeLead.email}</a>}{activeLead.phone&&<p><a href={`tel:${activeLead.phone}`}>{activeLead.phone}</a></p>}<p className="muted">Source: {activeLead.source}</p></div><LeadProvenance workspaceId={workspace.id} lead={activeLead}/><p className="message">{activeLead.message||'No message provided.'}</p><div className="lead-actions"><button className="primary" onClick={()=>openModal('task',activeLead.id)}>＋ Add follow-up</button><button className="secondary" onClick={()=>openModal('edit')}>Edit lead</button><button className="secondary" onClick={()=>{setReportLead(activeLead.id);setLeadTab('report');setSelected(null)}}>Business report</button><button className="secondary" onClick={()=>{setReportLead(activeLead.id);setLeadTab('contacts');setSelected(null)}}>Contacts</button><button className="secondary" onClick={()=>{setReportLead(activeLead.id);setLeadTab('outreach');setOutreachContact(null);setSelected(null)}}>Outreach</button><button className="secondary" onClick={()=>{setOnboardingLead(activeLead);setSelected(null);setPage('Onboarding')}}>Start client onboarding</button></div></div><h3>Follow-ups</h3>{taskList(data.tasks.filter(t=>t.leadId===activeLead.id))}<h3>Activity history</h3><ActivityTimeline activities={data.activities.filter(a=>a.leadId===activeLead.id)}/></Modal>}
+ {reportTarget&&!modal&&<Modal id="business-report" title={`${leadTabs.find(([tab])=>tab===leadTab)![1]} · ${reportTarget.company||reportTarget.name}`} onClose={()=>{setSelected(reportTarget.id);setReportLead(null);setOutreachContact(null)}}>
+  <div className="lead-tabs" role="tablist" aria-label="Lead workspace">{leadTabs.map(([tab,label])=><button key={tab} role="tab" aria-selected={leadTab===tab} className={leadTab===tab?'active':''} onClick={()=>setLeadTab(tab)}>{label}</button>)}</div>
+  {leadTab==='report'&&<BusinessReport workspace={workspace} lead={reportTarget} onEditLead={()=>{setSelected(reportTarget.id);setReportLead(null);openModal('edit')}}/>}
+  {leadTab==='contacts'&&<LeadContacts workspace={workspace} lead={reportTarget} onWriteTo={contactId=>{setOutreachContact(contactId);setLeadTab('outreach')}}/>}
+  {leadTab==='outreach'&&<OutreachStudio key={outreachContact??'any'} workspace={workspace} lead={reportTarget} initialContactId={outreachContact} onShowContacts={()=>setLeadTab('contacts')} onShowReport={()=>setLeadTab('report')}
+   onPlanFollowUp={(due,notes)=>commit(createTask(data,reportTarget.id,due,notes),'Follow-up reminder added.')}
+   onLogActivity={text=>commit({...data,activities:[activity(reportTarget.id,text),...data.activities]},'Outreach marked as sent.')}/>}
+ </Modal>}
  {palette&&<CommandPalette commands={commands} onClose={()=>setPalette(false)}/>}
  </>
 }

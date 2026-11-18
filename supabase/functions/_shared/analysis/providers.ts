@@ -121,6 +121,7 @@ export async function runPageSpeed(runtime: Runtime, website: string, strategy: 
 
 // ---------- AI interpretation (Gemini) ----------
 /** Injected by the Edge Function entry point (gemini.ts). Tests pass a fake. */
-export interface AiRequest { system: string; user: string; schema: Record<string, unknown>; maxTokens: number }
+/** thinking: how much the model reasons before answering (Gemini 3+); omitted, the model's default applies. timeoutMs defaults to 110 s. */
+export interface AiRequest { system: string; user: string; schema: Record<string, unknown>; maxTokens: number; thinking?: 'minimal' | 'low' | 'medium' | 'high'; timeoutMs?: number }
 export interface AiResponse { output: unknown; provider: string; inputTokens: number; outputTokens: number; model: string }
 export type AiClient = (request: AiRequest) => Promise<AiResponse>
