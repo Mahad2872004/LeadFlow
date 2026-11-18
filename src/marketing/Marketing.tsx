@@ -4,6 +4,7 @@ import { marketingPages, type MarketingPath } from './content'
 import { Glyph } from './Glyph'
 import { Brand, CTA, FAQs, FinalCTA, Intro, TextLink } from './shared'
 import { primaryLabel } from './access'
+import { ThemeToggle } from '../components/ThemeToggle'
 import Home from './Home'
 import { Features, Integrations, Pricing, Solutions } from './Pages'
 import { Resources, Security } from './Guides'
@@ -85,6 +86,7 @@ export default function Marketing({ path }: { path: string }) {
               <CTA small />
             </div>
           </nav>
+          <ThemeToggle className="mk-theme-toggle" />
         </div>
       </header>
       <main id="marketing-content" tabIndex={-1}>

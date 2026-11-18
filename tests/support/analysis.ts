@@ -13,6 +13,8 @@ export interface AnalysisState {
   sites: Record<string, SiteResponse | 'timeout'>
   /** Addresses by host name; a missing host is NXDOMAIN. */
   dns: Record<string, string[]>
+  /** Mail servers by domain, as DNS answers ("10 mx.example.com."); a domain in `dns` without an entry here has no MX records. */
+  mx: Record<string, string[]>
   dnsDown: boolean
   apify: { run: Record<string, unknown> | null; startStatus: number; startBody?: unknown; runStatuses: string[]; items: unknown[]; calls: string[]; inputs: unknown[] }
   pagespeed: Record<'mobile' | 'desktop', { status: number; body: unknown }[]>
@@ -24,7 +26,7 @@ export const resolver = 'https://dns.test/dns-query'
 export function createAnalysisHarness(db: PGlite, overrides: Record<string, string | undefined> = {}) {
   const config: Record<string, string | undefined> = { SUPABASE_URL: 'https://project.test', SUPABASE_SERVICE_ROLE_KEY: 'test-server-key', SUPABASE_ANON_KEY: 'test-public-key',
     DISCOVERY_ALLOWED_ORIGINS: 'http://127.0.0.1:5175,http://127.0.0.1:4175', ANALYSIS_DNS_RESOLVER: resolver, NOTIFICATION_WORKER_SECRET: 'test-worker-secret-at-least-32-characters', ...overrides }
-  const state: AnalysisState = { sites: {}, dns: {}, dnsDown: false, apify: { run: null, startStatus: 201, runStatuses: [], items: [], calls: [], inputs: [] },
+  const state: AnalysisState = { sites: {}, dns: {}, mx: {}, dnsDown: false, apify: { run: null, startStatus: 201, runStatuses: [], items: [], calls: [], inputs: [] },
     pagespeed: { mobile: [], desktop: [] }, pagespeedCalls: [], ai: { requests: [] }, siteCalls: [] }
   const rpcCall = async (url: URL, init: RequestInit | undefined) => {
     const name = url.pathname.match(/^\/rest\/v1\/rpc\/([a-z_]+)$/)?.[1]
@@ -55,6 +57,7 @@ export function createAnalysisHarness(db: PGlite, overrides: Record<string, stri
       if (state.dnsDown) return new Response('down', { status: 503 })
       const host = url.searchParams.get('name') ?? '', type = url.searchParams.get('type'), addresses = state.dns[host]
       if (!addresses) return Response.json({ Status: 3 })
+      if (type === 'MX') return Response.json({ Status: 0, Answer: (state.mx[host] ?? []).map(data => ({ type: 15, data })) })
       return Response.json({ Status: 0, Answer: addresses.filter(ip => (type === 'AAAA') === ip.includes(':')).map(ip => ({ type: ip.includes(':') ? 28 : 1, data: ip })) })
     }
     if (url.hostname === 'api.apify.com') {

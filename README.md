@@ -36,6 +36,10 @@ Discovery → **Apollo** searches people and companies with your own Apollo API 
 
 Open a lead → **Business report** to analyze its public website: pages, SEO basics, contact and booking options, technology, PageSpeed Insights measurements and an optional Gemini interpretation, every finding linked to its evidence, then matched to the services in **Settings → Agency services**. Apify, PageSpeed and Gemini keys are optional server-side secrets; without them LeadFlow reads pages itself and says which parts aren’t set up. See [docs/BUSINESS-INTELLIGENCE.md](docs/BUSINESS-INTELLIGENCE.md).
 
+## Contact intelligence and AI outreach (M8)
+
+Open a lead → **Contacts** to find its public business contacts (from its website, its business report and, if your workspace uses Apollo, decision-makers), each with its sources, email and phone status, and an explained confidence level. Add, edit, confirm and delete contacts; later searches never overwrite what your team confirmed or edited. Lead → **Outreach** prepares email, WhatsApp and LinkedIn drafts grounded in the business report's findings, with versions, follow-up reminders and a status only a person changes. LeadFlow never sends messages. See [docs/OUTREACH.md](docs/OUTREACH.md).
+
 ## Set up a Supabase project
 
 1. Create a Supabase project. In Authentication, disable anonymous sign-ins. Either keep public sign-up disabled and create users with a confirmed email in the dashboard, or enable it after following the [sign-up checklist](docs/MULTI-TENANCY.md#onboarding-and-workspace-management) (redirect URLs, SMTP, password length). Each account gets its own personal workspace. Accounts share data only through explicit workspace membership (see [multi-tenancy](docs/MULTI-TENANCY.md)).

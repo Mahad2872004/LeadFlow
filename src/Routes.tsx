@@ -13,7 +13,7 @@ export default function Routes(){
  const privatePage=appPage||path==='/login'||path==='/signup'
  const portalPage=path==='/client-portal'
  const themed=isThemedPath(path)
- // Dark mode covers the app, its sign-in pages and the client portal; the marketing site and inquiry form stay light.
+ // Dark mode covers the marketing site, the app, its sign-in pages and the client portal; the embeddable inquiry form stays light.
  useEffect(()=>themed?watchTheme():undefined,[themed])
  useEffect(()=>{
   if(privatePage){const [title,description]=authMeta[path]??['Workspace — LeadFlow','Sign in to your private LeadFlow workspace.'];document.title=title;document.querySelector('meta[name="description"]')?.setAttribute('content',description)}

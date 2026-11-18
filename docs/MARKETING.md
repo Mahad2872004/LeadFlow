@@ -15,7 +15,7 @@ Files in `src/marketing/`:
 - `Marketing.css`: scoped styles, organised by section.
 
 Design system:
-- dark ink and emerald surfaces for the hero and AI sections, on a light canvas;
+- dark ink and emerald surfaces for the hero and AI sections, on a light canvas, or on a dark canvas in dark mode (below);
 - one emerald-to-lime accent;
 - Inter Variable with an Instrument Serif italic accent. Both are self-hosted through `@fontsource` and imported only by the lazy-loaded marketing bundle;
 - the system monospace font for code.
@@ -27,7 +27,7 @@ Two audiences:
 Availability language:
 - Every capability carries a status chip: **Available**, **Needs setup**, **Beta**, **Planned** or **Not available**.
 - `featureStatus` in `content.ts` is the single source for the Pricing table.
-- Client onboarding is shown as **Beta** because it isn't applied to the hosted project yet. Remove it from `capabilities`, `featureStatus` and Features stage 05 if it won't ship with the frontend.
+- Client onboarding is shown as **Beta** because it isn't applied to the hosted project yet. Remove it from `capabilities`, `featureStatus` and Features stage 06 if it won't ship with the frontend.
 
 Illustrations:
 - They use fictional businesses and never read the database.
@@ -50,6 +50,31 @@ The site uses the existing pathname approach with native links and lazy page bun
 ## Business reports (M7)
 
 The home page (`#business-reports`) and Features (`/features#business-reports`) present business reports with an illustrated, fictional report (`ReportPreview` in `shared.tsx`): what is checked, the four finding labels (observed, measured, AI interpretation, hypothesis), opportunity matching, and the limits (public pages only, no bypassing protections, "not found" means not found on the pages analyzed, no promised results). The FAQ, Solutions, Pricing comparison, Security and Resources (field note 04) were updated to match. Copy names Google PageSpeed Insights and Google Gemini because website text is sent to them. Copy also reflects that CSV import and workspace roles exist, while team invitations and a general lead export are still planned.
+
+## Contacts and outreach (M8)
+
+The site presents M8 as "Reach out", between pitching and following through:
+- **Home:**
+  - The announcement and the hero copy mention contacts and drafts.
+  - "How it works" step 3 now covers contacts and drafts.
+  - A large **Contacts and outreach drafts** card was added to the platform grid, which was reordered so it has no gaps at six or two columns.
+  - The owner and technical points were extended, and the agency flow ends in "Outreach".
+- **Features:** a new stage, **04 · Reach out** (`/features#outreach`), with the `OutreachVisual` illustration. Following through and onboarding are now 05 and 06.
+- **Elsewhere:** Integrations (Apollo decision-makers, Gemini drafts), Solutions, Pricing (plan items, and three rows in `featureStatus`), Security (a contacts and outreach card) and Resources (field note 05, "Outreach that says only what you saw").
+- **FAQ:** a new question about finding contacts, and the sending question rewritten.
+- **Claims stay accurate:**
+  - LeadFlow never sends messages; "Sending messages from LeadFlow" is listed as **Not available**.
+  - Email addresses are never guessed.
+  - Drafts that claim more than the evidence are refused.
+  - Follow-ups are reminders, not scheduled sends.
+
+## Dark mode
+
+The marketing site follows the visitor's choice or their system setting, with a light/dark switch in the header. On phones the switch sits beside the menu button.
+- **Shared choice:** it's the same choice as the app (`leadflow.theme`), and `index.html` applies it before the first paint.
+- **The inquiry form** (`/inquiry`) stays light, because businesses embed it in their own websites.
+- **Styling:** in `Marketing.css`, "Dark theme" swaps the page tokens and the few light surfaces outside illustrations. Product illustrations (`.mk-window`, `.mk-mock`) keep their light tokens and brand colours, so they read as light screenshots of the app. The bands that are dark in both themes get a faint edge.
+- **Tested:** `tests/theme.spec.ts` covers the switch, the shared choice across pages and the app, and the light inquiry form.
 
 ## Access and accurate claims
 
