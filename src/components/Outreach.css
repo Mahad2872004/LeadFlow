@@ -1,0 +1,203 @@
+/* Contacts, outreach studio and outreach settings (LeadContacts.tsx, OutreachStudio.tsx, OutreachSettings.tsx), shown in the
+   lead workspace dialog (#business-report) next to the business report. Builds on tokens in src/index.css, primitives in
+   src/App.css and shared report pieces in BusinessReport.css (.br-notice, .br-error, .br-confirm, .br-muted, .br-table).
+   Sections: lead tabs · layout & feedback · contacts · channels & Apollo · studio · drafts · settings · responsive */
+
+/* ---------- Lead tabs (inside the dialog header area) ---------- */
+dialog#business-report > .lead-tabs { display: flex; gap: 4px; width: fit-content; max-width: calc(100% - 56px); margin: 18px 28px 20px; padding: 4px; overflow-x: auto; border: 1px solid var(--lf-line); border-radius: 12px; background: var(--lf-surface); box-shadow: var(--lf-shadow-xs); scrollbar-width: none }
+dialog#business-report > .lead-tabs button { min-height: 36px; padding: 0 16px; border: 0; border-radius: 9px; background: none; color: var(--lf-muted); font-size: 13.5px; font-weight: 600; white-space: nowrap }
+dialog#business-report > .lead-tabs button:hover { background: var(--lf-subtle); color: var(--lf-ink) }
+dialog#business-report > .lead-tabs button.active { background: var(--lf-accent-bg); color: #fff }
+dialog#business-report > .lead-tabs button:focus-visible { outline: 2px solid var(--lf-brand); outline-offset: -2px }
+dialog#business-report > .br-loading { padding: 0 28px 28px }
+
+/* ---------- Layout & feedback ---------- */
+.ow { padding: 0 28px 28px; color: var(--lf-text); font-size: 14px; line-height: 1.55 }
+.ow h3 { margin: 0 0 4px; color: var(--lf-ink); font-size: 17px; font-weight: 650; letter-spacing: -.02em }
+.ow h4 { margin: 0 0 10px; color: var(--lf-ink); font-size: 14.5px; font-weight: 650; letter-spacing: -.01em }
+.ow p { margin: 0 }
+/* Base form styles use :where() so component rules (a narrow select in a header, say) override them. */
+.ow :where(label) { display: block; margin-bottom: 14px; color: var(--lf-text); font-size: 13px; font-weight: 550 }
+.ow :where(input:not([type=checkbox]):not([type=radio]), select, textarea) { display: block; width: 100%; min-height: 40px; margin-top: 6px; padding: 8px 12px; border: 1px solid var(--lf-line-strong); border-radius: 10px; background: var(--lf-surface); color: var(--lf-ink); font-size: 14px; font-weight: 400 }
+.ow textarea { line-height: 1.55; resize: vertical }
+.ow :where(input, select, textarea):focus { border-color: var(--lf-brand); outline: none; box-shadow: 0 0 0 3px var(--lf-brand-ring) }
+.ow :where(input, textarea)::placeholder { color: var(--lf-faint) }
+.ow input[type=radio] { accent-color: var(--lf-brand) }
+.ow .danger { display: inline-flex; align-items: center; min-height: 36px; padding: 0 14px; border: 1px solid var(--lf-danger-line); border-radius: 10px; background: var(--lf-danger-soft); color: var(--lf-danger); font-size: 13.5px; font-weight: 600 }
+.ow .danger:hover:not(:disabled) { border-color: var(--lf-danger) }
+.ow-danger-link.text-button { color: var(--lf-danger) }
+.ow-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px }
+.ow-actions .primary, .ow-actions .secondary { min-height: 34px; padding: 0 12px; font-size: 13px }
+.ow-confirm-inline { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; color: var(--lf-text); font-size: 13px }
+.ow-hint { margin: -6px 0 14px !important; font-size: 12.5px }
+.ow-policy { display: flex; align-items: flex-start; gap: 8px; margin: 0 0 16px !important; font-size: 12.5px }
+.ow-policy svg { margin-top: 2px; color: var(--lf-success) }
+.ow-empty { display: grid; justify-items: center; gap: 6px; padding: 36px 20px; border: 1px dashed var(--lf-line-strong); border-radius: var(--lf-radius-lg); background: var(--lf-surface); text-align: center }
+.ow-empty p { max-width: 460px; color: var(--lf-muted); font-size: 13.5px }
+.ow-empty-icon { display: grid; place-items: center; width: 44px; height: 44px; margin-bottom: 4px; border-radius: 12px; background: var(--lf-brand-soft); color: var(--lf-brand) }
+
+/* ---------- Contacts ---------- */
+.ow-intro { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 12px }
+.ow-intro > div:first-child { flex: 1 1 360px; max-width: 640px }
+.ow-intro-actions { display: flex; flex-wrap: wrap; gap: 8px }
+.ow-job { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 12px; margin: 0 0 16px; padding: 12px 16px; border: 1px solid var(--lf-line); border-radius: 12px; background: var(--lf-surface) }
+.ow-job > div { display: grid; gap: 2px }
+.ow-job.running, .ow-job.pending { border-color: var(--lf-info-line); background: var(--lf-info-soft) }
+.ow-job.partial { border-color: var(--lf-warning-line); background: var(--lf-warning-soft) }
+.ow-job.failed { border-color: var(--lf-danger-line); background: var(--lf-danger-soft) }
+.ow-job-failure, .ow-providers { grid-column: 1 / -1 }
+.ow-providers { display: grid; gap: 2px; margin: 4px 0 0; padding: 0; list-style: none; color: var(--lf-muted); font-size: 12.5px }
+.ow-count { margin: 4px 0 10px !important; color: var(--lf-muted); font-size: 12.5px; font-weight: 600; letter-spacing: .02em }
+.ow-contacts { display: grid; gap: 12px; margin: 0 0 20px; padding: 0; list-style: none }
+.ow-contact { padding: 16px 18px; border: 1px solid var(--lf-line); border-radius: var(--lf-radius-lg); background: var(--lf-surface); box-shadow: var(--lf-shadow-xs) }
+.ow-contact.is-preferred { border-color: color-mix(in srgb, var(--lf-brand) 45%, var(--lf-line)) }
+.ow-contact > header { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 12px }
+.ow-avatar { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; background: var(--lf-brand-soft); color: var(--lf-brand-strong); font-size: 13px; font-weight: 700 }
+.ow-avatar.business { border-radius: 10px; background: var(--lf-subtle); color: var(--lf-muted) }
+.ow-contact-title h4 { margin: 0; overflow-wrap: anywhere }
+.ow-contact-title p { color: var(--lf-muted); font-size: 13px }
+.ow-badges { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px }
+.ow-badge, .ow-confidence, .ow-status, .ow-draft-status, .ow-chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 9px; border: 1px solid var(--lf-line); border-radius: 999px; background: var(--lf-subtle); color: var(--lf-text); font-size: 11.5px; font-weight: 600; line-height: 1.6; white-space: nowrap }
+.ow-badge.preferred { border-color: var(--lf-success-line); background: var(--lf-success-soft); color: var(--lf-success) }
+.ow-badge.confirmed { border-color: var(--lf-info-line); background: var(--lf-info-soft); color: var(--lf-info) }
+.ow-confidence { cursor: help }
+.ow-confidence.high { border-color: var(--lf-success-line); background: var(--lf-success-soft); color: var(--lf-success) }
+.ow-confidence.medium { border-color: var(--lf-warning-line); background: var(--lf-warning-soft); color: var(--lf-warning) }
+.ow-confidence.low { border-color: var(--lf-danger-line); background: var(--lf-danger-soft); color: var(--lf-danger) }
+.ow-details { display: grid; gap: 0; margin: 12px 0 0 }
+.ow-details > div { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 10px; padding: 7px 0; border-top: 1px dashed var(--lf-line) }
+.ow-details dt { color: var(--lf-muted); font-size: 12.5px; font-weight: 550 }
+.ow-details dd { margin: 0; overflow-wrap: anywhere }
+.ow-status { margin-left: 6px; cursor: help }
+.ow-status.email-verified, .ow-status.email-likely_valid, .ow-status.phone-valid_format, .ow-status.phone-provider_verified { border-color: var(--lf-success-line); background: var(--lf-success-soft); color: var(--lf-success) }
+.ow-status.email-invalid, .ow-status.phone-invalid_format { border-color: var(--lf-danger-line); background: var(--lf-danger-soft); color: var(--lf-danger) }
+.ow-status.email-risky { border-color: var(--lf-warning-line); background: var(--lf-warning-soft); color: var(--lf-warning) }
+.ow-suggestions { display: grid; gap: 8px; margin: 12px 0 0; padding: 10px 12px; border: 1px solid var(--lf-warning-line); border-radius: 10px; background: var(--lf-warning-soft) }
+.ow-suggestions p { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; color: var(--lf-text); font-size: 13px }
+.ow-suggestions p > span { flex: 1 1 260px }
+.ow-suggestions .secondary { min-height: 30px; padding: 0 10px; font-size: 12.5px }
+.ow-why { margin: 12px 0 0 }
+.ow-why summary { width: fit-content; color: var(--lf-brand); font-size: 13px; font-weight: 600; cursor: pointer }
+.ow-reasons, .ow-limits, .ow-sources, .ow-plain { display: grid; gap: 4px; margin: 8px 0 0; padding: 0; list-style: none; font-size: 12.5px }
+.ow-reasons li { display: flex; gap: 6px; color: var(--lf-success) }
+.ow-reasons li svg { margin-top: 2px }
+.ow-limits li { padding-left: 20px; color: var(--lf-warning) }
+.ow-sources li { color: var(--lf-muted); overflow-wrap: anywhere }
+.ow-contact > footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--lf-line) }
+.ow-form { margin: 0 0 18px; padding: 18px; border: 1px solid var(--lf-line); border-radius: var(--lf-radius-lg); background: var(--lf-surface) }
+.ow-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 16px }
+.ow-form-grid .ow-wide { grid-column: 1 / -1 }
+.ow-segmented { display: inline-flex; gap: 4px; margin: 0 0 14px; padding: 4px; border: 1px solid var(--lf-line); border-radius: 10px; background: var(--lf-subtle) }
+.ow-segmented label { display: inline-flex; align-items: center; gap: 6px; margin: 0; padding: 6px 12px; border-radius: 8px; cursor: pointer }
+.ow-segmented label:has(input:checked) { background: var(--lf-surface); box-shadow: var(--lf-shadow-xs); color: var(--lf-ink) }
+
+/* ---------- Channels & Apollo ---------- */
+.ow-channels, .ow-apollo { margin: 0 0 18px; padding: 16px 18px; border: 1px solid var(--lf-line); border-radius: var(--lf-radius-lg); background: var(--lf-surface) }
+.ow-channels ul, .ow-apollo-list { display: grid; gap: 0; margin: 0; padding: 0; list-style: none }
+.ow-channels li { display: grid; grid-template-columns: 180px minmax(0, 1fr) auto; align-items: baseline; gap: 12px; padding: 8px 0; border-top: 1px dashed var(--lf-line); overflow-wrap: anywhere }
+.ow-channels li:first-child, .ow-apollo-list li:first-child { border-top: 0 }
+.ow-channels li > span { color: var(--lf-muted); font-size: 12.5px; font-weight: 600 }
+.ow-apollo-head { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 10px }
+.ow-apollo-head > div { flex: 1 1 320px }
+.ow-apollo-list li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 0; border-top: 1px dashed var(--lf-line) }
+.ow-apollo-list li > div:first-child { display: grid }
+.ow-erase { margin-top: 8px; text-align: right }
+
+/* ---------- Studio ---------- */
+.ow-studio-grid { display: grid; grid-template-columns: minmax(280px, 340px) minmax(0, 1fr); align-items: start; gap: 18px }
+.ow-compose { position: sticky; top: 0; padding: 18px; border: 1px solid var(--lf-line); border-radius: var(--lf-radius-lg); background: var(--lf-surface); box-shadow: var(--lf-shadow-xs) }
+.ow-compose h3 { margin-bottom: 14px }
+.ow-compose fieldset { margin: 0 0 14px; padding: 0; border: 0 }
+.ow-compose legend { margin-bottom: 8px; padding: 0; color: var(--lf-text); font-size: 13px; font-weight: 550 }
+.ow-channel { display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px }
+.ow-channel label { display: flex; align-items: center; gap: 7px; margin: 0; padding: 8px 10px; border: 1px solid var(--lf-line); border-radius: 10px; cursor: pointer; font-size: 13px }
+.ow-channel label.on { border-color: var(--lf-brand); background: var(--lf-brand-soft); color: var(--lf-ink) }
+.ow-channel input, .ow-angles input { position: absolute; opacity: 0; pointer-events: none }
+.ow-channel label:has(input:focus-visible), .ow-angles label:has(input:focus-visible) { outline: 2px solid var(--lf-brand); outline-offset: 2px }
+.ow-channel label:has(input:disabled) { opacity: .5; cursor: not-allowed }
+.ow-angles { display: grid !important; gap: 6px }
+.ow-angles label { display: block; margin: 0; padding: 9px 12px; border: 1px solid var(--lf-line); border-radius: 10px; cursor: pointer }
+.ow-angles label.on { border-color: var(--lf-brand); background: var(--lf-brand-soft) }
+.ow-angles strong { display: flex; align-items: center; gap: 8px; color: var(--lf-ink); font-size: 13.5px }
+.ow-angles small { display: block; color: var(--lf-muted); font-size: 12px; font-weight: 400; line-height: 1.45 }
+.ow-recommended { padding: 1px 7px; border-radius: 999px; background: var(--lf-ai-soft); color: var(--lf-ai); font-size: 10.5px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase }
+.ow-why-recommended { margin: -6px 0 14px; font-size: 12.5px }
+.ow-why-recommended summary { color: var(--lf-brand); font-weight: 600; cursor: pointer }
+.ow-why-recommended ul { margin: 6px 0 0; padding-left: 18px; color: var(--lf-muted) }
+.ow-generate { width: 100% }
+.ow-followup-note { margin: -6px 0 14px !important; padding: 8px 10px; border-radius: 10px; background: var(--lf-info-soft); color: var(--lf-info); font-size: 12.5px }
+
+/* ---------- Drafts ---------- */
+.ow-editor-wrap { display: grid; gap: 16px; min-width: 0 }
+.ow-editor { padding: 18px 20px; border: 1px solid var(--lf-line); border-radius: var(--lf-radius-lg); background: var(--lf-surface); box-shadow: var(--lf-shadow-xs) }
+.ow-editor > header > div { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 14px }
+.ow-draft-status.ready { border-color: var(--lf-info-line); background: var(--lf-info-soft); color: var(--lf-info) }
+.ow-draft-status.sent, .ow-draft-status.replied { border-color: var(--lf-success-line); background: var(--lf-success-soft); color: var(--lf-success) }
+.ow-draft-status.follow_up { border-color: var(--lf-warning-line); background: var(--lf-warning-soft); color: var(--lf-warning) }
+.ow-draft-status.archived { color: var(--lf-faint) }
+.ow-grounding { margin: 0 0 14px; padding: 12px 14px; border: 1px solid var(--lf-ai-line); border-radius: 12px; background: var(--lf-ai-soft); font-size: 13px }
+.ow-grounding.general { border-color: var(--lf-line); background: var(--lf-subtle) }
+.ow-grounding h4 { margin: 0 0 6px; color: var(--lf-ai); font-size: 12px; letter-spacing: .05em; text-transform: uppercase }
+.ow-grounding ul { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none }
+.ow-grounding li { display: grid; gap: 1px }
+.ow-grounding small { overflow-wrap: anywhere }
+.ow-warnings { margin-top: 8px !important; color: var(--lf-warning) }
+.ow-body { font-family: var(--lf-font); min-height: 160px }
+.ow-counter { margin: -8px 0 12px !important; color: var(--lf-muted); font-size: 12px; text-align: right; font-variant-numeric: tabular-nums }
+.ow-counter.over { color: var(--lf-danger); font-weight: 600 }
+.ow-link-button { min-height: 34px !important; padding: 0 12px !important; font-size: 13px !important }
+.ow-editor-actions, .ow-status-row, .ow-secondary-actions { margin: 0 0 12px }
+.ow-status-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding-top: 12px; border-top: 1px solid var(--lf-line) }
+.ow-status-row .secondary { min-height: 32px; padding: 0 12px; font-size: 13px }
+.ow-followups { margin: 0 0 12px; padding: 12px 14px; border-radius: 12px; background: var(--lf-subtle) }
+.ow-followups p { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; margin-bottom: 8px }
+.ow-followups label { margin: 10px 0 0 }
+.ow-inline { display: inline-flex !important; align-items: center; gap: 8px; margin: 0 !important }
+.ow-inline select { width: auto; min-height: 34px; margin: 0 }
+.ow-versions { margin-top: 4px; padding-top: 12px; border-top: 1px solid var(--lf-line) }
+.ow-versions summary { display: inline-flex; align-items: center; gap: 6px; color: var(--lf-brand); font-size: 13px; font-weight: 600; cursor: pointer }
+.ow-versions ol { display: grid; gap: 6px; margin: 10px 0 0; padding: 0; list-style: none; font-size: 13px }
+.ow-versions li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 10px; border-radius: 8px }
+.ow-versions li.current { background: var(--lf-subtle) }
+.ow-diff { margin-top: 10px; padding: 12px 14px; border: 1px solid var(--lf-line); border-radius: 10px; background: var(--lf-bg); white-space: pre-wrap; font-size: 13px; line-height: 1.6 }
+.ow-diff ins { background: var(--lf-success-soft); color: var(--lf-success); text-decoration: none }
+.ow-diff del { background: var(--lf-danger-soft); color: var(--lf-danger) }
+.ow-draft-list { padding: 14px 16px; border: 1px solid var(--lf-line); border-radius: var(--lf-radius-lg); background: var(--lf-surface) }
+.ow-draft-list-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px }
+.ow-draft-list-head h4 { display: flex; align-items: center; gap: 6px; margin: 0; white-space: nowrap }
+.ow-draft-list-head select { width: auto; min-height: 34px; margin: 0 }
+.ow-draft-list ul { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none }
+.ow-draft-list button { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 10px; width: 100%; padding: 9px 10px; border: 1px solid transparent; border-radius: 10px; background: none; color: var(--lf-text); text-align: left }
+.ow-draft-list button:hover { background: var(--lf-hover) }
+.ow-draft-list button.on { border-color: var(--lf-line-strong); background: var(--lf-subtle) }
+.ow-draft-list button > span:nth-child(2) { display: grid; min-width: 0 }
+.ow-draft-list strong { overflow: hidden; color: var(--lf-ink); font-size: 13.5px; text-overflow: ellipsis; white-space: nowrap }
+.ow-draft-list small { color: var(--lf-muted); font-size: 12px }
+
+/* ---------- Settings ---------- */
+.panel.ow-settings { margin-top: 18px }
+.ow-settings .ow-form { margin: 16px 0 0 }
+.ow-settings h4 { margin: 0 0 12px; color: var(--lf-ink); font-size: 14.5px }
+.ow-usage { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--lf-line) }
+.ow-usage h4 { margin: 0 0 12px }
+.ow-usage-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 0 0 14px; padding: 0; list-style: none }
+.ow-usage-stats li { display: grid; padding: 12px 14px; border: 1px solid var(--lf-line); border-radius: 12px; background: var(--lf-surface) }
+.ow-usage-stats strong { color: var(--lf-ink); font-size: 22px; font-weight: 650; font-variant-numeric: tabular-nums }
+.ow-usage-stats span { color: var(--lf-muted); font-size: 12.5px }
+.ow-apollo-usage { margin-top: 14px }
+.ow-apollo-usage p { margin: 0 0 6px; font-size: 13px }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 900px) {
+  .ow-studio-grid { grid-template-columns: 1fr }
+  .ow-compose { position: static }
+}
+@media (max-width: 640px) {
+  .ow, dialog#business-report > .lead-tabs { padding-inline: 16px }
+  dialog#business-report > .lead-tabs { margin-inline: 16px; padding-inline: 4px }
+  .ow-form-grid, .ow-usage-stats { grid-template-columns: 1fr }
+  .ow-contact > header { grid-template-columns: auto minmax(0, 1fr) }
+  .ow-badges { grid-column: 1 / -1; justify-content: flex-start }
+  .ow-details > div, .ow-channels li { grid-template-columns: 1fr; gap: 2px }
+}
+@media (prefers-reduced-motion: reduce) { .ow * { transition: none !important } }

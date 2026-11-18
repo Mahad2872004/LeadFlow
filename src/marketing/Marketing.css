@@ -1,5 +1,5 @@
 /* LeadFlow marketing site. Scoped under .marketing; the dashboard has its own styles.
-   Sections: tokens · base · layout · buttons · header · hero · windows & illustrations · sections · pages · footer · motion · responsive */
+   Sections: tokens · base · layout · buttons · header · hero · windows & illustrations · sections · pages · footer · dark theme · motion · responsive */
 
 /* ---------- Tokens ---------- */
 .marketing {
@@ -177,6 +177,8 @@
 .mk-signin { display: flex; align-items: center; min-height: 40px; padding: 0 12px; font-size: 14.5px; font-weight: 500; color: var(--text); text-decoration: none; border-radius: 9px }
 .mk-signin:hover { background: rgba(10, 24, 19, .05); color: var(--ink) }
 .mk-menu-toggle { display: none; place-items: center; width: 44px; height: 44px; margin-left: auto; border: 1px solid var(--line-strong); border-radius: 11px; background: #fff; color: var(--ink) }
+.mk-theme-toggle { display: grid; flex-shrink: 0; place-items: center; width: 40px; height: 40px; border: 1px solid var(--line-strong); border-radius: 10px; background: transparent; color: var(--text); transition: background .2s, color .2s, border-color .2s }
+.mk-theme-toggle:hover { background: rgba(10, 24, 19, .05); color: var(--ink) }
 
 /* ---------- Hero ---------- */
 .mk-hero { --overlap: clamp(170px, 19vw, 250px); position: relative }
@@ -398,6 +400,16 @@
 .mk-pipeline .is-contacted { background: #fff1db; color: #835100 }
 .mk-pipeline .is-qualified { background: #e5f4ed; color: #0b6040 }
 .mk-pipeline .is-converted { background: #0a1813; color: var(--lime) }
+.mk-contact-row { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 10px 4px; border-top: 1px solid var(--line) }
+.mk-contact-row strong { display: block; overflow: hidden; font-size: 13px; font-weight: 600; white-space: nowrap; text-overflow: ellipsis; color: var(--ink) }
+.mk-contact-row small { display: block; font-size: 12px; color: var(--muted) }
+.mk-draft { display: grid; gap: 8px; margin-top: 12px; padding: 12px 14px; border: 1px solid #e0d4f3; border-radius: 12px; background: linear-gradient(180deg, #faf8fe, #fff) }
+.mk-draft-top { display: flex; flex-wrap: wrap; gap: 6px }
+.mk-draft-subject { color: var(--ink) !important; font-size: 13.5px; font-weight: 650 }
+.mk-draft p { font-size: 13px; color: var(--text) }
+.mk-draft-basis { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 12px !important; color: var(--muted) !important }
+.mk-outreach-card { display: grid; gap: 12px }
+.mk-outreach-card p { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0; font-size: 13.5px; font-style: italic }
 
 /* ---------- Sections ---------- */
 /* How it works */
@@ -639,6 +651,73 @@
 .mk-footer-bottom a { color: var(--muted); text-decoration: none }
 .mk-footer-bottom a:hover { color: var(--ink) }
 
+/* ---------- Dark theme ----------
+   On <html data-theme="dark"> (the visitor's choice or their system setting; see src/lib/theme.ts). The page, header, cards and
+   text switch to dark tokens. Product illustrations (.mk-window, .mk-mock) keep their own light tokens, so they read like
+   light screenshots of the app, as they already do inside the dark bands. */
+:root[data-theme="dark"] .marketing {
+  color-scheme: dark;
+  --canvas: #050e0a;
+  --brand: #5ee0a8;
+  --brand-strong: #7ff0bf;
+  --brand-soft: rgba(94, 224, 168, .12);
+  --ink: #f2f8f5;
+  --text: #d5e2dc;
+  --muted: #9fb3aa;
+  --faint: #7c9087;
+  --line: rgba(214, 255, 236, .1);
+  --line-strong: rgba(214, 255, 236, .2);
+  --surface: #0a1712;
+  --subtle: rgba(255, 255, 255, .05);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, .4);
+  --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 12px 32px -14px rgba(0, 0, 0, .6);
+  --shadow-lg: 0 2px 6px rgba(0, 0, 0, .3), 0 30px 70px -24px rgba(0, 0, 0, .7);
+}
+/* Illustrations keep the light brand colours too. */
+:root[data-theme="dark"] .marketing :is(.mk-window, .mk-mock) { color-scheme: light; --brand: #0e7a55; --brand-strong: #0a5c40; --brand-soft: #e5f4ed }
+:root[data-theme="dark"] .marketing :is(h1, h2) em {
+  background: linear-gradient(95deg, #7ff0bf 5%, var(--lime) 95%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  padding-right: .06em;
+}
+:root[data-theme="dark"] .marketing :focus-visible { outline-color: var(--lime) }
+:root[data-theme="dark"] .mk-header { background: rgba(5, 14, 10, .78); border-bottom-color: rgba(214, 255, 236, .08) }
+:root[data-theme="dark"] .marketing :is(.mk-nav-links a, .mk-signin, .mk-theme-toggle):hover { background: rgba(255, 255, 255, .06) }
+:root[data-theme="dark"] .mk-nav-links a[aria-current=page] { background: rgba(94, 224, 168, .12) }
+:root[data-theme="dark"] .marketing .mk-menu-toggle { background: var(--surface) }
+:root[data-theme="dark"] .marketing .mk-button { background: var(--lime); color: #0a1813 !important; box-shadow: 0 0 0 1px rgba(196, 242, 106, .35), 0 10px 36px -10px rgba(196, 242, 106, .5) }
+:root[data-theme="dark"] .marketing .mk-button:hover { background: #d3f78c }
+:root[data-theme="dark"] .marketing .mk-button-secondary { background: rgba(255, 255, 255, .05); color: #fff !important; border-color: rgba(255, 255, 255, .18); box-shadow: none }
+:root[data-theme="dark"] .marketing .mk-button-secondary:hover { background: rgba(255, 255, 255, .1); border-color: rgba(255, 255, 255, .34) }
+:root[data-theme="dark"] .mk-skip { color: #0a1813 !important }
+:root[data-theme="dark"] .marketing .mk-status { background: rgba(255, 255, 255, .06); border-color: rgba(255, 255, 255, .14) }
+:root[data-theme="dark"] .marketing .mk-status.is-available { color: var(--mint) }
+:root[data-theme="dark"] .marketing .mk-status.is-setup { color: #f3c56b }
+:root[data-theme="dark"] .marketing .mk-status.is-beta { color: #c9b0f2 }
+:root[data-theme="dark"] .marketing .mk-status.is-planned { color: #a9c4ea }
+:root[data-theme="dark"] .marketing .mk-status.is-off { color: #a3b6ae }
+:root[data-theme="dark"] .marketing .mk-chip:not(.mk-window *, .mk-mock *) { background: var(--surface) }
+:root[data-theme="dark"] .mk-section-tint { background: linear-gradient(180deg, #08140f, var(--canvas)) }
+:root[data-theme="dark"] .mk-providers li { color: var(--muted) }
+:root[data-theme="dark"] .mk-how-tab:hover { background: rgba(255, 255, 255, .04) }
+:root[data-theme="dark"] .mk-how-tab[aria-selected=true] { background: var(--surface) }
+:root[data-theme="dark"] .mk-how-n { background: rgba(255, 255, 255, .06) }
+:root[data-theme="dark"] .mk-how-tab[aria-selected=true] .mk-how-n { background: rgba(196, 242, 106, .14); color: var(--lime) }
+:root[data-theme="dark"] :is(.mk-how-stage, .mk-stage-visual) { background: radial-gradient(70% 60% at 70% 20%, rgba(94, 224, 168, .12), transparent 70%), radial-gradient(60% 50% at 10% 90%, rgba(196, 242, 106, .06), transparent 70%), #0a1612 }
+:root[data-theme="dark"] .mk-how-stage::before { background-image: radial-gradient(rgba(214, 255, 236, .08) 1px, transparent 1px) }
+:root[data-theme="dark"] .marketing :is(.mk-card, .mk-map span, .mk-evidence article, .mk-use, .mk-faq-contact, .mk-stage-report, .mk-method, .mk-solution, .mk-plan:not(.is-featured), .mk-compare, .mk-index a, .mk-sec-grid article) { background-color: var(--surface) }
+:root[data-theme="dark"] .mk-card.is-lg { background: radial-gradient(70% 90% at 100% 100%, rgba(94, 224, 168, .1), transparent 70%), var(--surface) }
+:root[data-theme="dark"] .mk-duo-owner { border-color: rgba(94, 224, 168, .2); background: radial-gradient(80% 60% at 0% 0%, rgba(94, 224, 168, .12), transparent 70%), var(--surface) }
+:root[data-theme="dark"] .mk-solution-icon { background: rgba(94, 224, 168, .12); color: var(--brand) }
+:root[data-theme="dark"] .mk-note { border-color: rgba(94, 224, 168, .2); background: rgba(94, 224, 168, .06) }
+:root[data-theme="dark"] .mk-faq details[open] .mk-faq-icon, :root[data-theme="dark"] .mk-index a:hover .mk-index-arrow { border-color: var(--lime); background: var(--lime); color: #0a1813 }
+:root[data-theme="dark"] .mk-intro::before { background-image: linear-gradient(rgba(214, 255, 236, .05) 1px, transparent 1px), linear-gradient(90deg, rgba(214, 255, 236, .05) 1px, transparent 1px) }
+:root[data-theme="dark"] .mk-inline-code { box-shadow: inset 0 0 0 1px rgba(214, 255, 236, .1) }
+/* The bands that are dark in both themes get an edge, so they stand out from the dark page. */
+:root[data-theme="dark"] :is(.mk-stage, .mk-night, .mk-final, .mk-duo-dev, .mk-plan.is-featured, .mk-sec-aside) { box-shadow: inset 0 0 0 1px rgba(214, 255, 236, .08) }
+
 /* ---------- Motion ---------- */
 @keyframes mk-rise { from { opacity: 0; transform: translateY(14px) } to { opacity: 1; transform: none } }
 @keyframes mk-rise-lg { from { opacity: 0; transform: translateY(48px) scale(.985) } to { opacity: 1; transform: none } }
@@ -693,7 +772,9 @@
   .mk-sec-aside { position: relative; top: 0 }
 }
 @media (max-width: 940px) {
-  .mk-menu-toggle { display: grid }
+  /* The theme switch sits before the menu button on the right. */
+  .mk-menu-toggle { display: grid; order: 3; margin-left: 0 }
+  .mk-theme-toggle { order: 2; width: 44px; height: 44px; margin-left: auto; border-radius: 11px }
   .mk-header nav { position: absolute; top: 64px; right: 0; left: 0; display: none; flex-direction: column; align-items: stretch; gap: 16px; max-height: calc(100dvh - 64px); overflow: auto; padding: 8px 24px 24px; border-bottom: 1px solid var(--line); background: var(--canvas); box-shadow: 0 30px 40px -30px rgba(10, 24, 19, .3) }
   .mk-header nav.is-open { display: flex }
   .mk-nav-links { flex-direction: column; gap: 0; margin: 0 }
@@ -701,6 +782,7 @@
   .mk-nav-links a[aria-current=page] { background: none; color: var(--brand) }
   .mk-nav-actions { flex-direction: column; align-items: stretch; gap: 10px }
   .mk-signin { justify-content: center; min-height: 48px; border: 1px solid var(--line-strong); border-radius: 12px; background: #fff; font-weight: 600 }
+  :root[data-theme="dark"] .marketing .mk-signin { background: var(--surface) }
   .mk-nav-actions .mk-button { min-height: 48px }
   .mk-footer-top { grid-template-columns: repeat(3, minmax(0, 1fr)) }
   .mk-footer-brand { grid-column: 1 / -1 }
