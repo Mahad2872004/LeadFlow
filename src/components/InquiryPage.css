@@ -1,1 +1,195 @@
-.inquiry-page{box-sizing:border-box;min-height:100vh;background:#f5f7f3;color:#22372d;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;padding:48px clamp(20px,5vw,84px) 24px}.inquiry-page *{box-sizing:border-box}.inquiry-layout{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:1fr 1.08fr;gap:clamp(32px,6vw,90px);align-items:start}.inquiry-brand{display:inline-flex;gap:10px;align-items:center;color:#22372d;font-size:24px;font-weight:750;text-decoration:none;margin-bottom:88px}.inquiry-brand span{background:#265540;color:white;padding:5px 10px;border-radius:10px}.inquiry-eyebrow{font-size:11px;font-weight:750;letter-spacing:2px;color:#587460;margin:0 0 20px}.inquiry-intro h1{font-size:clamp(34px,4.3vw,58px);line-height:1.09;letter-spacing:-2.4px;font-weight:650;margin:0 0 25px;max-width:530px}.inquiry-description{font-size:17px;line-height:1.8;color:#67746b;max-width:390px}.inquiry-note{display:flex;gap:18px;margin-top:58px;max-width:380px;padding-top:24px;border-top:1px solid #dce3db}.inquiry-note>span{font-size:24px;color:#66856b}.inquiry-note strong{font-size:14px}.inquiry-note p,.inquiry-small{font-size:12px;color:#738077;line-height:1.7}.inquiry-small{margin-top:30px}.inquiry-card{background:white;padding:36px;border:1px solid #e1e7de;border-radius:20px;box-shadow:0 12px 45px #1b3d2710}.inquiry-card-heading h2,.inquiry-success h2{font-size:24px;letter-spacing:-.6px;margin:0 0 10px}.inquiry-card-heading p{font-size:13px;color:#7b837d;margin:0 0 28px}.inquiry-page fieldset{border:0;padding:0;margin:0;min-width:0}.inquiry-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 18px}.inquiry-page label{display:flex;flex-direction:column;gap:8px;margin:0 0 20px;font-size:12px;font-weight:650;color:#35483c}.inquiry-page input,.inquiry-page select,.inquiry-page textarea{width:100%;min-width:0;font:inherit;font-size:14px;font-weight:400;padding:12px 13px;border:1px solid #dce3dc;border-radius:8px;background:#fdfefd;color:#283e30;outline-offset:3px;min-height:46px}.inquiry-page textarea{resize:vertical;line-height:1.6}.inquiry-page input::placeholder,.inquiry-page textarea::placeholder{color:#919c93}.inquiry-page :focus-visible{outline:2px solid #387351}.inquiry-page button{cursor:pointer;font:inherit;border-radius:9px;min-height:44px}.inquiry-submit,.inquiry-success button{border:0;background:#28573e;color:white;font-size:14px;font-weight:650;padding:14px 20px;width:100%;display:flex;align-items:center;justify-content:space-between}.inquiry-page button:disabled{opacity:.5;cursor:not-allowed}.inquiry-submit:hover:not(:disabled){background:#1c442e}.inquiry-privacy{font-size:11px;color:#7b857e;line-height:1.7;margin:18px 0}.inquiry-error{font-size:13px;line-height:1.6;color:#9f352a;background:#fff1ee;border-radius:8px;padding:12px}.inquiry-reverify{border:0;background:none;color:#64766a;font-size:11px!important;text-decoration:underline;padding:0}.inquiry-honeypot{position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden}.inquiry-footer{max-width:1180px;margin:48px auto 0;display:flex;justify-content:space-between;color:#8a958d;font-size:11px;gap:20px}.inquiry-success{padding:55px 0;text-align:center}.inquiry-check{display:inline-grid;place-items:center;background:#e8f1e7;color:#28573e;border-radius:50%;width:64px;height:64px;font-size:30px;margin-bottom:28px}.inquiry-success p{line-height:1.7}.inquiry-reference{font-size:11px;color:#7b857e;overflow-wrap:anywhere;margin:28px 0}.inquiry-success button{justify-content:center}.inquiry-verification{min-height:65px;max-width:100%}@media(max-width:760px){.inquiry-page{padding:24px 18px}.inquiry-layout{grid-template-columns:1fr;gap:28px}.inquiry-brand{margin-bottom:34px;font-size:21px}.inquiry-intro h1{font-size:38px;max-width:480px;letter-spacing:-1.4px}.inquiry-description{font-size:15px;max-width:100%}.inquiry-note,.inquiry-intro>.inquiry-small{display:none}.inquiry-card{padding:25px 20px}.inquiry-footer{margin-top:28px}.inquiry-card-heading h2{font-size:22px}}@media(max-width:420px){.inquiry-grid{grid-template-columns:1fr}.inquiry-page{padding:20px 12px}.inquiry-card{padding:24px 16px}.inquiry-footer{flex-direction:column;gap:8px}.inquiry-intro h1{font-size:34px}}
+/* Public inquiry form (/inquiry). Businesses link to it and embed it on their own websites in an iframe.
+   It loads only the tokens in src/index.css and this file (never src/App.css), so it styles its own base elements.
+   Deliberately light and neutral so it sits comfortably inside any website.
+   Sections: page · layout · brand panel · form card · fields · verification · submit & privacy · feedback ·
+   success · footer · motion · responsive */
+
+/* ---------- Page ---------- */
+.inquiry-page {
+  position: relative; isolation: isolate;
+  box-sizing: border-box; min-height: 100vh; overflow-x: clip;
+  padding: 40px clamp(16px, 4vw, 56px) 28px;
+  background: radial-gradient(50% 40% at 12% 0%, rgba(94, 224, 168, .14), transparent 70%), radial-gradient(40% 40% at 100% 100%, rgba(196, 242, 106, .1), transparent 70%), var(--lf-bg);
+  color: var(--lf-text); font-family: var(--lf-font); font-size: 14px; line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+.inquiry-page *, .inquiry-page *::before, .inquiry-page *::after { box-sizing: border-box }
+.inquiry-page :where(h1, h2, p) { margin: 0 }
+.inquiry-page a:focus-visible, .inquiry-page button:focus-visible { outline: 2px solid var(--lf-brand); outline-offset: 3px }
+
+/* ---------- Layout: one card, brand panel + form ---------- */
+.inquiry-layout {
+  display: grid; grid-template-columns: minmax(0, .92fr) minmax(0, 1.08fr);
+  max-width: 1120px; margin: 0 auto; overflow: hidden;
+  border: 1px solid var(--lf-line); border-radius: 24px; background: #fff;
+  box-shadow: var(--lf-shadow-lg);
+}
+
+/* ---------- Brand panel ---------- */
+.inquiry-intro {
+  position: relative; isolation: isolate; overflow: hidden;
+  display: flex; flex-direction: column; min-width: 0;
+  padding: 40px 44px 36px; border-right: 1px solid var(--lf-line);
+  background: radial-gradient(90% 55% at 0% 0%, rgba(94, 224, 168, .22), transparent 70%), radial-gradient(70% 45% at 100% 100%, rgba(196, 242, 106, .2), transparent 70%), linear-gradient(180deg, #f5faf7, #edf5f0);
+}
+.inquiry-intro::before {
+  content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background-image: linear-gradient(rgba(10, 24, 19, .05) 1px, transparent 1px), linear-gradient(90deg, rgba(10, 24, 19, .05) 1px, transparent 1px);
+  background-size: 32px 32px;
+  -webkit-mask-image: radial-gradient(ellipse 90% 60% at 0% 0%, #000 10%, transparent 75%);
+  mask-image: radial-gradient(ellipse 90% 60% at 0% 0%, #000 10%, transparent 75%);
+}
+.inquiry-brand { display: inline-flex; align-items: center; align-self: flex-start; gap: 10px; margin-bottom: 56px; border-radius: 10px; color: var(--lf-ink); font-size: 19px; font-weight: 700; letter-spacing: -.035em; text-decoration: none }
+.inquiry-brand span { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 9px; background: linear-gradient(145deg, #17a572, #0a5a3e); color: #fff; font-size: 15px; font-weight: 600; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .28), 0 4px 10px -3px rgba(10, 90, 62, .6) }
+.inquiry-page .inquiry-eyebrow { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 16px; color: var(--lf-brand); font-size: 11.5px; font-weight: 650; letter-spacing: .08em; text-transform: uppercase }
+.inquiry-page .inquiry-eyebrow::before { content: ''; flex-shrink: 0; width: 6px; height: 6px; border-radius: 50%; background: #19b377; box-shadow: 0 0 0 3px rgba(25, 179, 119, .18) }
+.inquiry-intro h1 { max-width: 460px; margin-bottom: 16px; color: var(--lf-ink); font-size: clamp(32px, 3.3vw, 44px); font-weight: 650; letter-spacing: -.04em; line-height: 1.08; text-wrap: balance }
+.inquiry-description { max-width: 420px; color: var(--lf-muted); font-size: 16px; line-height: 1.65 }
+
+/* Decorative conversation: an incoming message, a reply, someone typing */
+/* Auto margins centre the illustration in whatever height the form column leaves free. */
+.inquiry-visual { display: grid; gap: 10px; width: min(100%, 360px); margin: auto 0; padding: 36px 0 }
+.inquiry-visual span { position: relative; display: block; border-radius: 16px }
+.inquiry-visual span::before, .inquiry-visual span::after { content: ''; position: absolute; left: 16px; height: 6px; border-radius: 999px }
+.inquiry-visual span:nth-child(1) { width: 84%; height: 56px; border: 1px solid var(--lf-line); border-bottom-left-radius: 6px; background: #fff; box-shadow: var(--lf-shadow) }
+.inquiry-visual span:nth-child(1)::before { top: 17px; width: 72%; background: #dfe7e3 }
+.inquiry-visual span:nth-child(1)::after { top: 31px; width: 46%; background: #ebf0ed }
+.inquiry-visual span:nth-child(2) { justify-self: end; width: 62%; height: 44px; border-bottom-right-radius: 6px; background: linear-gradient(145deg, #17a572, #0a5a3e); box-shadow: 0 10px 24px -12px rgba(10, 90, 62, .7) }
+.inquiry-visual span:nth-child(2)::before { top: 13px; width: 64%; background: rgba(255, 255, 255, .55) }
+.inquiry-visual span:nth-child(2)::after { top: 25px; width: 38%; background: rgba(255, 255, 255, .3) }
+.inquiry-visual span:nth-child(3) { width: 62px; height: 32px; border: 1px solid var(--lf-line); border-bottom-left-radius: 6px; background: #fff; box-shadow: var(--lf-shadow-xs) }
+.inquiry-visual span:nth-child(3)::before { top: 12px; left: 16px; width: 6px; background: var(--lf-faint); box-shadow: 11px 0 0 var(--lf-line-strong), 22px 0 0 var(--lf-line-strong); animation: inquiry-typing 1.4s ease-in-out infinite }
+.inquiry-visual span:nth-child(3)::after { display: none }
+
+.inquiry-note { display: flex; gap: 14px; padding: 16px 18px; border: 1px solid rgba(10, 24, 19, .07); border-radius: 16px; background: rgba(255, 255, 255, .78); box-shadow: var(--lf-shadow-xs); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px) }
+.inquiry-note > span { display: grid; flex-shrink: 0; place-items: center; width: 36px; height: 36px; border-radius: 11px; background: var(--lf-ink); color: var(--lf-lime); font-size: 15px }
+.inquiry-note strong { display: block; color: var(--lf-ink); font-size: 14px; font-weight: 650; letter-spacing: -.01em }
+.inquiry-note p { margin-top: 3px; color: var(--lf-muted); font-size: 13px; line-height: 1.55 }
+.inquiry-page .inquiry-small { color: var(--lf-muted); font-size: 12.5px; line-height: 1.6 }
+.inquiry-intro > .inquiry-small { margin-top: 14px; padding-left: 4px }
+
+/* ---------- Form card ---------- */
+.inquiry-card { min-width: 0; padding: 40px 44px }
+.inquiry-card-heading { margin-bottom: 26px }
+.inquiry-card-heading h2 { color: var(--lf-ink); font-size: 23px; font-weight: 650; letter-spacing: -.03em; line-height: 1.25 }
+.inquiry-card-heading p { margin-top: 5px; color: var(--lf-muted); font-size: 13.5px }
+.inquiry-page fieldset { min-width: 0; margin: 0; padding: 0; border: 0 }
+
+/* ---------- Fields ---------- */
+.inquiry-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 14px }
+.inquiry-page label { display: flex; flex-direction: column; gap: 7px; margin: 0 0 18px; color: var(--lf-text); font-size: 13.5px; font-weight: 600; letter-spacing: -.005em }
+.inquiry-page input, .inquiry-page select, .inquiry-page textarea {
+  width: 100%; min-width: 0; min-height: 48px; margin: 0; padding: 12px 14px;
+  border: 1px solid var(--lf-line-strong); border-radius: 12px; background: #fff;
+  color: var(--lf-ink); font: inherit; font-size: 15px; font-weight: 400; line-height: 1.4; letter-spacing: 0;
+  box-shadow: var(--lf-shadow-xs); transition: border-color .15s, box-shadow .15s, background-color .15s;
+}
+.inquiry-page input:hover, .inquiry-page select:hover, .inquiry-page textarea:hover { border-color: #aab8b1 }
+.inquiry-page input:focus, .inquiry-page select:focus, .inquiry-page textarea:focus { border-color: var(--lf-brand); outline: none; box-shadow: 0 0 0 4px var(--lf-brand-ring) }
+.inquiry-page input::placeholder, .inquiry-page textarea::placeholder { color: var(--lf-faint); opacity: 1 }
+.inquiry-page select {
+  padding-right: 42px; cursor: pointer;
+  -webkit-appearance: none; appearance: none;
+  background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2356645e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m7 10 5 5 5-5'/%3E%3C/svg%3E") no-repeat right 14px center / 16px;
+}
+.inquiry-page select:invalid { color: var(--lf-faint) }
+.inquiry-page option { color: var(--lf-ink) }
+.inquiry-page textarea { min-height: 136px; resize: vertical; line-height: 1.55 }
+.inquiry-page input:user-invalid, .inquiry-page textarea:user-invalid { border-color: #d0705d; box-shadow: 0 0 0 4px rgba(208, 112, 93, .12) }
+.inquiry-page input:disabled, .inquiry-page select:disabled, .inquiry-page textarea:disabled { border-color: var(--lf-line); background-color: var(--lf-subtle); color: var(--lf-muted); box-shadow: none; cursor: not-allowed }
+/* Spam trap: kept off-screen for people, still present for bots. */
+.inquiry-honeypot { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden }
+
+/* ---------- Verification ---------- */
+.inquiry-verification { min-height: 65px; max-width: 100%; margin: 2px 0 4px }
+/* Until the Cloudflare widget renders, show a calm placeholder of the same size. */
+.inquiry-verification > div:empty {
+  min-height: 65px; border: 1px dashed var(--lf-line-strong); border-radius: 12px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230e7a55' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3 5 6v5c0 4.5 3 8.2 7 10 4-1.8 7-5.5 7-10V6Z'/%3E%3Cpath d='m9 12 2 2 4-4'/%3E%3C/svg%3E") no-repeat 18px center / 22px, linear-gradient(90deg, #f4f7f5 25%, #eef3f0 50%, #f4f7f5 75%) 0 0 / 200% 100%;
+  animation: inquiry-shimmer 1.8s ease-in-out infinite;
+}
+.inquiry-verification p { margin-top: 8px; padding: 10px 12px; border: 1px solid var(--lf-danger-line); border-radius: 10px; background: var(--lf-danger-soft); color: var(--lf-danger); font-size: 13px; line-height: 1.55; overflow-wrap: anywhere }
+.inquiry-page .inquiry-reverify { display: inline-flex; align-items: center; min-height: 32px; padding: 0; border: 0; border-radius: 6px; background: none; color: var(--lf-muted); font-size: 12.5px; font-weight: 550; text-decoration: underline; text-decoration-color: var(--lf-line-strong); text-underline-offset: 3px }
+.inquiry-page .inquiry-reverify:hover:not(:disabled) { color: var(--lf-ink); text-decoration-color: currentColor }
+
+/* ---------- Submit & privacy ---------- */
+.inquiry-privacy { position: relative; margin: 12px 0 18px; padding: 12px 14px 12px 44px; border: 1px solid var(--lf-line); border-radius: 12px; background: var(--lf-subtle); color: var(--lf-muted); font-size: 12.5px; line-height: 1.6 }
+.inquiry-privacy::before { content: ''; position: absolute; top: 12px; left: 14px; width: 20px; height: 20px; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230e7a55' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='5' y='11' width='14' height='10' rx='2'/%3E%3Cpath d='M8 11V8a4 4 0 0 1 8 0v3'/%3E%3C/svg%3E") no-repeat center / 18px }
+.inquiry-page button { min-height: 44px; border-radius: 12px; font: inherit; cursor: pointer }
+.inquiry-page button:disabled { cursor: not-allowed }
+.inquiry-page .inquiry-submit {
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  width: 100%; min-height: 54px; padding: 0 20px;
+  border: 0; border-radius: 14px; background: var(--lf-ink); color: #fff;
+  font-size: 15.5px; font-weight: 600; letter-spacing: -.01em;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12), 0 1px 2px rgba(10, 24, 19, .2), 0 14px 28px -14px rgba(10, 24, 19, .6);
+  transition: background-color .15s, box-shadow .2s, transform .15s;
+}
+.inquiry-submit span { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--lf-lime); color: var(--lf-ink); font-size: 13px; font-weight: 700; transition: transform .2s var(--lf-ease), background-color .15s }
+.inquiry-page .inquiry-submit:hover:not(:disabled) { background: #1b3129; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12), 0 1px 2px rgba(10, 24, 19, .2), 0 18px 32px -14px rgba(10, 24, 19, .65); transform: translateY(-1px) }
+.inquiry-page .inquiry-submit:hover:not(:disabled) span { transform: translate(2px, -2px) }
+.inquiry-page .inquiry-submit:active:not(:disabled) { transform: none }
+.inquiry-page .inquiry-submit:disabled { background: #a5b2ac; box-shadow: none }
+.inquiry-page .inquiry-submit:disabled span { background: rgba(255, 255, 255, .28); color: #fff }
+
+/* ---------- Feedback ---------- */
+.inquiry-page .inquiry-error { position: relative; margin: 0 0 18px; padding: 12px 14px 12px 44px; border: 1px solid var(--lf-danger-line); border-radius: 12px; background: var(--lf-danger-soft); color: var(--lf-danger); font-size: 13.5px; line-height: 1.55; overflow-wrap: anywhere }
+.inquiry-page .inquiry-error::before { content: ''; position: absolute; top: 12px; left: 14px; width: 20px; height: 20px; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a8321d' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M12 8v5M12 16h.01'/%3E%3C/svg%3E") no-repeat center / 19px }
+.inquiry-page form > .inquiry-error { margin: 16px 0 0 }
+.inquiry-card form > .inquiry-small { margin-top: 12px; text-align: center }
+
+/* ---------- Success ---------- */
+.inquiry-success { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100%; padding: 48px 8px 40px; text-align: center }
+.inquiry-check { display: grid; place-items: center; width: 72px; height: 72px; margin-bottom: 26px; border-radius: 50%; background: linear-gradient(145deg, #19b377, #0a7a52); color: #fff; font-size: 32px; font-weight: 600; box-shadow: 0 0 0 8px rgba(25, 179, 119, .12), 0 0 0 16px rgba(25, 179, 119, .05), 0 18px 32px -12px rgba(10, 122, 82, .7); animation: inquiry-pop .55s var(--lf-ease) both }
+.inquiry-success h2 { margin-bottom: 8px; color: var(--lf-ink); font-size: 27px; font-weight: 650; letter-spacing: -.035em; line-height: 1.2 }
+.inquiry-success > p:not(.inquiry-eyebrow):not(.inquiry-reference) { max-width: 380px; color: var(--lf-muted); font-size: 15px; line-height: 1.6 }
+.inquiry-page .inquiry-reference { max-width: 100%; margin: 22px 0 26px; padding: 8px 14px; border: 1px solid var(--lf-line); border-radius: 10px; background: var(--lf-subtle); color: var(--lf-text); font-family: var(--lf-mono); font-size: 12.5px; line-height: 1.6; overflow-wrap: anywhere }
+.inquiry-page .inquiry-success button { min-height: 46px; padding: 0 20px; border: 1px solid var(--lf-line-strong); background: #fff; color: var(--lf-ink); font-size: 14.5px; font-weight: 600; box-shadow: var(--lf-shadow-xs); transition: border-color .15s, box-shadow .15s }
+.inquiry-page .inquiry-success button:hover { border-color: #95a69e; box-shadow: var(--lf-shadow) }
+
+/* ---------- Footer ---------- */
+.inquiry-footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 20px; max-width: 1120px; margin: 22px auto 0; padding: 0 6px; color: var(--lf-faint); font-size: 12.5px }
+.inquiry-footer span { display: inline-flex; align-items: center; gap: 8px; color: var(--lf-muted); font-weight: 550 }
+.inquiry-footer span::before { content: ''; width: 18px; height: 18px; border-radius: 6px; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 17 17 7M7 7h10v10'/%3E%3C/svg%3E") no-repeat center / 11px, linear-gradient(145deg, #17a572, #0a5a3e) }
+
+/* ---------- Motion ---------- */
+@keyframes inquiry-pop { from { opacity: 0; transform: scale(.7) } to { opacity: 1; transform: none } }
+@keyframes inquiry-shimmer { from { background-position: 18px center, 200% 0 } to { background-position: 18px center, -200% 0 } }
+@keyframes inquiry-typing { 50% { background: var(--lf-line-strong); box-shadow: 11px 0 0 var(--lf-faint), 22px 0 0 var(--lf-line-strong) } }
+@media (prefers-reduced-motion: reduce) {
+  .inquiry-check, .inquiry-verification > div:empty, .inquiry-visual span:nth-child(3)::before { animation: none }
+  .inquiry-page .inquiry-submit, .inquiry-submit span, .inquiry-page input, .inquiry-page select, .inquiry-page textarea { transition: none }
+  .inquiry-page .inquiry-submit:hover:not(:disabled), .inquiry-page .inquiry-submit:hover:not(:disabled) span { transform: none }
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1000px) {
+  .inquiry-intro { padding: 34px 32px 30px }
+  .inquiry-card { padding: 34px 32px }
+  .inquiry-brand { margin-bottom: 44px }
+}
+@media (max-width: 860px) {
+  .inquiry-page { padding: 16px 14px 24px }
+  .inquiry-layout { grid-template-columns: minmax(0, 1fr); border-radius: 20px }
+  .inquiry-intro { padding: 24px 22px 26px; border-right: 0; border-bottom: 1px solid var(--lf-line) }
+  .inquiry-brand { margin-bottom: 26px; font-size: 18px }
+  .inquiry-intro h1 { max-width: 560px; margin-bottom: 12px; font-size: clamp(28px, 6.4vw, 38px) }
+  .inquiry-description { max-width: 560px; font-size: 15px; line-height: 1.6 }
+  .inquiry-visual, .inquiry-note, .inquiry-intro > .inquiry-small { display: none }
+  .inquiry-card { padding: 26px 22px 28px }
+  .inquiry-card-heading { margin-bottom: 22px }
+  .inquiry-card-heading h2 { font-size: 21px }
+  .inquiry-page input, .inquiry-page select, .inquiry-page textarea { font-size: 16px }
+  .inquiry-footer { justify-content: center; margin-top: 18px; text-align: center }
+}
+@media (max-width: 480px) {
+  .inquiry-page { padding: 12px 12px 20px }
+  .inquiry-layout { border-radius: 18px }
+  .inquiry-intro { padding: 22px 18px 24px }
+  .inquiry-card { padding: 22px 16px 24px }
+  .inquiry-grid { grid-template-columns: minmax(0, 1fr) }
+  .inquiry-page label { margin-bottom: 16px }
+  .inquiry-success { padding: 36px 4px 28px }
+  .inquiry-success h2 { font-size: 24px }
+  .inquiry-footer { flex-direction: column; gap: 6px }
+}

@@ -31,6 +31,10 @@ interface SearchProps {
   onListsChanged: () => void
 }
 const storageKey = (kind: SearchKind) => `leadflow.apollo.columns.${kind}`
+/** Decorative initials tile: up to two letters, and one of five tones picked from the name. */
+const initialsOf = (name: string) => name.replace(/[^\p{L}\p{N}]+/gu, ' ').trim().split(' ').slice(0, 2).map(word => word.charAt(0)).join('').toUpperCase() || '?'
+const toneOf = (name: string) => [...name].reduce((sum, char) => sum + (char.codePointAt(0) ?? 0), 0) % 5
+const Avatar = ({ name, org }: { name: string; org?: boolean }) => <span className={`dv-avatar${org ? ' is-org' : ''}`} data-tone={toneOf(name)} aria-hidden="true">{initialsOf(name)}</span>
 const chunk = <T,>(items: T[], size: number) => Array.from({ length: Math.ceil(items.length / size) }, (_, index) => items.slice(index * size, index * size + size))
 /** People or company search with Apollo: filters, results, reveals and saving to leads. */
 export function ApolloSearch({kind,workspace,account,phoneReveal,leads,origins,lists,blocked,initial,onChanged,onImported,onListsChanged}:SearchProps){
@@ -261,7 +265,7 @@ export function ApolloSearch({kind,workspace,account,phoneReveal,leads,origins,l
     return number?<a href={`tel:${number}`}>{number}</a>:contact?.phoneRequestedAt&&!contact.phoneRevealedAt?<span className="ap-pending">Looking up…</span>:contact?.phoneRevealedAt?<span className="muted">No number found</span>
       :person.directPhone==='yes'?<span className="ap-lock">Direct phone · locked</span>:person.directPhone==='maybe'?<span className="ap-lock">Maybe · locked</span>:<span className="muted">Not available</span>}
   const columns:Column[]=people?[
-    {id:'name',label:'Name',sort:item=>contactOf(item)?.name||(item as Person).name,render:item=><button className="dv-name" onClick={()=>setDetail(item)}><strong>{contactOf(item)?.name||(item as Person).name}</strong><small>{(item as Person).title||'No title listed'}</small></button>},
+    {id:'name',label:'Name',sort:item=>contactOf(item)?.name||(item as Person).name,render:item=><div className="dv-biz"><Avatar name={contactOf(item)?.name||(item as Person).name}/><button className="dv-name" onClick={()=>setDetail(item)}><strong>{contactOf(item)?.name||(item as Person).name}</strong><small>{(item as Person).title||'No title listed'}</small></button></div>},
     {id:'company',label:'Company',sort:item=>(item as Person).organizationName,render:item=>(item as Person).organizationName||<span className="muted">—</span>},
     {id:'website',label:'Website',render:item=>{const domain=contactOf(item)?.organizationDomain;return domain?<a href={`https://${domain}`} target="_blank" rel="noopener noreferrer nofollow">{domain}</a>:<span className="muted">{contactOf(item)?.emailRevealedAt?'Not provided':'After reveal'}</span>}},
     {id:'email',label:'Email',render:item=>emailCell(item as Person)},
@@ -271,7 +275,7 @@ export function ApolloSearch({kind,workspace,account,phoneReveal,leads,origins,l
     {id:'refreshed',label:'Apollo updated',sort:item=>(item as Person).lastRefreshedAt??'',render:item=>(item as Person).lastRefreshedAt?dateLabel((item as Person).lastRefreshedAt!):<span className="muted">—</span>},
     {id:'status',label:'LeadFlow',render:item=>inLeadFlow(item)?<span className="dv-badge dv-existing">In LeadFlow</span>:<span className="dv-badge dv-new">New</span>},
   ]:[
-    {id:'name',label:'Company',sort:item=>item.name,render:item=><button className="dv-name" onClick={()=>setDetail(item)}><strong>{item.name}</strong><small>{(item as Organization).primaryDomain||'No domain listed'}</small></button>},
+    {id:'name',label:'Company',sort:item=>item.name,render:item=><div className="dv-biz"><Avatar name={item.name} org/><button className="dv-name" onClick={()=>setDetail(item)}><strong>{item.name}</strong><small>{(item as Organization).primaryDomain||'No domain listed'}</small></button></div>},
     {id:'website',label:'Website',render:item=>{const url=(item as Organization).websiteUrl;return /^https?:\/\//.test(url)?<a href={url} target="_blank" rel="noopener noreferrer nofollow">{domainOf(url)||url}</a>:<span className="muted">—</span>}},
     {id:'phone',label:'Phone',render:item=>(item as Organization).phone||<span className="muted">—</span>},
     {id:'linkedin',label:'LinkedIn',render:item=>{const url=(item as Organization).linkedinUrl;return url?<a href={url} target="_blank" rel="noopener noreferrer nofollow">Company page</a>:<span className="muted">—</span>}},

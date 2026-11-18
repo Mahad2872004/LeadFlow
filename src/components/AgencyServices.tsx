@@ -1,12 +1,14 @@
-import { useEffect, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import { agencyServices, analysisUsage, deleteAgencyService, installStarterServices, opportunityLabels, opportunityTypes, saveAgencyService, type AgencyService, type OpportunityType, type UsageSummary } from '../lib/analysis'
 import type { WorkspaceSummary } from '../lib/backend'
 import { Modal } from './Modal'
+import { Icon, type IconName } from './Icon'
 import './BusinessReport.css'
 
 type Draft = { id?: string; name: string; description: string; category: string; targetCategories: string; opportunityTypes: OpportunityType[]; pricing: string; notes: string; active: boolean }
 const blank: Draft = { name: '', description: '', category: '', targetCategories: '', opportunityTypes: [], pricing: '', notes: '', active: true }
 const errorText = (cause: unknown) => cause instanceof Error ? cause.message : 'Something went wrong. Try again.'
+const categoryIcons: Record<string, IconName> = { Web: 'grid', Marketing: 'arrow', Automation: 'spark', Software: 'gear' }
 const unitLabels: Record<string, string> = { pages: 'pages crawled', runs: 'crawler runs', requests: 'PageSpeed requests', input_tokens: 'AI input tokens', output_tokens: 'AI output tokens' }
 
 /** The services the agency sells. Business analysis matches its findings to these. Owners and admins edit; members read. */
@@ -50,9 +52,13 @@ export function AgencyServices({ workspace }: { workspace: WorkspaceSummary }) {
     {error && <p className="br-error" role="alert">{error}</p>}
     {services === null ? <p className="br-muted" role="status">Loading services…</p> : services.length === 0 ? <p className="br-muted">No services yet.{canEdit ? ' Add the starter set and edit it, or add your own.' : ' Ask an owner or admin to add them.'}</p>
       : <ul className="svc-list">{services.map(service => <li key={service.id} className={service.active ? '' : 'inactive'}>
-        <div><h3>{service.name}{!service.active && ' (inactive)'}</h3>{service.description && <p>{service.description}</p>}
-          <p>{service.opportunityTypes.map(type => opportunityLabels[type]).join(' · ') || 'No opportunity types'}{service.targetCategories.length ? ` · For: ${service.targetCategories.join(', ')}` : ''}{service.pricing ? ` · ${service.pricing}` : ''}</p>
-          {canEdit && service.notes && <p>Internal: {service.notes}</p>}</div>
+        <div className="svc-body"><div className="svc-card-top"><span className="svc-icon" aria-hidden="true"><Icon name={categoryIcons[service.category] ?? 'clipboard'} size={18} /></span>{service.category && <span className="svc-category">{service.category}</span>}</div>
+          <h3>{service.name}{!service.active && ' (inactive)'}</h3>{service.description && <p className="svc-desc">{service.description}</p>}
+          {/* Same text as a single line; each part is wrapped so it can be shown as a chip, and the separators are hidden visually. */}
+          <p className="svc-tags">{service.opportunityTypes.length ? service.opportunityTypes.map((type, index) => <Fragment key={type}>{index > 0 && <span className="svc-sep"> · </span>}<span className="svc-tag">{opportunityLabels[type]}</span></Fragment>) : <span className="svc-tag is-empty">No opportunity types</span>}
+            {service.targetCategories.length ? <><span className="svc-sep"> · </span><span className="svc-tag is-for">For: {service.targetCategories.join(', ')}</span></> : ''}
+            {service.pricing ? <><span className="svc-sep"> · </span><span className="svc-tag is-price">{service.pricing}</span></> : ''}</p>
+          {canEdit && service.notes && <p className="svc-note"><span className="svc-note-icon" aria-hidden="true"><Icon name="clipboard" size={14} /></span>Internal: {service.notes}</p>}</div>
         {canEdit && <div className="svc-actions"><button className="secondary" disabled={busy} onClick={() => edit(service)}>Edit</button>
           <button className="secondary" disabled={busy} onClick={() => void run(() => saveAgencyService(workspace.id, { id: service.id, active: !service.active }))}>{service.active ? 'Deactivate' : 'Activate'}</button>
           <button className="secondary" disabled={busy} onClick={() => { if (window.confirm(`Delete “${service.name}”? Reports that matched it keep its name.`)) void run(() => deleteAgencyService(workspace.id, service.id)) }}>Delete</button></div>}

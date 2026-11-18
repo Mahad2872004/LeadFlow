@@ -6,10 +6,13 @@ import type { Lead } from '../lib/model'
 import { ApolloWorkspace } from './ApolloWorkspace'
 import { CsvImport } from './CsvImport'
 import { DiscoverySearch } from './DiscoverySearch'
-import { Icon } from './Icon'
+import { Icon, type IconName } from './Icon'
 import './Discovery.css'
 
 type Tab = 'apollo' | 'find' | 'csv' | 'history'
+const tabIcons: Record<Tab, IconName> = { apollo: 'spark', find: 'search', csv: 'clipboard', history: 'clock' }
+/** Decorative preview beside the setup and coming-soon messages. */
+const SetupArt = () => <div className="dv-setup-art" aria-hidden="true"><i/><i/><i/></div>
 type Status = { state: 'loading' } | { state: 'error'; message: string } | { state: 'ready'; providers: ProviderStatus[] }
 interface DiscoveryProps {
   workspace: WorkspaceSummary; leads: Lead[]
@@ -53,7 +56,7 @@ export function LeadDiscovery({workspace,leads,blocked,onImported,onAddLead}:Dis
   const tabs:[Tab,string][]=searchEnabled?[['apollo','Apollo'],['find','Find businesses'],['csv','Import CSV'],['history','Search history']]:[['apollo','Apollo'],['csv','Import CSV'],['find','Find businesses']]
   return <div className="dv">
     <div className="dv-toolbar">
-      <div className="dv-tabs" role="tablist" aria-label="Lead discovery views">{tabs.map(([id,label])=><button key={id} role="tab" id={`dv-tab-${id}`} aria-selected={tab===id} aria-controls={`dv-panel-${id}`} className={tab===id?'active':''} onClick={()=>setTab(id)}>{label}{!searchEnabled&&id==='find'&&<span className="dv-soon">Coming soon</span>}</button>)}</div>
+      <div className="dv-tabs" role="tablist" aria-label="Lead discovery views">{tabs.map(([id,label])=><button key={id} role="tab" id={`dv-tab-${id}`} aria-selected={tab===id} aria-controls={`dv-panel-${id}`} className={tab===id?'active':''} onClick={()=>setTab(id)}><Icon name={tabIcons[id]} size={15}/>{label}{!searchEnabled&&id==='find'&&<span className="dv-soon">Coming soon</span>}</button>)}</div>
       <button className="secondary" onClick={onAddLead}><Icon name="plus" size={15}/> Add a business manually</button>
     </div>
     <div role="tabpanel" id={`dv-panel-${tab}`} aria-labelledby={`dv-tab-${tab}`}>
@@ -82,22 +85,26 @@ export function LeadDiscovery({workspace,leads,blocked,onImported,onAddLead}:Dis
 function ComingSoon({onCsv,onAddLead}:{onCsv:()=>void;onAddLead:()=>void}){
   return <section className="panel dv-setup" aria-labelledby="dv-soon-title">
     <div className="dv-setup-copy">
+      <span className="dv-setup-icon" aria-hidden="true"><Icon name="compass" size={22}/></span>
       <p className="eyebrow">COMING SOON</p>
       <h2 id="dv-soon-title">Find businesses by industry and location</h2>
       <p>Soon you’ll be able to search for businesses that match your ideal client, such as dental clinics in Austin, check whether they’re already in LeadFlow, and add the right ones in one step.</p>
       <p>Until then, import a list from a spreadsheet or add businesses yourself. Duplicate checks work the same way.</p>
       <div className="welcome-actions"><button className="primary" onClick={onCsv}>Import a CSV file</button><button className="secondary" onClick={onAddLead}>Add a business manually</button></div>
     </div>
+    <SetupArt/>
   </section>
 }
 function NotConfigured({providers,canManage,onCsv,onAddLead}:{providers:ProviderStatus[];canManage:boolean;onCsv:()=>void;onAddLead:()=>void}){
   return <section className="panel dv-setup" aria-labelledby="dv-setup-title">
     <div className="dv-setup-copy">
+      <span className="dv-setup-icon" aria-hidden="true"><Icon name="gear" size={22}/></span>
       <p className="eyebrow">NOT SWITCHED ON YET</p>
       <h2 id="dv-setup-title">Business search hasn’t been set up for this LeadFlow deployment</h2>
       <p>Searching for businesses uses an external directory, which an administrator connects on the server. Until then, you can still build your list: add businesses yourself or import a CSV file.</p>
       {canManage&&providers.map(provider=><p key={provider.id} className="dv-setup-detail"><strong>{provider.label}:</strong> needs {provider.missing.join(', ')}. See the lead discovery setup guide (docs/LEAD-DISCOVERY.md).</p>)}
       <div className="welcome-actions"><button className="primary" onClick={onCsv}>Import a CSV file</button><button className="secondary" onClick={onAddLead}>Add a business manually</button></div>
     </div>
+    <SetupArt/>
   </section>
 }

@@ -73,7 +73,7 @@ export function CsvImport({workspace,leads,origins,blocked,onImported}:CsvProps)
 
     {step==='upload'&&<div className="dv-csv-body">
       <label className={`dv-drop${dragging?' dragging':''}`} onDragOver={event=>{event.preventDefault();setDragging(true)}} onDragLeave={()=>setDragging(false)} onDrop={event=>{event.preventDefault();setDragging(false);const file=event.dataTransfer.files[0];if(file)void read(file)}}>
-        <Icon name="clipboard" size={26}/><strong>Choose a CSV file</strong><span>or drag it here · up to {maxCsvRows.toLocaleString()} rows, 2 MB</span>
+        <span className="dv-drop-icon" aria-hidden="true"><Icon name="clipboard" size={26}/></span><strong>Choose a CSV file</strong><span>or drag it here · up to {maxCsvRows.toLocaleString()} rows, 2 MB</span>
         <input ref={input} type="file" accept=".csv,text/csv" className="sr-only" onChange={event=>{const file=event.target.files?.[0];if(file)void read(file)}}/>
       </label>
       {fileError&&<p className="field-error" role="alert">{fileError}</p>}
@@ -94,7 +94,7 @@ export function CsvImport({workspace,leads,origins,blocked,onImported}:CsvProps)
       <div className="dv-counts" role="group" aria-label="Rows by status">{(['all','ready','review','existing','invalid'] as const).map(status=><button key={status} className={`dv-count dv-count-${status}${show===status?' active':''}`} aria-pressed={show===status} onClick={()=>setShow(status)}><strong>{status==='all'?reviewed.length:counts[status]}</strong>{status==='all'?'All rows':statusLabels[status]}</button>)}</div>
       {counts.review>0&&<label className="dv-check dv-include"><input type="checkbox" checked={includeReview} onChange={event=>setIncludeReview(event.target.checked)}/>Also import the {counts.review} possible {counts.review===1?'duplicate':'duplicates'} as separate leads</label>}
       <div className="table-scroll dv-preview"><table><thead><tr><th>Row</th><th>Name</th><th>Email / website</th><th>Status</th></tr></thead>
-        <tbody>{reviewed.filter(row=>show==='all'||statusOf(row)===show).slice(0,200).map(row=>{const status=statusOf(row);return <tr key={row.line}><td className="muted">{row.line}</td><td>{row.row?.businessName||row.row?.contactName||row.values[mapping!.businessName]||row.values[mapping!.contactName]||'—'}{row.row?.businessName&&row.row.contactName&&<small className="dv-sub">{row.row.contactName}</small>}</td>
+        <tbody>{reviewed.filter(row=>show==='all'||statusOf(row)===show).slice(0,200).map(row=>{const status=statusOf(row);return <tr key={row.line} data-status={status}><td className="muted">{row.line}</td><td>{row.row?.businessName||row.row?.contactName||row.values[mapping!.businessName]||row.values[mapping!.contactName]||'—'}{row.row?.businessName&&row.row.contactName&&<small className="dv-sub">{row.row.contactName}</small>}</td>
           <td>{row.row?row.row.email||row.row.website||<span className="muted">—</span>:''}</td>
           <td><span className={`dv-badge dv-${status==='ready'?'new':status==='review'?'possible':status==='existing'?'existing':'invalid'}`}>{statusLabels[status]}</span>{(row.errors.length>0||row.match)&&<small className="dv-sub">{row.errors.join(' ')||`${reasonLabels[row.match!.reason]}${row.match!.inBatch?' earlier in this file':row.match!.lead?`: ${row.match!.lead.name}`:''}`}</small>}</td></tr>})}</tbody></table></div>
       {reviewed.filter(row=>show==='all'||statusOf(row)===show).length>200&&<p className="muted">Showing the first 200 rows of this view. Every row is still imported or reported.</p>}

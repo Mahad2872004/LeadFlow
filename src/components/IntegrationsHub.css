@@ -1,4 +1,401 @@
-.integrations-hub{min-width:0}.integration-hero{background:linear-gradient(115deg,#e9f2e8,#f3f5e9);border:1px solid #dce6d9;border-radius:14px;padding:34px;display:grid;grid-template-columns:1.5fr 1fr;gap:32px;margin-bottom:28px;align-items:center}.integration-hero h2{font-size:29px;letter-spacing:-1px;margin-bottom:14px}.integration-hero p:not(.eyebrow){line-height:1.8;color:#607663;max-width:450px}.integration-hero .primary{margin-top:8px}.integration-hero-art{display:grid;gap:10px;justify-items:center;transform:rotate(-3deg)}.integration-hero-art>span{font-size:9px;color:#748771;letter-spacing:1.5px}.integration-hero-art>div{background:#ffffffb5;box-shadow:0 5px 15px #31543209;border:1px solid #dce6d9;padding:16px 20px;border-radius:10px;width:220px;font-weight:650}.integration-hero-art b{float:right;color:#3d8c64}.integration-toolbar{display:flex;align-items:center;gap:16px;margin:0 0 18px;flex-wrap:wrap}.integration-toolbar>span{color:#75877b;font-size:12px}.integration-toolbar>.text-button{margin-left:auto}.integration-categories{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:24px}.integration-categories button{border:1px solid transparent;background:transparent;padding:10px 14px;border-radius:7px;color:#697b6f;font-size:12px;min-height:40px}.integration-categories button.active{background:#e4efe7;color:#2d7150;border-color:#cee1d4}.integration-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-bottom:24px}.integration-card{background:#fff;border:1px solid #e0e8e2;border-radius:12px;padding:23px;display:flex;flex-direction:column;min-width:0}.integration-card:hover{border-color:#accbb9;box-shadow:0 4px 15px #24463107}.integration-card-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:24px}.integration-logo{width:44px;height:44px;display:grid;place-items:center;flex-shrink:0;font-size:19px;font-weight:750;border-radius:11px;background:#edf4ee;color:#347659}.logo-zapier{background:#fff0e6;color:#d96624}.logo-make{background:#f4eafd;color:#8e47c0}.logo-n8n{background:#feeeef;color:#bb5467}.logo-wordpress{background:#e9f1f8;color:#3a759b}.logo-sheets{background:#e5f4e9;color:#34805a}.logo-email{background:#f1efeb;color:#6c645a}.integration-status{font-size:10px;line-height:1.4;padding:5px 8px;border:1px solid #e1e7e2;border-radius:20px;background:#f7f9f7;color:#66796d;text-align:center}.integration-status.needs-configuration{background:#fff8e7;color:#89713a;border-color:#f0e5c5}.integration-status.connected{background:#e9f5ed;color:#2a744a;border-color:#cfe5d5}.integration-status.planned{background:#f2f2f5;color:#797780}.integration-category{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#839087;margin-bottom:9px}.integration-card h2{font-size:16px;margin-bottom:10px}.integration-card>p:not(.integration-category){font-size:12px;line-height:1.8;color:#708075;flex:1}.integration-card>.text-button{border-top:1px solid #eef2ee;padding-top:14px;margin-top:10px;justify-content:space-between}.integration-hint{font-size:12px;line-height:1.8;color:#748477;margin-top:18px}.integration-back{margin-bottom:23px}.integration-detail-heading{display:flex;align-items:flex-start;gap:17px;margin-bottom:28px}.integration-detail-heading>div{flex:1;min-width:0}.integration-detail-heading .eyebrow{margin-bottom:6px}.integration-detail-heading h2{font-size:25px;margin-bottom:8px}.integration-detail-heading p:last-child{color:#6a7e70;font-size:13px;line-height:1.7}.integration-section{padding:26px;overflow:visible}.integration-section p,.integration-section li{font-size:13px;line-height:1.9;color:#5d7364;overflow-wrap:anywhere}.integration-section h3{font-size:18px;margin-bottom:16px}.integration-section h4{font-size:14px}.integration-section ol,.integration-section ul{padding-left:22px}.integration-section li{padding-bottom:8px}.integration-section details{border-top:1px solid #e7ede7;padding:15px 0}.integration-section summary{cursor:pointer;font-size:13px;font-weight:600;line-height:1.6}.integration-section details p{margin:12px 0 0}.integration-section progress{width:100%;height:8px;accent-color:#347b58;margin:10px 0 18px}.integration-install-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}.integration-code{background:#f6f8f6;border:1px solid #e0e8e1;border-radius:9px;padding:14px;margin:18px 0;min-width:0}.integration-code>div{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:12px;margin-bottom:8px}.integration-code textarea{display:block;width:100%;border:0;background:transparent;resize:vertical;font:12px/1.7 ui-monospace,SFMono-Regular,Consolas,monospace;color:#3e6150;white-space:pre;overflow:auto;min-height:60px}.integration-code p{margin:8px 0 0;font-size:12px}.integration-actions{display:flex;gap:10px;flex-wrap:wrap}.integration-actions a{text-decoration:none}.integration-preview{display:block;width:100%;height:720px;border:1px solid #dce5dc;border-radius:10px;margin-top:20px;background:#fff}.integration-check{display:flex;align-items:flex-start;gap:12px;margin:15px 0;color:#506b58;font-size:13px;line-height:1.7}.integration-check input{width:18px;height:18px;accent-color:#327658;flex-shrink:0}.integration-field{display:grid;gap:8px;margin:15px 0;max-width:520px;font-size:13px}.integration-field input{padding:12px;border:1px solid #dce5df;border-radius:7px;min-width:0}.integration-success{background:#edf7ef;padding:12px;border-radius:8px;margin-top:16px}.integration-warning{background:#fff6e3;padding:12px;border-radius:8px}.integration-evidence{display:flex;gap:18px;flex-wrap:wrap;background:#f3f7f3;padding:18px;margin:20px 0;border-radius:9px;font-size:13px}.integration-credential{border-top:1px solid #e3eae4;padding:17px 0;display:flex;align-items:center;justify-content:space-between;gap:16px}.integration-credential p{margin:6px 0 0}.integration-credential .secondary{margin:6px}.integration-section a{overflow-wrap:anywhere}@media(max-width:1200px){.integration-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:650px){.integration-grid{grid-template-columns:1fr}.integration-hero{grid-template-columns:1fr;padding:25px}.integration-hero h2{font-size:26px}.integration-hero-art{display:none}.integration-section{padding:20px 16px}.integration-install-grid{grid-template-columns:1fr;gap:10px}.integration-detail-heading{flex-wrap:wrap}.integration-detail-heading>.integration-status{margin-left:61px}.integration-toolbar>.text-button{margin-left:0}.integration-categories{gap:4px}.integration-categories button{font-size:11px;padding:9px 11px}.integration-credential{align-items:flex-start;flex-direction:column}.integration-code{padding:12px}.integration-code>div{align-items:flex-start;flex-direction:column}.integration-check{font-size:12px}.integration-field input{font-size:16px}}
-/* Five navigation items must remain usable on small screens. */
-@media(max-width:580px){.sidebar nav .nav-item{font-size:10px;min-width:0;padding-inline:2px}.sidebar nav .nav-count{right:2px}.topbar .header-actions{gap:10px}}
-.integration-recipient{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;margin-top:6px}.integration-recipient .integration-field{flex:1 1 260px;margin-bottom:0}.integration-recipient .secondary{margin-bottom:1px}.integration-section .integration-actions>p{margin:0;align-self:center}
+/* Integrations hub: directory, setup guides, code snippets, credentials and receipt verification.
+   Renders inside the dashboard shell and builds on tokens in src/index.css and primitives in src/App.css.
+   Rules that adjust shared primitives (.panel, .primary, .secondary, .text-button, .empty, form fields) are
+   scoped under .integrations-hub so they win whatever order the stylesheets load in.
+   Layout breakpoints are container queries on the hub itself, so they follow the space left by the sidebar.
+   Sections: layout · hero · toolbar & categories · directory · app tiles · status pills · detail header ·
+   guide sections · stepper · notes & alerts · code blocks · preview · form settings · checklist · evidence ·
+   credentials · verification · troubleshooting · motion · responsive */
+
+/* ---------- Layout ---------- */
+.integrations-hub { container: lf-hub / inline-size; min-width: 0 }
+.integrations-hub .empty h2 { margin: 0 0 4px; color: var(--lf-ink); font-size: 16px }
+
+/* ---------- Hero (night surface) ---------- */
+.integrations-hub .integration-hero {
+  position: relative; isolation: isolate; overflow: hidden;
+  display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(250px, .9fr); align-items: center; gap: 40px;
+  margin-bottom: 22px; padding: 36px 40px;
+  border-radius: var(--lf-radius-xl); color: var(--lf-night-text);
+  background:
+    radial-gradient(60% 90% at 100% 0%, color-mix(in srgb, var(--lf-glow-emerald) 30%, transparent), transparent 70%),
+    radial-gradient(45% 70% at 0% 100%, color-mix(in srgb, var(--lf-glow-lime) 9%, transparent), transparent 70%),
+    linear-gradient(160deg, var(--lf-night), var(--lf-night-2));
+  box-shadow: 0 1px 2px rgba(6, 19, 14, .2), 0 28px 56px -32px rgba(6, 40, 28, .7);
+}
+.integrations-hub .integration-hero::before {
+  content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background-image: linear-gradient(color-mix(in srgb, var(--lf-grid-line) 6%, transparent) 1px, transparent 1px), linear-gradient(90deg, color-mix(in srgb, var(--lf-grid-line) 6%, transparent) 1px, transparent 1px);
+  background-size: 32px 32px;
+  -webkit-mask-image: radial-gradient(ellipse 70% 100% at 85% 0%, #000, transparent 75%);
+  mask-image: radial-gradient(ellipse 70% 100% at 85% 0%, #000, transparent 75%);
+}
+.integrations-hub .integration-hero .eyebrow { margin-bottom: 14px; color: var(--lf-mint) }
+.integrations-hub .integration-hero .eyebrow::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--lf-mint); box-shadow: 0 0 0 3px rgba(94, 224, 168, .2) }
+.integrations-hub .integration-hero h2 { max-width: 520px; margin: 0 0 12px; color: #fff; font-size: 32px; font-weight: 650; letter-spacing: -.04em; line-height: 1.1; text-wrap: balance }
+.integrations-hub .integration-hero p:not(.eyebrow) { max-width: 440px; margin: 0 0 26px; color: var(--lf-night-muted); font-size: 15px; line-height: 1.6 }
+.integrations-hub .integration-hero .primary { min-height: 44px; padding: 0 18px; background: var(--lf-lime); color: var(--lf-on-lime); box-shadow: 0 10px 28px -10px color-mix(in srgb, var(--lf-lime) 55%, transparent) }
+.integrations-hub .integration-hero .primary:hover:not(:disabled) { background: var(--lf-lime-hover) }
+.integrations-hub .integration-hero .primary:focus-visible { outline-color: var(--lf-lime) }
+
+/* Decorative flow: website form → LeadFlow */
+.integration-hero-art {
+  position: relative; display: grid; justify-items: center; gap: 10px;
+  padding: 22px 20px 20px; border: 1px solid color-mix(in srgb, var(--lf-night-ink) 12%, transparent); border-radius: var(--lf-radius-lg);
+  background: linear-gradient(180deg, rgba(255, 255, 255, .07), rgba(255, 255, 255, .02));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06), 0 30px 60px -30px rgba(0, 0, 0, .7);
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+}
+.integration-hero-label { color: var(--lf-night-muted); font-size: 11px; font-weight: 650; letter-spacing: .09em; text-transform: uppercase }
+.integration-hero-label.is-accent { margin-top: 4px; padding: 3px 10px; border: 1px solid color-mix(in srgb, var(--lf-lime) 20%, transparent); border-radius: 999px; background: color-mix(in srgb, var(--lf-lime) 10%, transparent); color: var(--lf-lime) }
+.integration-hero-node { display: flex; align-items: center; gap: 12px; width: 100%; max-width: 290px; padding: 10px 10px 10px 10px; border: 1px solid color-mix(in srgb, var(--lf-night-ink) 14%, transparent); border-radius: 13px; background: rgba(4, 14, 10, .6); color: #fff; font-size: 14px; font-weight: 600; letter-spacing: -.01em; box-shadow: 0 12px 30px -16px rgba(0, 0, 0, .8) }
+.integration-hero-icon { display: grid; flex-shrink: 0; place-items: center; width: 34px; height: 34px; border-radius: 10px; background: rgba(255, 255, 255, .07); color: var(--lf-night-text); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .08) }
+.integration-hero-node b { display: grid; place-items: center; width: 26px; height: 26px; margin-left: auto; border-radius: 8px; background: rgba(255, 255, 255, .08); color: var(--lf-night-muted); font-size: 13px; font-weight: 600 }
+.integration-hero-node.is-leadflow { border-color: color-mix(in srgb, var(--lf-lime) 38%, transparent); background: linear-gradient(180deg, color-mix(in srgb, var(--lf-lime) 10%, transparent), rgba(4, 14, 10, .6)); box-shadow: 0 0 0 4px color-mix(in srgb, var(--lf-lime) 5%, transparent), 0 16px 36px -14px color-mix(in srgb, var(--lf-lime) 35%, transparent) }
+.integration-hero-node.is-leadflow .integration-hero-icon { background: linear-gradient(145deg, #17a572, #0a5a3e); color: #fff; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .28) }
+.integration-hero-node.is-leadflow b { background: var(--lf-lime); color: var(--lf-on-lime); font-weight: 700 }
+.integration-hero-link { position: relative; isolation: isolate; display: grid; place-items: center; width: 24px; height: 24px; margin-block: 6px; border: 1px solid rgba(94, 224, 168, .4); border-radius: 50%; background: var(--lf-night-2); color: var(--lf-mint); font-size: 12px; line-height: 1 }
+.integration-hero-link::before { content: ''; position: absolute; top: -18px; bottom: -18px; left: 50%; z-index: -1; width: 1px; background: linear-gradient(rgba(94, 224, 168, 0), rgba(94, 224, 168, .55), rgba(94, 224, 168, 0)) }
+.integration-hero-link::after { content: ''; position: absolute; top: -18px; left: 50%; width: 5px; height: 5px; margin-left: -2.5px; border-radius: 50%; background: var(--lf-lime); box-shadow: 0 0 10px 2px color-mix(in srgb, var(--lf-lime) 60%, transparent); animation: lf-int-flow 2.4s var(--lf-ease) infinite }
+
+/* ---------- Toolbar & categories ---------- */
+.integration-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin: 0 0 14px }
+.integrations-hub .integration-toolbar .search { flex: 1 1 280px; max-width: 420px; min-height: 42px; box-shadow: var(--lf-shadow-xs) }
+.integration-toolbar > span { color: var(--lf-muted); font-size: 13px; font-weight: 550; font-variant-numeric: tabular-nums }
+.integrations-hub .integration-toolbar > .text-button { margin-left: auto }
+.integration-categories { display: flex; flex-wrap: wrap; gap: 2px; width: fit-content; max-width: 100%; margin-bottom: 18px; padding: 4px; border: 1px solid var(--lf-line); border-radius: 12px; background: #eaefec }
+.integrations-hub .integration-categories button { min-height: 34px; padding: 0 14px; border: 0; border-radius: 9px; background: transparent; color: var(--lf-muted); font-size: 13px; font-weight: 550; white-space: nowrap }
+.integrations-hub .integration-categories button:hover { background: var(--lf-glass); color: var(--lf-ink) }
+.integrations-hub .integration-categories button.active { background: var(--lf-surface); color: var(--lf-ink); font-weight: 600; box-shadow: 0 1px 2px rgba(10, 24, 19, .08), 0 0 0 1px rgba(10, 24, 19, .06) }
+
+/* ---------- Directory cards ---------- */
+.integration-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 290px), 1fr)); gap: 14px; margin-bottom: 18px }
+.integrations-hub .integration-card {
+  position: relative; isolation: isolate;
+  display: flex; flex-direction: column; min-width: 0;
+  padding: 20px 20px 0; border: 1px solid var(--lf-line); border-radius: var(--lf-radius-lg); background: var(--lf-surface);
+  box-shadow: var(--lf-shadow-xs);
+  transition: transform .3s var(--lf-ease), box-shadow .3s var(--lf-ease), border-color .2s;
+}
+.integrations-hub .integration-card::before { content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: radial-gradient(70% 60% at 0% 0%, color-mix(in srgb, var(--lf-glow-mint) 12%, transparent), transparent 70%); opacity: 0; transition: opacity .3s; pointer-events: none }
+.integrations-hub .integration-card:hover { transform: translateY(-3px); border-color: var(--lf-line-strong); box-shadow: var(--lf-shadow-lg) }
+.integrations-hub .integration-card:hover::before { opacity: 1 }
+.integration-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 18px }
+.integration-category { margin: 0 0 4px; color: var(--lf-faint); font-size: 11px; font-weight: 650; letter-spacing: .07em; text-transform: uppercase }
+.integrations-hub .integration-card h2 { margin: 0 0 6px; color: var(--lf-ink); font-size: 16px; font-weight: 650; letter-spacing: -.02em; line-height: 1.3 }
+.integrations-hub .integration-card > p:not(.integration-category) { flex: 1; margin: 0; color: var(--lf-muted); font-size: 13.5px; line-height: 1.55 }
+.integrations-hub .integration-card > .text-button { display: flex; justify-content: space-between; width: calc(100% + 40px); min-height: 48px; margin: 18px -20px 0; padding: 0 20px; border-top: 1px solid var(--lf-line); border-radius: 0 0 var(--lf-radius-lg) var(--lf-radius-lg); color: var(--lf-ink); font-size: 13.5px }
+.integrations-hub .integration-card > .text-button:hover:not(:disabled) { color: var(--lf-brand-strong); text-decoration: none }
+.integrations-hub .integration-card > .text-button svg { color: var(--lf-faint); transition: transform .25s var(--lf-ease), color .2s }
+.integrations-hub .integration-card:hover > .text-button { background: rgba(241, 245, 243, .7); color: var(--lf-brand-strong) }
+.integrations-hub .integration-card:hover > .text-button svg { color: var(--lf-brand); transform: translate(2px, -2px) }
+/* The whole card is the guide's hit area; the overlay belongs to the button itself. */
+.integrations-hub .integration-card > .text-button::after { content: ''; position: absolute; inset: 0; border-radius: var(--lf-radius-lg) }
+.integrations-hub .integration-card > .text-button:focus-visible { outline: none }
+.integrations-hub .integration-card > .text-button:focus-visible::after { outline: 2px solid var(--lf-brand); outline-offset: 2px }
+.integrations-hub > .integration-hint { max-width: none; margin-top: 4px }
+
+/* ---------- App tiles ---------- */
+.integration-logo {
+  --tile-ink: var(--lf-brand-strong);
+  display: grid; flex-shrink: 0; place-items: center; width: 44px; height: 44px;
+  border-radius: 12px; color: var(--tile-ink); font-size: 18px; font-weight: 700; letter-spacing: -.03em; line-height: 1;
+  background: linear-gradient(145deg, #ecf8f2, #d3ecdf);
+  box-shadow: inset 0 0 0 1px rgba(10, 24, 19, .06), inset 0 1px 0 rgba(255, 255, 255, .9), 0 1px 2px rgba(10, 24, 19, .06);
+  transition: transform .3s var(--lf-ease);
+}
+.integrations-hub .integration-card:hover .integration-logo { transform: scale(1.05) }
+.logo-embed, .logo-custom, .logo-api, .logo-examples, .logo-n8n { font-family: var(--lf-mono); font-size: 14px; letter-spacing: -.04em }
+.logo-wordpress { --tile-ink: #1f6a90; background: linear-gradient(145deg, #edf4fa, #d4e5f2) }
+.logo-zapier { --tile-ink: #d34a0a; background: linear-gradient(145deg, #fff3ea, #ffdcc6) }
+.logo-make { --tile-ink: #6b3cbf; background: linear-gradient(145deg, #f5f0fc, #e3d6f7) }
+.logo-n8n { --tile-ink: #bb2f52; background: linear-gradient(145deg, #fdf0f2, #f8d3dc) }
+.logo-sheets { --tile-ink: #137a34; background: linear-gradient(145deg, #ebf7ee, #cde9d5) }
+.logo-email { --tile-ink: #8a5300; background: linear-gradient(145deg, #fff7e9, #fbe4bb) }
+.logo-crm { --tile-ink: #2c5592; background: linear-gradient(145deg, #eef3fb, #d5e1f4) }
+.logo-api, .logo-webhook, .logo-examples { --tile-ink: var(--lf-lime); background: radial-gradient(90% 90% at 100% 0%, color-mix(in srgb, var(--lf-glow-emerald) 35%, transparent), transparent 70%), linear-gradient(160deg, var(--lf-night-2), var(--lf-night)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--lf-night-ink) 10%, transparent), inset 0 1px 0 rgba(255, 255, 255, .08), 0 4px 10px -4px rgba(6, 19, 14, .5) }
+
+/* ---------- Status pills ---------- */
+.integration-status { display: inline-flex; flex-shrink: 0; align-items: center; gap: 7px; padding: 3px 10px 3px 9px; border: 1px solid var(--lf-line); border-radius: 999px; background: var(--lf-surface-2); color: var(--lf-muted); font-size: 12px; font-weight: 600; line-height: 1.5; white-space: nowrap }
+.integration-status::before { content: ''; flex-shrink: 0; width: 7px; height: 7px; border-radius: 50%; background: #a3b0aa }
+.integration-status.needs-configuration { border-color: var(--lf-warning-line); background: var(--lf-warning-soft); color: var(--lf-warning) }
+.integration-status.needs-configuration::before { background: #e0a43a; box-shadow: 0 0 0 3px rgba(224, 164, 58, .18) }
+.integration-status.planned { border-color: var(--lf-info-line); background: var(--lf-info-soft); color: var(--lf-info) }
+.integration-status.planned::before { background: #6d93d6 }
+.integration-status.connected { border-color: #a9dfc3; background: linear-gradient(180deg, var(--lf-tint), var(--lf-tint)); color: var(--lf-success); box-shadow: 0 0 0 3px rgba(34, 168, 115, .07), 0 6px 16px -8px rgba(34, 168, 115, .6) }
+.integration-status.connected::before { background: #19b377; box-shadow: 0 0 0 3px rgba(25, 179, 119, .2), 0 0 8px rgba(25, 179, 119, .8); animation: lf-int-pulse 2.4s ease-in-out infinite }
+
+/* ---------- Detail header band ---------- */
+.integrations-hub .integration-back { min-height: 34px; margin-bottom: 14px; padding: 0 14px 0 12px; border: 1px solid var(--lf-line); border-radius: 999px; background: var(--lf-surface); color: var(--lf-text); font-size: 13px; font-weight: 600; box-shadow: var(--lf-shadow-xs) }
+.integrations-hub .integration-back:hover:not(:disabled) { border-color: var(--lf-line-strong); color: var(--lf-ink); text-decoration: none }
+.integrations-hub .integration-detail-heading {
+  position: relative; isolation: isolate; overflow: hidden;
+  display: flex; align-items: center; gap: 22px;
+  margin-bottom: 16px; padding: 30px 30px 30px 28px;
+  border: 1px solid var(--lf-line); border-radius: var(--lf-radius-xl);
+  background: radial-gradient(45% 140% at 100% 0%, color-mix(in srgb, var(--lf-glow-mint) 20%, transparent), transparent 70%), radial-gradient(30% 90% at 70% 120%, color-mix(in srgb, var(--lf-glow-lime) 14%, transparent), transparent 70%), linear-gradient(180deg, var(--lf-surface), #f7faf8);
+  box-shadow: var(--lf-shadow-xs);
+}
+.integrations-hub .integration-detail-heading::before {
+  content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background-image: linear-gradient(rgba(10, 24, 19, .045) 1px, transparent 1px), linear-gradient(90deg, rgba(10, 24, 19, .045) 1px, transparent 1px);
+  background-size: 28px 28px;
+  -webkit-mask-image: radial-gradient(ellipse 55% 120% at 100% 0%, #000, transparent 75%);
+  mask-image: radial-gradient(ellipse 55% 120% at 100% 0%, #000, transparent 75%);
+}
+.integrations-hub .integration-detail-heading .integration-logo { width: 68px; height: 68px; border-radius: 19px; font-size: 27px; box-shadow: inset 0 0 0 1px rgba(10, 24, 19, .06), inset 0 1px 0 rgba(255, 255, 255, .9), 0 12px 26px -14px rgba(10, 24, 19, .45) }
+.integrations-hub .integration-detail-heading .logo-embed, .integrations-hub .integration-detail-heading .logo-custom, .integrations-hub .integration-detail-heading .logo-api, .integrations-hub .integration-detail-heading .logo-examples, .integrations-hub .integration-detail-heading .logo-n8n { font-size: 20px }
+.integration-detail-heading > div { flex: 1; min-width: 0 }
+.integrations-hub .integration-detail-heading .eyebrow { margin-bottom: 6px }
+.integrations-hub .integration-detail-heading h2 { margin: 0 0 6px; color: var(--lf-ink); font-size: 28px; font-weight: 650; letter-spacing: -.04em; line-height: 1.15 }
+.integration-detail-heading > div > p:not(.eyebrow) { max-width: 620px; margin: 0; color: var(--lf-muted); font-size: 15px; line-height: 1.6 }
+.integrations-hub .integration-detail-heading > .integration-status { align-self: flex-start; padding: 5px 13px 5px 11px; background-color: var(--lf-surface); font-size: 13px }
+.integrations-hub .integration-detail-heading > .integration-status.connected { background: linear-gradient(180deg, var(--lf-tint), var(--lf-tint)) }
+
+/* ---------- Guide sections ---------- */
+.integrations-hub .integration-section { position: relative; overflow: visible; padding: 26px 28px }
+.integrations-hub .integration-section h3 { margin: 0 0 8px; color: var(--lf-ink); font-size: 17.5px; font-weight: 650; letter-spacing: -.025em; line-height: 1.35 }
+.integrations-hub .integration-section h4 { margin: 26px 0 8px; padding-top: 22px; border-top: 1px solid var(--lf-line); color: var(--lf-ink); font-size: 14.5px; font-weight: 650; letter-spacing: -.01em }
+.integrations-hub .integration-section h3 + h4 { margin-top: 18px; padding-top: 0; border-top: 0 }
+.integrations-hub .integration-section p, .integrations-hub .integration-section li { color: var(--lf-text); font-size: 14px; line-height: 1.65; overflow-wrap: anywhere }
+.integrations-hub .integration-section p { max-width: 78ch; margin: 0 0 12px }
+.integrations-hub .integration-section h3 + p { color: var(--lf-muted) }
+.integrations-hub .integration-section > :last-child { margin-bottom: 0 }
+.integrations-hub .integration-section strong { color: var(--lf-ink); font-weight: 650 }
+.integrations-hub .integration-section a:not([class]) { display: inline-flex; color: var(--lf-brand); font-size: 14px; font-weight: 600; text-underline-offset: 3px; overflow-wrap: anywhere }
+.integrations-hub .integration-section a:not([class]):hover { color: var(--lf-brand-strong) }
+.integration-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 18px 0 }
+.integrations-hub .integration-actions a { text-decoration: none }
+.integrations-hub .integration-section .integration-actions > p { margin: 0 }
+
+/* ---------- Stepper (ordered steps) ---------- */
+/* A zero-width marker (instead of list-style: none) keeps list semantics in Safari. */
+.integrations-hub .integration-section ol { counter-reset: lf-step; display: grid; margin: 18px 0; padding: 0; list-style-type: "\200B" }
+.integrations-hub .integration-section ol > li { position: relative; max-width: 80ch; min-height: 30px; padding: 4px 0 18px 46px; counter-increment: lf-step }
+.integrations-hub .integration-section ol > li::before { content: counter(lf-step); position: absolute; top: 0; left: 0; display: grid; place-items: center; width: 30px; height: 30px; border: 1px solid var(--lf-line-strong); border-radius: 50%; background: var(--lf-surface); color: var(--lf-ink); font-size: 13px; font-weight: 650; font-variant-numeric: tabular-nums; box-shadow: var(--lf-shadow-xs) }
+.integrations-hub .integration-section ol > li::after { content: ''; position: absolute; top: 34px; bottom: 4px; left: 15px; width: 1px; background: linear-gradient(var(--lf-line-strong), var(--lf-line)) }
+.integrations-hub .integration-section ol > li:first-child::before { border-color: var(--lf-accent-bg); background: var(--lf-accent-bg); color: var(--lf-lime) }
+.integrations-hub .integration-section ol > li:last-child { padding-bottom: 0 }
+.integrations-hub .integration-section ol > li:last-child::after { display: none }
+
+/* Unordered reference list (response codes) */
+.integrations-hub .integration-section ul { display: grid; margin: 14px 0 0; padding: 0; overflow: hidden; border: 1px solid var(--lf-line); border-radius: 12px; list-style-type: "\200B" }
+.integrations-hub .integration-section ul > li { position: relative; padding: 10px 14px 10px 34px; border-top: 1px solid var(--lf-line); font-size: 13.5px; line-height: 1.55 }
+.integrations-hub .integration-section ul > li:first-child { border-top: 0 }
+.integrations-hub .integration-section ul > li:nth-child(even) { background: var(--lf-surface-2) }
+.integrations-hub .integration-section ul > li::before { content: ''; position: absolute; top: 18px; left: 16px; width: 6px; height: 6px; border-radius: 2px; background: var(--lf-line-strong) }
+
+/* ---------- Notes & alerts ---------- */
+.integrations-hub .integration-hint { position: relative; max-width: 80ch; margin: 14px 0 0; padding-left: 24px; color: var(--lf-muted); font-size: 13px; line-height: 1.6 }
+.integrations-hub .integration-hint::before { content: ''; position: absolute; top: 2px; left: 0; width: 16px; height: 16px; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2385928c' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M12 11v5M12 8h.01'/%3E%3C/svg%3E") no-repeat center / 16px }
+.integrations-hub .integration-hint + .integration-hint { margin-top: 8px }
+.integrations-hub .integration-section .integration-warning { position: relative; max-width: none; margin: 14px 0 0; padding: 12px 14px 12px 42px; border: 1px solid var(--lf-warning-line); border-radius: 12px; background: var(--lf-warning-soft); color: var(--lf-warning); font-size: 13.5px; line-height: 1.6 }
+.integrations-hub .integration-section .integration-warning::before { content: ''; position: absolute; top: 13px; left: 14px; width: 18px; height: 18px; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23855200' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10.3 3.9 2.4 17.5A2 2 0 0 0 4.1 20.5h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z'/%3E%3Cpath d='M12 9v4M12 17h.01'/%3E%3C/svg%3E") no-repeat center / 18px }
+.integrations-hub .integration-section .integration-success { position: relative; max-width: none; margin: 16px 0 0; padding: 12px 14px 12px 42px; border: 1px solid var(--lf-success-line); border-radius: 12px; background: var(--lf-success-soft); color: var(--lf-success); font-size: 13.5px; font-weight: 550; line-height: 1.6 }
+.integrations-hub .integration-section .integration-success::before { content: ''; position: absolute; top: 13px; left: 14px; width: 18px; height: 18px; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230b6b48' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='m8 12 3 3 5-6'/%3E%3C/svg%3E") no-repeat center / 18px }
+.integrations-hub .integration-section p[role="alert"], .integrations-hub .integration-section .field-error { position: relative; max-width: none; margin: 14px 0 0; padding: 12px 14px 12px 42px; border: 1px solid var(--lf-danger-line); border-radius: 12px; background: var(--lf-danger-soft); color: var(--lf-danger); font-size: 13.5px; line-height: 1.6 }
+.integrations-hub .integration-section p[role="alert"]::before, .integrations-hub .integration-section .field-error::before { content: ''; position: absolute; top: 13px; left: 14px; width: 18px; height: 18px; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a8321d' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M12 8v5M12 16h.01'/%3E%3C/svg%3E") no-repeat center / 18px }
+.integrations-hub .integration-role-note { color: var(--lf-muted); font-size: 12.5px; line-height: 1.5 }
+
+/* ---------- Code blocks (dark, mono, copy affordance) ---------- */
+.integrations-hub .integration-code { min-width: 0; margin: 16px 0; overflow: hidden; border: 1px solid #12291f; border-radius: 14px; background: #030c08; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .04), 0 14px 30px -20px rgba(2, 10, 7, .8) }
+.integrations-hub .integration-code > div:first-child { display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 6px 8px 6px 14px; border-bottom: 1px solid color-mix(in srgb, var(--lf-night-ink) 8%, transparent); background: linear-gradient(180deg, rgba(255, 255, 255, .045), rgba(255, 255, 255, .015)) }
+.integration-code-dots { display: inline-flex; flex-shrink: 0; gap: 6px }
+.integration-code-dots i { width: 10px; height: 10px; border-radius: 50%; background: rgba(255, 255, 255, .13) }
+.integration-code-dots i:first-child { background: rgba(255, 112, 97, .7) }
+.integration-code-dots i:nth-child(2) { background: rgba(246, 196, 82, .7) }
+.integration-code-dots i:last-child { background: rgba(94, 224, 168, .75) }
+.integrations-hub .integration-code > div:first-child > strong { flex: 1; min-width: 0; overflow: hidden; color: #93a89f; font-family: var(--lf-mono); font-size: 12px; font-weight: 500; letter-spacing: 0; text-overflow: ellipsis; white-space: nowrap }
+.integrations-hub .integration-code > div:first-child > .text-button { flex-shrink: 0; gap: 7px; min-height: 30px; padding: 0 11px; border: 1px solid color-mix(in srgb, var(--lf-night-ink) 14%, transparent); border-radius: 8px; background: rgba(255, 255, 255, .05); color: var(--lf-night-text); font-size: 12.5px; font-weight: 550; white-space: nowrap }
+.integrations-hub .integration-code > div:first-child > .text-button:hover:not(:disabled) { border-color: color-mix(in srgb, var(--lf-lime) 40%, transparent); background: color-mix(in srgb, var(--lf-lime) 10%, transparent); color: #fff; text-decoration: none }
+.integrations-hub .integration-code > div:first-child > .text-button:focus-visible { outline-color: var(--lf-lime) }
+.integration-code-body { position: relative; min-width: 0 }
+.integration-code-body:focus-within { box-shadow: inset 0 0 0 2px rgba(94, 224, 168, .45) }
+/* The coloured copy sits under a transparent textarea; both share exact metrics so selection lines up. */
+.integrations-hub .integration-code-highlight, .integrations-hub .integration-code textarea {
+  margin: 0; padding: 14px 16px 16px;
+  font-family: var(--lf-mono); font-size: 12.5px; font-weight: 400; line-height: 1.75; letter-spacing: 0;
+  font-variant-ligatures: none; tab-size: 2; white-space: pre; overflow-wrap: normal; word-break: normal;
+  scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, .18) transparent;
+}
+.integrations-hub .integration-code-highlight { position: absolute; inset: 0; overflow: auto; color: #d5e5dd; pointer-events: none }
+.integrations-hub .integration-code textarea { position: relative; display: block; width: 100%; min-height: 60px; overflow: auto; border: 0; border-radius: 0; background: transparent; color: transparent; -webkit-text-fill-color: transparent; caret-color: var(--lf-mint); resize: vertical; outline: none; box-shadow: none }
+.integrations-hub .integration-code textarea::selection { background: rgba(94, 224, 168, .3) }
+.integrations-hub .integration-code > p[role="status"] { max-width: none; margin: 0; padding: 9px 14px; border-top: 1px solid color-mix(in srgb, var(--lf-night-ink) 8%, transparent); color: var(--lf-mint); font-size: 12.5px; line-height: 1.5 }
+.integration-code-highlight .tok-key { color: #9ccaff }
+.integration-code-highlight .tok-string { color: #d7f59a }
+.integration-code-highlight .tok-tag { color: #7ff0bf }
+.integration-code-highlight .tok-attr { color: #9ccaff }
+.integration-code-highlight .tok-keyword { color: #7ff0bf }
+.integration-code-highlight .tok-number { color: #f7c47f }
+
+/* ---------- Live preview (browser frame) ---------- */
+.integration-browser { min-width: 0; margin-top: 18px; overflow: hidden; border: 1px solid var(--lf-line-strong); border-radius: 14px; background: var(--lf-surface); box-shadow: var(--lf-shadow-lg) }
+.integration-browser-bar { display: flex; align-items: center; gap: 6px; height: 42px; padding: 0 14px; border-bottom: 1px solid var(--lf-line); background: linear-gradient(180deg, var(--lf-surface-2), #f0f4f2) }
+.integration-browser-bar > span { flex-shrink: 0; width: 10px; height: 10px; border-radius: 50%; background: #d3dcd8 }
+.integration-browser-bar > code { flex: 1; min-width: 0; max-width: 560px; margin: 0 auto; padding: 4px 12px; overflow: hidden; border: 1px solid var(--lf-line); border-radius: 8px; background: var(--lf-surface); color: var(--lf-muted); font-family: var(--lf-mono); font-size: 12px; text-align: center; text-overflow: ellipsis; white-space: nowrap }
+.integration-preview { display: block; width: 100%; height: 720px; border: 0; background: var(--lf-surface) }
+
+/* ---------- Form settings ---------- */
+.integrations-hub .integration-section .integration-form-state { max-width: none; margin: 14px 0 0; padding: 14px 16px; border: 1px solid var(--lf-line); border-radius: 12px; background: linear-gradient(180deg, var(--lf-surface-2), #f5f8f6) }
+.integration-live { display: inline-block; width: 8px; height: 8px; margin-right: 10px; border-radius: 50%; background: #a3b0aa; box-shadow: 0 0 0 3px rgba(163, 176, 170, .2); vertical-align: 1px }
+.integration-live.is-on { background: #19b377; box-shadow: 0 0 0 3px rgba(25, 179, 119, .2), 0 0 8px rgba(25, 179, 119, .7); animation: lf-int-pulse 2.4s ease-in-out infinite }
+.integrations-hub .integration-recipient { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px; margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--lf-line) }
+.integrations-hub .integration-recipient .integration-field { flex: 1 1 280px; margin: 0 }
+.integrations-hub .integration-recipient .secondary { min-height: 44px }
+.integrations-hub .integration-field { display: grid; gap: 6px; max-width: 520px; margin: 16px 0 12px; color: var(--lf-text); font-size: 13px; font-weight: 600 }
+/* Extra :not() clauses outrank App.css's `form input:not(...)` rule for the recipient field. */
+.integrations-hub .integration-field > input:not([type=checkbox]):not([type=radio]) { display: block; width: 100%; min-width: 0; min-height: 44px; margin: 0; padding: 10px 13px; border: 1px solid var(--lf-line-strong); border-radius: 10px; background: var(--lf-surface); color: var(--lf-ink); font-size: 14px; font-weight: 400; box-shadow: var(--lf-shadow-xs); transition: border-color .15s, box-shadow .15s }
+.integrations-hub .integration-field > input:not([type=checkbox]):not([type=radio]):focus { border-color: var(--lf-brand); outline: none; box-shadow: 0 0 0 3px var(--lf-brand-ring) }
+.integrations-hub .integration-field > input::placeholder { color: var(--lf-faint) }
+
+/* ---------- Administrator checklist ---------- */
+.integrations-hub .integration-check { display: flex; align-items: flex-start; gap: 12px; margin: 8px 0; padding: 12px 14px; border: 1px solid var(--lf-line); border-radius: 12px; background: var(--lf-surface); color: var(--lf-text); font-size: 14px; font-weight: 500; line-height: 1.55; cursor: pointer; transition: border-color .15s, background-color .15s }
+.integrations-hub .integration-check:hover { border-color: var(--lf-line-strong); background: var(--lf-hover) }
+.integrations-hub .integration-check:has(input:checked) { border-color: var(--lf-success-line); background: var(--lf-success-soft); color: var(--lf-ink) }
+.integrations-hub .integration-check input { flex-shrink: 0; width: 18px; height: 18px; margin: 2px 0 0; accent-color: var(--lf-brand); cursor: pointer }
+.integrations-hub .integration-section progress { display: block; width: 100%; height: 8px; margin: 4px 0 16px; overflow: hidden; border: 0; border-radius: 999px; background: var(--lf-subtle); -webkit-appearance: none; appearance: none; accent-color: var(--lf-brand) }
+.integrations-hub .integration-section progress::-webkit-progress-bar { border-radius: 999px; background: var(--lf-subtle) }
+.integrations-hub .integration-section progress::-webkit-progress-value { border-radius: 999px; background: linear-gradient(90deg, var(--lf-brand), #34c58c); transition: width .3s var(--lf-ease) }
+.integrations-hub .integration-section progress::-moz-progress-bar { border-radius: 999px; background: linear-gradient(90deg, var(--lf-brand), #34c58c) }
+
+/* ---------- Queue evidence ---------- */
+.integration-evidence { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 20px 0 }
+.integrations-hub .integration-evidence strong { position: relative; display: block; min-width: 0; padding: 14px 16px 14px 36px; border: 1px solid var(--lf-line); border-radius: 12px; background: linear-gradient(180deg, var(--lf-surface), var(--lf-surface-2)); color: var(--lf-ink); font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; box-shadow: var(--lf-shadow-xs) }
+.integration-evidence strong::before { content: ''; position: absolute; top: 50%; left: 16px; width: 8px; height: 8px; margin-top: -4px; border-radius: 50%; background: #19b377; box-shadow: 0 0 0 3px rgba(25, 179, 119, .18) }
+.integration-evidence strong:nth-child(2)::before { background: #6d93d6; box-shadow: 0 0 0 3px rgba(109, 147, 214, .18) }
+.integration-evidence strong:nth-child(3)::before { background: #e0a43a; box-shadow: 0 0 0 3px rgba(224, 164, 58, .18) }
+
+/* ---------- Credentials (secure cards) ---------- */
+.integrations-hub .integration-credential { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 16px; margin-top: 12px; padding: 16px 18px; border: 1px solid var(--lf-line); border-radius: 14px; background: linear-gradient(180deg, var(--lf-surface), var(--lf-surface-2)); box-shadow: var(--lf-shadow-xs) }
+.integration-credential-icon { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 12px; color: var(--lf-lime); background: radial-gradient(90% 90% at 100% 0%, color-mix(in srgb, var(--lf-glow-emerald) 35%, transparent), transparent 70%), linear-gradient(160deg, var(--lf-night-2), var(--lf-night)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--lf-night-ink) 10%, transparent), 0 6px 14px -8px rgba(6, 19, 14, .6) }
+.integrations-hub .integration-credential strong { display: block; color: var(--lf-ink); font-size: 14.5px; font-weight: 650; letter-spacing: -.01em; overflow-wrap: anywhere }
+.integrations-hub .integration-credential > div > p { max-width: none; margin: 4px 0 0; color: var(--lf-muted); font-size: 13px; line-height: 1.6 }
+.integration-credential-state { display: inline-flex; align-items: center; gap: 6px; padding: 0 8px; border: 1px solid var(--lf-line); border-radius: 999px; background: var(--lf-surface-2); color: var(--lf-muted); font-size: 12px; font-weight: 600; line-height: 1.6; white-space: nowrap; vertical-align: 1px }
+.integration-credential-state::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor }
+.integration-credential-state.is-connected { border-color: #a9dfc3; background: var(--lf-success-soft); color: var(--lf-success) }
+.integration-credential-state.is-connected::before { background: #19b377; box-shadow: 0 0 6px rgba(25, 179, 119, .8) }
+.integration-credential-state.is-pending { border-color: var(--lf-warning-line); background: var(--lf-warning-soft); color: var(--lf-warning) }
+.integration-credential-state.is-revoked { border-color: var(--lf-danger-line); background: var(--lf-danger-soft); color: var(--lf-danger) }
+.integration-credential-secret { display: inline-flex; align-items: center; gap: 8px; max-width: 100%; margin-top: 8px; padding: 2px 10px 2px 8px; overflow: hidden; border: 1px solid var(--lf-line); border-radius: 8px; background: var(--lf-subtle); color: var(--lf-faint); font-family: var(--lf-mono); font-size: 12px; letter-spacing: .14em; line-height: 1.8; white-space: nowrap }
+.integration-credential-secret::before { content: ''; flex-shrink: 0; width: 13px; height: 13px; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2385928c' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='5' y='11' width='14' height='10' rx='2'/%3E%3Cpath d='M8 11V8a4 4 0 0 1 8 0v3'/%3E%3C/svg%3E") no-repeat center / 13px }
+.integrations-hub .integration-credential:has(.is-revoked) .integration-credential-icon { color: #9fb3aa; background: linear-gradient(160deg, #d9e1dd, #c8d3ce); box-shadow: none }
+.integrations-hub .integration-credential:has(.is-revoked) .integration-credential-secret { text-decoration: line-through; text-decoration-color: var(--lf-line-strong) }
+.integrations-hub .integration-credential > .text-button { min-height: 36px; padding: 0 14px; border: 1px solid var(--lf-danger-line); border-radius: 10px; background: var(--lf-surface); color: var(--lf-danger); font-size: 13px }
+.integrations-hub .integration-credential > .text-button:hover:not(:disabled) { background: var(--lf-danger-soft); color: var(--lf-danger); text-decoration: none }
+.integrations-hub .integration-credential > div + div { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px }
+.integrations-hub .integration-credential > div + div > p { width: 100%; margin: 0; color: var(--lf-ink); font-size: 13px; font-weight: 600; text-align: right }
+.integrations-hub .integration-credential > div + div .secondary { min-height: 36px; padding: 0 13px; font-size: 13px }
+
+/* ---------- Receipt verification ---------- */
+.integrations-hub .integration-verify { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start; gap: 18px; background: linear-gradient(180deg, var(--lf-surface), var(--lf-surface-2)); transition: border-color .25s, background-color .25s }
+.integration-verify-state { display: grid; place-items: center; width: 48px; height: 48px; border: 1px dashed var(--lf-line-strong); border-radius: 14px; background: var(--lf-subtle); color: var(--lf-muted) }
+.integration-verify-body { min-width: 0 }
+.integration-verify-row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px; margin-top: 16px }
+.integrations-hub .integration-verify-row .integration-field { flex: 1 1 320px; margin: 0 }
+.integrations-hub .integration-verify-row .primary { min-height: 44px }
+.integrations-hub .integration-verify.is-checking .integration-verify-state { border-style: solid; border-color: var(--lf-info-line); background: var(--lf-info-soft); color: var(--lf-info) }
+.integrations-hub .integration-verify.is-checking .integration-verify-state svg { animation: lf-int-spin 1.6s linear infinite }
+.integrations-hub .integration-verify.is-failed .integration-verify-state { border-style: solid; border-color: var(--lf-danger-line); background: var(--lf-danger-soft); color: var(--lf-danger) }
+.integrations-hub .integration-verify.is-verified { border-color: var(--lf-success-line); background: radial-gradient(60% 120% at 0% 0%, color-mix(in srgb, var(--lf-glow-mint) 16%, transparent), transparent 70%), linear-gradient(180deg, var(--lf-surface), var(--lf-tint)) }
+.integrations-hub .integration-verify.is-verified .integration-verify-state { border: 0; background: linear-gradient(145deg, #19b377, #0a7a52); color: #fff; box-shadow: 0 0 0 5px rgba(25, 179, 119, .14), 0 10px 22px -10px rgba(10, 122, 82, .8) }
+
+/* ---------- Troubleshooting & administrator guide ---------- */
+.integrations-hub .integration-section details { border-top: 1px solid var(--lf-line) }
+.integrations-hub .integration-section > details:first-child { border-top: 0 }
+.integrations-hub .integration-section summary { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 54px; padding: 12px 0; color: var(--lf-ink); font-size: 14.5px; font-weight: 600; letter-spacing: -.01em; line-height: 1.45; list-style: none; cursor: pointer }
+.integrations-hub .integration-section summary::-webkit-details-marker { display: none }
+.integrations-hub .integration-section summary::after { content: ''; flex-shrink: 0; width: 28px; height: 28px; border: 1px solid var(--lf-line); border-radius: 50%; background: var(--lf-surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2356645e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m7 10 5 5 5-5'/%3E%3C/svg%3E") no-repeat center / 15px; transition: transform .25s var(--lf-ease), border-color .15s }
+.integrations-hub .integration-section summary:hover { color: var(--lf-brand-strong) }
+.integrations-hub .integration-section summary:hover::after { border-color: var(--lf-line-strong) }
+.integrations-hub .integration-section details[open] > summary::after { transform: rotate(180deg) }
+.integrations-hub .integration-section details > p { margin: 0 0 16px; color: var(--lf-muted) }
+.integrations-hub .integration-section > details:first-child > summary { min-height: 40px; padding: 0; font-size: 17.5px; letter-spacing: -.025em }
+.integrations-hub .integration-section > details:first-child[open] > summary { margin-bottom: 14px }
+.integrations-hub .integration-section > details:first-child > .integration-code { margin-bottom: 0 }
+
+/* ---------- Motion ---------- */
+@keyframes lf-int-flow { 0% { top: -18px; opacity: 0 } 20% { opacity: 1 } 80% { opacity: 1 } 100% { top: calc(100% + 13px); opacity: 0 } }
+@keyframes lf-int-pulse { 50% { box-shadow: 0 0 0 5px rgba(25, 179, 119, .08), 0 0 10px rgba(25, 179, 119, .5) } }
+@keyframes lf-int-spin { to { transform: rotate(360deg) } }
+@media (prefers-reduced-motion: reduce) {
+  .integration-hero-link::after, .integration-status.connected::before, .integration-live.is-on, .integrations-hub .integration-verify.is-checking .integration-verify-state svg { animation: none }
+  .integration-hero-link::after { display: none }
+  .integrations-hub .integration-card, .integrations-hub .integration-card:hover, .integrations-hub .integration-card:hover .integration-logo, .integrations-hub .integration-card:hover > .text-button svg { transform: none; transition: none }
+}
+
+/* ---------- Responsive (hub width) ---------- */
+@container lf-hub (max-width: 760px) {
+  .integrations-hub .integration-hero { grid-template-columns: minmax(0, 1fr); padding: 28px 24px }
+  .integration-hero-art { display: none }
+  .integrations-hub .integration-hero h2 { font-size: 27px }
+  .integrations-hub .integration-detail-heading { padding: 24px 22px }
+  .integrations-hub .integration-detail-heading .integration-logo { width: 58px; height: 58px; border-radius: 16px; font-size: 23px }
+}
+@container lf-hub (max-width: 560px) {
+  .integrations-hub .integration-hero { padding: 24px 20px; border-radius: var(--lf-radius-lg) }
+  .integrations-hub .integration-hero h2 { font-size: 24px }
+  .integrations-hub .integration-hero p:not(.eyebrow) { margin-bottom: 20px; font-size: 14.5px }
+  .integrations-hub .integration-hero .primary { width: 100% }
+  .integrations-hub .integration-toolbar .search { flex-basis: 100%; max-width: none }
+  .integrations-hub .integration-categories button { padding: 0 11px; font-size: 12.5px }
+  /* Compact cards: tile beside the name, description below, guide link as the footer. */
+  .integrations-hub .integration-card { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; column-gap: 14px; padding: 16px 16px 0 }
+  .integrations-hub .integration-card-top { display: contents }
+  .integrations-hub .integration-card .integration-logo { grid-column: 1; grid-row: 1 / span 2; align-self: center; width: 42px; height: 42px }
+  .integrations-hub .integration-card .integration-status { grid-column: 3; grid-row: 1; align-self: start }
+  .integrations-hub .integration-card .integration-category { grid-column: 2; grid-row: 1; align-self: center; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+  .integrations-hub .integration-card h2 { grid-column: 2 / -1; grid-row: 2; margin: 2px 0 0 }
+  .integrations-hub .integration-card > p:not(.integration-category) { grid-column: 1 / -1; grid-row: 3; margin-top: 12px }
+  .integrations-hub .integration-card > .text-button { grid-column: 1 / -1; grid-row: 4; width: auto; min-height: 46px; margin: 14px -16px 0; padding: 0 16px }
+  .integrations-hub .integration-detail-heading { flex-direction: column; align-items: flex-start; gap: 14px; padding: 22px 18px; border-radius: var(--lf-radius-lg) }
+  .integrations-hub .integration-detail-heading h2 { font-size: 23px }
+  .integration-detail-heading > div > p:not(.eyebrow) { font-size: 14px }
+  .integrations-hub .integration-detail-heading > .integration-status { align-self: flex-start }
+  .integrations-hub .integration-section { padding: 20px 16px }
+  .integrations-hub .integration-section ol > li { padding-left: 42px }
+  .integrations-hub .integration-section ul > li { padding-right: 12px }
+  .integration-evidence { grid-template-columns: minmax(0, 1fr) }
+  .integrations-hub .integration-credential { grid-template-columns: auto minmax(0, 1fr); gap: 12px 14px; padding: 14px }
+  .integrations-hub .integration-credential > :nth-child(3) { grid-column: 1 / -1; justify-self: start }
+  .integrations-hub .integration-credential > div + div { justify-content: flex-start }
+  .integrations-hub .integration-credential > div + div > p { text-align: left }
+  .integrations-hub .integration-verify { grid-template-columns: minmax(0, 1fr); gap: 14px }
+  .integration-verify-state { width: 42px; height: 42px; border-radius: 12px }
+  .integrations-hub .integration-verify-row .primary, .integrations-hub .integration-recipient .secondary { width: 100% }
+  .integrations-hub .integration-code > div:first-child { padding-left: 12px }
+  .integration-code-dots { display: none }
+  .integration-preview { height: 640px }
+}
+@media (max-width: 640px) {
+  .integrations-hub .integration-field > input:not([type=checkbox]):not([type=radio]) { font-size: 16px }
+}
+
+/* ---------- Dark theme: pastel surfaces (generated from the light values above; update both together) ---------- */
+:root[data-theme="dark"] .integration-categories { background: var(--lf-surface-2) }
+:root[data-theme="dark"] .integration-logo { background: linear-gradient(145deg, rgba(105, 200, 152, 0.14), rgba(105, 190, 146, 0.14)) }
+:root[data-theme="dark"] .logo-wordpress { background: linear-gradient(145deg, rgba(105, 163, 213, 0.14), rgba(105, 164, 210, 0.14)) }
+:root[data-theme="dark"] .logo-zapier { background: linear-gradient(145deg, rgba(255, 169, 105, 0.14), rgba(255, 163, 105, 0.14)) }
+:root[data-theme="dark"] .logo-make { background: linear-gradient(145deg, rgba(155, 105, 225, 0.14), rgba(153, 105, 226, 0.14)) }
+:root[data-theme="dark"] .logo-n8n { background: linear-gradient(145deg, rgba(235, 105, 125, 0.14), rgba(231, 105, 136, 0.14)) }
+:root[data-theme="dark"] .logo-sheets { background: linear-gradient(145deg, rgba(105, 195, 128, 0.14), rgba(105, 189, 129, 0.14)) }
+:root[data-theme="dark"] .logo-email { background: linear-gradient(145deg, rgba(255, 200, 105, 0.14), rgba(246, 195, 105, 0.14)) }
+:root[data-theme="dark"] .logo-crm { background: linear-gradient(145deg, rgba(105, 149, 220, 0.14), rgba(105, 148, 216, 0.14)) }
+:root[data-theme="dark"] .integrations-hub .integration-detail-heading { background: radial-gradient(45% 140% at 100% 0%, color-mix(in srgb, var(--lf-glow-mint) 20%, transparent), transparent 70%), radial-gradient(30% 90% at 70% 120%, color-mix(in srgb, var(--lf-glow-lime) 14%, transparent), transparent 70%), linear-gradient(180deg, var(--lf-surface), var(--lf-surface-2)) }
+:root[data-theme="dark"] .integration-browser-bar { background: linear-gradient(180deg, var(--lf-surface-2), var(--lf-surface-2)) }
+:root[data-theme="dark"] .integrations-hub .integration-section .integration-form-state { background: linear-gradient(180deg, var(--lf-surface-2), var(--lf-surface-2)) }
+
+/* Dark theme: lighter glyph inks so app tiles stay legible on dark surfaces. */
+:root[data-theme="dark"] .integration-logo { --tile-ink: #7fd8ab }
+:root[data-theme="dark"] .logo-wordpress { --tile-ink: #8cbfe0 }
+:root[data-theme="dark"] .logo-zapier { --tile-ink: #f39a6b }
+:root[data-theme="dark"] .logo-make { --tile-ink: #bba5f2 }
+:root[data-theme="dark"] .logo-n8n { --tile-ink: #f08aa2 }
+:root[data-theme="dark"] .logo-sheets { --tile-ink: #7bd29a }
+:root[data-theme="dark"] .logo-email { --tile-ink: #e6bd78 }
+:root[data-theme="dark"] .logo-crm { --tile-ink: #9dbdf5 }
+
+/* ---------- Dark theme: light surfaces in rgba, custom properties and interactive states (generated; update with their light values) ---------- */
+:root[data-theme="dark"] .integrations-hub .integration-card:hover > .text-button { background: var(--lf-overlay) }
+:root[data-theme="dark"] .integration-browser-bar > span { background: var(--lf-surface-2) }
+:root[data-theme="dark"] .integrations-hub .integration-credential:has(.is-revoked) .integration-credential-icon { background: linear-gradient(160deg, var(--lf-surface-2), rgba(105, 135, 121, .14)) }
