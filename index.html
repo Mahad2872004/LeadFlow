@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="description" content="LeadFlow finds businesses worth talking to, analyzes their website with AI, matches what they’re missing to the services you sell, and keeps every follow-up on track." />
+    <meta name="description" content="LeadFlow finds businesses worth talking to, analyzes their website with AI, matches what they’re missing to the services you sell, finds the right contact, drafts outreach you review, and keeps every follow-up on track." />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#06130e" />
     <title>LeadFlow — Know what every lead needs before the first call</title>
@@ -11,7 +11,8 @@
       (function () {
         try {
           var path = location.pathname.replace(/\/+$/, '') || '/'
-          if (!/^\/(app(\/.*)?|login|signup|client-portal)$/.test(path)) return
+          // The embeddable inquiry form stays light; everything else follows the saved choice or the system (src/lib/theme.ts).
+          if (path === '/inquiry') return
           var stored = localStorage.getItem('leadflow.theme')
           var dark = stored === 'dark' || (stored !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches)
           document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light')

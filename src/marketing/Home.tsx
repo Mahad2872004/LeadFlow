@@ -8,7 +8,7 @@ import { signupOpen } from './access'
 const steps: { id: string; label: string; title: string; text: string; visual: ReactNode }[] = [
   { id: 'find', label: 'Find', title: 'Find businesses worth talking to', text: 'Search a business directory by industry and location, search people and companies with your Apollo account, or import a CSV. Duplicates are caught before they reach your pipeline.', visual: <FindVisual /> },
   { id: 'analyze', label: 'Analyze', title: 'Let AI read their website', text: 'LeadFlow reads public pages, checks SEO, booking and contact options, measures speed with PageSpeed Insights and spots their tools. Gemini summarizes the business.', visual: <AnalyzeVisual /> },
-  { id: 'pitch', label: 'Pitch', title: 'Lead with what they’re missing', text: 'Findings are matched to the services you sell. Each opportunity explains why, the possible benefit, and a question to open the conversation.', visual: <PitchVisual /> },
+  { id: 'pitch', label: 'Pitch', title: 'Lead with what they’re missing', text: 'Findings are matched to the services you sell. LeadFlow finds the lead’s public contacts and drafts an email, WhatsApp or LinkedIn message based on what it found. You review it and send it yourself.', visual: <PitchVisual /> },
   { id: 'follow', label: 'Follow through', title: 'Keep every conversation moving', text: 'Statuses, follow-up tasks and full history show what’s due today. When a deal is won, start client onboarding with a private checklist link.', visual: <FollowVisual /> },
 ]
 
@@ -67,6 +67,12 @@ function Bento() {
             </div>
           )}
           {item.icon === 'globe' && <div className="mk-card-visual mk-chip-row" aria-hidden="true">{['HTML', 'WordPress', 'React'].map(chip => <span key={chip} className="mk-chip">{chip}</span>)}</div>}
+          {item.icon === 'mail' && (
+            <div className="mk-card-visual mk-outreach-card" aria-hidden="true">
+              <div className="mk-chip-row">{['Email', 'WhatsApp', 'LinkedIn'].map(chip => <span key={chip} className="mk-chip">{chip}</span>)}<span className="mk-chip is-soft">You send it</span></div>
+              <p><span className="mk-type mk-type-observed">Observed</span>“I couldn’t find an online booking option on the pages I looked at…”</p>
+            </div>
+          )}
           {item.icon === 'clipboard' && (
             <div className="mk-card-visual" aria-hidden="true">
               <div className="mk-ready"><span>Readiness</span><b>7 of 9 items</b></div>
@@ -83,6 +89,7 @@ function Bento() {
 const ownerPoints = [
   'Know their speed score, what’s missing and what they sell before you dial.',
   'Pitch services they actually need, with evidence you can show them.',
+  'Open with a drafted message that only says what the report actually found.',
   'See what’s due today, so no conversation goes quiet by accident.',
   'Start with a form link or a CSV. No setup project.',
 ]
@@ -91,10 +98,11 @@ const builderPoints: [GlyphName, string][] = [
   ['key', 'Scoped API tokens, stored only as hashes, with rotation and revocation.'],
   ['shield', 'The website reader refuses private networks and stops at logins.'],
   ['sparkles', 'Website text is passed to the AI as data; its output is schema-checked and must cite real evidence.'],
+  ['mail', 'Outreach drafts are checked in code: claims the evidence can’t support are refused, and nothing is ever sent for you.'],
   ['zap', 'Idempotent request IDs: retrying a request never duplicates a lead.'],
 ]
 const uses = [
-  { icon: 'compass' as GlyphName, title: 'Web and marketing agencies', text: 'See what a prospect’s website needs before the first call, and pitch the service that fixes it.', flow: ['Discovery', 'Report', 'Proposal'] },
+  { icon: 'compass' as GlyphName, title: 'Web and marketing agencies', text: 'See what a prospect’s website needs before the first call, and pitch the service that fixes it.', flow: ['Discovery', 'Report', 'Outreach'] },
   { icon: 'users' as GlyphName, title: 'Consultants', text: 'Keep a contact’s goals and context together, from first interest to a useful discovery call.', flow: ['Inquiry', 'Contacted', 'Discovery call'] },
   { icon: 'calendar' as GlyphName, title: 'Service businesses', text: 'Give every incoming request a clear owner and next step, so none of them goes cold.', flow: ['Request', 'Review', 'Follow-up'] },
 ]
@@ -104,9 +112,9 @@ export default function Home() {
     <section className="mk-hero">
       <div className="mk-stage mk-dark">
         <div className="mk-wrap mk-hero-copy">
-          <a className="mk-announce" href="/features#business-reports"><b>New</b>AI business reports, with the evidence attached<Glyph name="arrowRight" size={15} /></a>
+          <a className="mk-announce" href="/features#outreach"><b>New</b>Contacts and outreach drafts, based on the evidence<Glyph name="arrowRight" size={15} /></a>
           <h1>Know what every lead needs <em>before</em> the first call.</h1>
-          <p className="mk-lede">LeadFlow finds businesses worth talking to, reads their website with AI, and matches every gap to a service you sell. Then it keeps each follow-up on track.</p>
+          <p className="mk-lede">LeadFlow finds businesses worth talking to, reads their website with AI, and matches every gap to a service you sell. Then it finds the right contact, drafts a first message for you to review, and keeps each follow-up on track.</p>
           <div className="mk-actions">
             <CTA />
             <CTA href="#product-preview" secondary>Take a closer look</CTA>
@@ -131,7 +139,7 @@ export default function Home() {
     <section className="mk-section">
       <div className="mk-wrap">
         <SectionHead center eyebrow="The workspace" title={<>Every lead, report and follow-up. <em>One calm place.</em></>}
-          text="Leads, business reports, follow-ups and history stay together, so the next conversation starts where the last one ended." />
+          text="Leads, business reports, contacts, outreach drafts and follow-ups stay together, so the next conversation starts where the last one ended." />
         <div data-reveal><ProductPreview /></div>
       </div>
     </section>
