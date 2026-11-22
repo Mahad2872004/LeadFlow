@@ -1,0 +1,281 @@
+/* Sales pipeline and deal management (M9): SalesPipeline, DealDetail, DealForm, SalesAnalytics, PipelineSettings, LeadDeals,
+   TaskForm. Builds on the tokens in src/index.css and the primitives in src/App.css (.panel, .section-heading, .filters,
+   .view-toggle, buttons, form fields, dialog, .empty). Every colour is a token, so light and dark themes both work; a
+   stage's own colour arrives as --sp-stage.
+   Sections: shared · summary · board · list · forms & feedback · deal view · timeline · follow-ups & meetings · analytics
+   · settings · lead pieces · task form · responsive */
+
+/* ---------- Shared ---------- */
+.sp-muted { color: var(--lf-muted); font-size: 13px }
+.sp-link { padding: 0; border: 0; background: none; color: var(--lf-ink); font: inherit; font-weight: 600; text-align: left; cursor: pointer }
+.sp-link:hover { color: var(--lf-brand-strong); text-decoration: underline; text-underline-offset: 3px }
+.sp-link:focus-visible { border-radius: 4px; outline: 2px solid var(--lf-brand); outline-offset: 2px }
+.sp-stage { display: inline-flex; align-items: center; gap: 6px; padding: 2px 9px 2px 7px; border: 1px solid var(--lf-line); border-radius: 999px; background: var(--lf-surface); color: var(--lf-text); font-size: 12px; font-weight: 600; line-height: 1.5; white-space: nowrap }
+.sp-stage i, .sp-column-head i, .sp-swatch { flex-shrink: 0; width: 8px; height: 8px; border-radius: 50%; background: var(--sp-stage, var(--lf-muted)) }
+.sp-stage.is-won { border-color: var(--lf-success-line); background: var(--lf-success-soft); color: var(--lf-success) }
+.sp-stage.is-lost { border-color: var(--lf-danger-line); background: var(--lf-danger-soft); color: var(--lf-danger) }
+.sp-chip { display: inline-flex; align-items: center; gap: 4px; padding: 1px 8px; border: 1px solid var(--lf-line); border-radius: 999px; background: var(--lf-subtle); color: var(--lf-muted); font-size: 11.5px; font-weight: 600; line-height: 1.6; white-space: nowrap }
+.sp-chip.is-high { border-color: var(--lf-warning-line); background: var(--lf-warning-soft); color: var(--lf-warning) }
+.sp-chip.is-late, .is-late { color: var(--lf-danger) }
+.sp-chip.is-late { border-color: var(--lf-danger-line); background: var(--lf-danger-soft) }
+.sp-totals { display: inline-flex; flex-wrap: wrap; gap: 2px 10px }
+.sp-totals > span + span::before { content: '·'; margin-right: 10px; color: var(--lf-faint); font-weight: 400 }
+.sp-pre { white-space: pre-wrap; overflow-wrap: anywhere }
+.sp-quote { display: block; margin-top: 6px; padding-left: 10px; border-left: 3px solid var(--lf-line-strong); color: var(--lf-muted); font-size: 13px; white-space: pre-wrap }
+.sp-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px }
+.sp-actions .primary, .sp-actions .secondary, .sp-block-head .secondary { min-height: 34px; padding: 0 12px; font-size: 13px }
+.sp-inline { display: inline-flex; align-items: center; gap: 8px; margin: 0; color: var(--lf-muted); font-size: 13px; font-weight: 550 }
+.sp-loading { padding: 28px 22px; color: var(--lf-muted); font-size: 14px }
+.sp-inset { margin: 0 22px 16px }
+/* Fields outside a <form> (filters inside the deal view, settings rows) get the same look as form fields. */
+:where(.sp-detail, .sp-settings, .sp-period, .sp-composer-foot) :where(select, input:not([type=checkbox]):not([type=radio])) { min-height: 36px; padding: 6px 10px; border: 1px solid var(--lf-line-strong); border-radius: 9px; background-color: var(--lf-surface); color: var(--lf-ink); font: inherit; font-size: 13.5px }
+:where(.sp-detail, .sp-settings, .sp-period, .sp-composer-foot) :where(select, input):focus { border-color: var(--lf-brand); outline: none; box-shadow: 0 0 0 3px var(--lf-brand-ring) }
+
+/* ---------- Summary cards ---------- */
+.sp-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 16px }
+.sp-summary > div { display: grid; align-content: start; gap: 4px; min-width: 0; padding: 16px 18px; border: 1px solid var(--lf-line); border-radius: var(--lf-radius-lg); background: var(--lf-surface); box-shadow: var(--lf-shadow-xs) }
+.sp-summary span { color: var(--lf-muted); font-size: 12.5px; font-weight: 600 }
+.sp-summary strong { color: var(--lf-ink); font-size: 22px; font-weight: 650; letter-spacing: -.02em; line-height: 1.25; overflow-wrap: anywhere }
+.sp-summary strong .sp-muted { font-size: 15px; font-weight: 550 }
+.sp-summary small { color: var(--lf-muted); font-size: 12px; line-height: 1.45 }
+
+/* ---------- Pipeline panel & board ---------- */
+.sp-heading { align-items: flex-start; gap: 12px; flex-wrap: wrap }
+.sp-heading-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px }
+.sp-heading-actions .primary, .sp-heading-actions .secondary { min-height: 38px }
+/* Inline-size containment keeps the columns' combined width from widening the page; the board scrolls inside its panel. */
+.sp-board { display: grid; grid-template-columns: repeat(var(--sp-columns, 10), minmax(232px, 1fr)); gap: 12px; padding: 4px 16px 18px; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: thin; contain: inline-size }
+.sp-column { display: flex; flex-direction: column; min-width: 0; border: 1px solid var(--lf-line); border-radius: 14px; background: var(--lf-subtle); transition: border-color .15s, box-shadow .15s, background-color .15s }
+.sp-column.is-over { border-color: var(--lf-brand); background: var(--lf-brand-soft); box-shadow: 0 0 0 3px var(--lf-brand-ring) }
+.sp-column.is-won .sp-column-head { box-shadow: inset 0 3px 0 var(--lf-success) }
+.sp-column.is-lost .sp-column-head { box-shadow: inset 0 3px 0 var(--lf-danger) }
+.sp-column-head { padding: 12px 12px 8px; border-radius: 14px 14px 0 0; box-shadow: inset 0 3px 0 var(--sp-stage) }
+.sp-column-head > div { display: flex; align-items: center; gap: 8px }
+.sp-column-head h3 { flex: 1; min-width: 0; margin: 0; overflow: hidden; color: var(--lf-ink); font-size: 13.5px; text-overflow: ellipsis; white-space: nowrap }
+.sp-column-head p { min-height: 18px; margin: 4px 0 0; color: var(--lf-text); font-size: 12.5px; font-weight: 600 }
+.sp-column-list { display: grid; align-content: start; gap: 8px; min-height: 140px; padding: 4px 8px 10px }
+.sp-column-empty { margin: 0; padding: 20px 8px; border: 1px dashed var(--lf-line-strong); border-radius: 10px; color: var(--lf-muted); font-size: 12.5px; text-align: center }
+.sp-column-more { margin: 2px 4px 0; color: var(--lf-muted); font-size: 12px; line-height: 1.45 }
+.sp-card { display: grid; gap: 8px; padding: 12px; border: 1px solid var(--lf-line); border-radius: 12px; background: var(--lf-surface); box-shadow: var(--lf-shadow-xs); cursor: grab; transition: box-shadow .15s, transform .15s, opacity .15s }
+.sp-card:hover { box-shadow: var(--lf-shadow); transform: translateY(-1px) }
+.sp-card:active { cursor: grabbing }
+.sp-card.priority-high { box-shadow: inset 3px 0 0 var(--lf-warning), var(--lf-shadow-xs) }
+.sp-card.is-busy { opacity: .6; cursor: progress }
+.sp-card-open { display: grid; gap: 2px; padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer }
+.sp-card-open strong { color: var(--lf-ink); font-size: 13.5px; line-height: 1.35; overflow-wrap: anywhere }
+.sp-card-open span { color: var(--lf-muted); font-size: 12.5px; overflow-wrap: anywhere }
+.sp-card-open:focus-visible { border-radius: 6px; outline: 2px solid var(--lf-brand); outline-offset: 3px }
+.sp-card-value { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 8px; margin: 0; font-size: 13px }
+.sp-card-value b { color: var(--lf-ink); font-weight: 650 }
+.sp-card-value b.sp-muted { color: var(--lf-muted); font-size: 12.5px; font-weight: 550 }
+.sp-card-value span { color: var(--lf-muted); font-size: 12px }
+.sp-card-meta { display: flex; flex-wrap: wrap; gap: 4px; margin: 0 }
+.sp-card-meta:empty { display: none }
+.sp-card-move select { width: 100%; min-height: 32px; padding: 0 28px 0 10px; border: 1px solid var(--lf-line); border-radius: 8px; background-color: var(--lf-subtle); color: var(--lf-text); font-size: 12.5px; font-weight: 550; cursor: pointer }
+.sp-card-move select:focus { border-color: var(--lf-brand); box-shadow: 0 0 0 3px var(--lf-brand-ring); outline: none }
+.sp-empty { margin: 0 16px 16px; border: 1px dashed var(--lf-line-strong); border-radius: 14px }
+.sp-floating-confirm { position: fixed; z-index: 30; right: 24px; bottom: 24px; display: grid; gap: 12px; width: min(440px, calc(100vw - 32px)); padding: 16px 18px; border: 1px solid var(--lf-warning-line); border-radius: 14px; background: var(--lf-surface); box-shadow: var(--lf-shadow-pop); color: var(--lf-text); font-size: 13.5px; line-height: 1.55 }
+.sp-floating-confirm p { margin: 0 }
+
+/* ---------- List ---------- */
+.sp-list-filters { padding-top: 0 }
+.sp-table-wrap { overflow-x: auto; border-top: 1px solid var(--lf-line); contain: inline-size }
+.sp-table { width: 100%; border-collapse: collapse; font-size: 13.5px }
+.sp-table th { padding: 10px 14px; border-bottom: 1px solid var(--lf-line); background: var(--lf-subtle); color: var(--lf-muted); font-size: 12px; font-weight: 600; text-align: left; white-space: nowrap }
+.sp-table td { padding: 12px 14px; border-bottom: 1px solid var(--lf-line); color: var(--lf-text); vertical-align: top }
+.sp-table td small { display: block; margin-top: 2px; color: var(--lf-muted); font-size: 12px }
+.sp-table tbody tr:hover { background: var(--lf-hover) }
+.sp-table .sp-num { font-variant-numeric: tabular-nums; white-space: nowrap }
+.sp-sort { padding: 0; border: 0; background: none; color: inherit; font: inherit; cursor: pointer }
+.sp-sort:hover { color: var(--lf-ink) }
+.sp-pager { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; padding: 12px 16px; color: var(--lf-muted); font-size: 13px }
+.sp-pager span { margin-right: auto }
+.sp-pager .secondary { min-height: 34px; padding: 0 12px; font-size: 13px }
+
+/* ---------- Forms & feedback ---------- */
+.sp-form small { display: block; margin-top: 5px; color: var(--lf-muted); font-size: 12px; font-weight: 400; line-height: 1.45 }
+.sp-intro { margin: -4px 0 18px; color: var(--lf-muted); font-size: 13.5px; line-height: 1.55 }
+.sp-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 14px }
+.sp-row-3 { grid-template-columns: repeat(3, minmax(0, 1fr)) }
+.sp-notice, .sp-error { margin: 0 0 14px; padding: 10px 14px; border: 1px solid; border-radius: 12px; font-size: 13.5px; line-height: 1.5; overflow-wrap: anywhere }
+.sp-notice { border-color: var(--lf-success-line); background: var(--lf-success-soft); color: var(--lf-success) }
+.sp-error { border-color: var(--lf-danger-line); background: var(--lf-danger-soft); color: var(--lf-danger) }
+.sp-confirm, .sp-suggest { display: grid; gap: 12px; margin: 0 0 14px; padding: 14px 16px; border: 1px solid var(--lf-warning-line); border-radius: 14px; background: var(--lf-warning-soft); color: var(--lf-text); font-size: 13.5px; line-height: 1.55 }
+.sp-confirm p, .sp-suggest p { margin: 0 }
+.sp-confirm label { margin: 0 }
+.sp-suggest { border-color: var(--lf-info-line); background: var(--lf-info-soft) }
+.sp-caution { margin: -4px 0 16px; padding: 10px 14px; border: 1px solid var(--lf-warning-line); border-radius: 12px; background: var(--lf-warning-soft); color: var(--lf-text); font-size: 13px }
+
+/* ---------- Deal view (dialog#deal-detail) ---------- */
+dialog#deal-detail { width: min(1040px, calc(100vw - 32px)); max-height: min(calc(100dvh - 40px), 1100px); padding: 0; overflow: hidden auto; background: var(--lf-bg); overscroll-behavior: contain }
+dialog#deal-detail > .modal-head { position: sticky; z-index: 2; top: 0; margin: 0; padding: 18px 22px 16px 28px; border-bottom: 1px solid var(--lf-line); background: var(--lf-surface) }
+.sp-detail { padding: 20px 28px 28px; color: var(--lf-text); font-size: 14px; line-height: 1.55 }
+.sp-detail h3 { margin: 0 0 10px; color: var(--lf-ink); font-size: 15px; font-weight: 650; letter-spacing: -.01em }
+.sp-detail h4 { margin: 16px 0 8px; color: var(--lf-ink); font-size: 13.5px }
+.sp-detail p { margin: 0 0 6px }
+.sp-detail-head { display: grid; gap: 14px; margin-bottom: 16px }
+.sp-detail-who { display: flex; flex-wrap: wrap; align-items: center; gap: 8px }
+.sp-detail-who p { flex-basis: 100%; margin: 0; color: var(--lf-text) }
+.sp-facts { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 1px; margin: 0; overflow: hidden; border: 1px solid var(--lf-line); border-radius: 14px; background: var(--lf-line) }
+.sp-facts > div { padding: 12px 14px; background: var(--lf-surface) }
+.sp-facts dt { color: var(--lf-muted); font-size: 12px; font-weight: 600 }
+.sp-facts dd { margin: 2px 0 0; color: var(--lf-ink); font-size: 15px; font-weight: 650; overflow-wrap: anywhere }
+.sp-tabs { display: flex; gap: 4px; width: fit-content; max-width: 100%; margin: 4px 0 16px; padding: 4px; overflow-x: auto; border: 1px solid var(--lf-line); border-radius: 12px; background: var(--lf-surface); box-shadow: var(--lf-shadow-xs); scrollbar-width: none }
+.sp-tabs button { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 14px; border: 0; border-radius: 9px; background: none; color: var(--lf-muted); font-size: 13.5px; font-weight: 600; white-space: nowrap }
+.sp-tabs button:hover { background: var(--lf-subtle); color: var(--lf-ink) }
+.sp-tabs button.active { background: var(--lf-accent-bg); color: #fff }
+.sp-tabs button.active .number-tag { border-color: transparent; background: rgba(255, 255, 255, .2); color: #fff }
+.sp-tabs button:focus-visible { outline: 2px solid var(--lf-brand); outline-offset: -2px }
+.sp-section-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px }
+.sp-card-block { min-width: 0; padding: 18px; border: 1px solid var(--lf-line); border-radius: var(--lf-radius-lg); background: var(--lf-surface); box-shadow: var(--lf-shadow-xs) }
+.sp-card-block.sp-wide, .sp-wide { grid-column: 1 / -1 }
+.sp-block-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px }
+.sp-block-head h3 { margin: 0 }
+.sp-card-block .sp-actions { margin-top: 10px }
+.sp-won { background: var(--lf-success) }
+.sp-handoff, .sp-reopen { display: grid; gap: 10px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--lf-line) }
+.sp-reopen { display: flex; flex-wrap: wrap; align-items: center; gap: 8px }
+.sp-handoff p { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; color: var(--lf-success) }
+.sp-handoff .sp-quote { flex-basis: 100% }
+.sp-dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 16px; margin: 0 }
+.sp-dl dt { color: var(--lf-muted); font-size: 12px; font-weight: 600 }
+.sp-dl dd { margin: 2px 0 0; color: var(--lf-ink); overflow-wrap: anywhere }
+.sp-dl dd small { display: block; color: var(--lf-muted); font-size: 12px }
+.sp-dl a { color: var(--lf-brand-strong) }
+.sp-contacts, .sp-findings, .sp-history, .sp-events, .sp-tasks, .sp-meetings, .sp-drafts, .sp-closing, .sp-bars, .sp-stage-list, .sp-archived { margin: 0; padding: 0; list-style: none }
+.sp-contacts li { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; padding: 8px 0; border-top: 1px solid var(--lf-line) }
+.sp-contacts li > span:last-child { display: flex; flex-basis: 100%; flex-wrap: wrap; gap: 4px 12px; font-size: 13px }
+.sp-contacts a { color: var(--lf-brand-strong) }
+.sp-findings li { padding: 4px 0; font-size: 13px }
+.sp-history li { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; padding: 7px 0; border-top: 1px solid var(--lf-line); font-size: 13.5px }
+.sp-history li:first-child { border-top: 0 }
+.sp-history time { margin-left: auto; color: var(--lf-muted); font-size: 12.5px }
+.sp-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--lf-info) }
+.sp-dot.is-won { background: var(--lf-success) }
+.sp-dot.is-lost { background: var(--lf-danger) }
+.sp-archive { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--lf-line) }
+.sp-archive .sp-confirm { margin: 0 }
+
+/* ---------- Timeline ---------- */
+.sp-timeline { display: grid; gap: 14px }
+.sp-composer { padding: 16px 18px; border: 1px solid var(--lf-line); border-radius: var(--lf-radius-lg); background: var(--lf-surface); box-shadow: var(--lf-shadow-xs) }
+.sp-composer .sp-muted { margin-bottom: 10px }
+.sp-segment, .sp-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px }
+.sp-segment button, .sp-chips button { min-height: 32px; padding: 0 12px; border: 1px solid var(--lf-line); border-radius: 999px; background: var(--lf-surface); color: var(--lf-muted); font-size: 12.5px; font-weight: 600 }
+.sp-segment button[aria-pressed=true] { border-color: var(--lf-ink); background: var(--lf-accent-bg); color: #fff }
+.sp-chips { margin: 0 }
+.sp-chips button[aria-pressed=true] { border-color: var(--lf-brand); background: var(--lf-brand-soft); color: var(--lf-brand-strong) }
+.sp-composer-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 10px }
+.sp-composer-foot .primary { margin-left: auto; min-height: 36px }
+.sp-composer-foot .sp-muted { margin: 0 }
+.sp-composer .sp-notice { margin: 12px 0 0 }
+.sp-events { display: grid; gap: 0; padding: 4px 18px; border: 1px solid var(--lf-line); border-radius: var(--lf-radius-lg); background: var(--lf-surface) }
+.sp-events li { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 12px; padding: 12px 0; border-top: 1px solid var(--lf-line) }
+.sp-events li:first-child { border-top: 0 }
+.sp-events p { margin: 0 0 3px }
+.sp-event-icon { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 9px; background: var(--lf-subtle); color: var(--lf-muted) }
+.sp-events .is-stage .sp-event-icon { background: var(--lf-info-soft); color: var(--lf-info) }
+.sp-events .is-outreach .sp-event-icon { background: var(--lf-ai-soft); color: var(--lf-ai) }
+.sp-events .is-task .sp-event-icon, .sp-events .is-meeting .sp-event-icon { background: var(--lf-brand-soft); color: var(--lf-brand-strong) }
+.sp-more { justify-self: center }
+
+/* ---------- Follow-ups & meetings ---------- */
+.sp-tasks li, .sp-meetings li, .sp-drafts li { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 6px 12px; padding: 12px 0; border-top: 1px solid var(--lf-line) }
+.sp-tasks li:first-child, .sp-meetings li:first-child, .sp-drafts li:first-child { border-top: 0 }
+.sp-tasks li > div, .sp-meetings li > div:first-child, .sp-drafts li > div { flex: 1 1 220px; min-width: 0 }
+.sp-tasks li p, .sp-meetings li p, .sp-drafts li p { margin: 2px 0 0 }
+.sp-tasks .is-completed strong, .sp-tasks .is-cancelled strong { color: var(--lf-muted); text-decoration: line-through }
+.sp-meetings .is-cancelled strong, .sp-meetings .is-no_show strong { color: var(--lf-muted) }
+.sp-meetings strong + .sp-chip { margin-left: 8px }
+.sp-meetings a { color: var(--lf-brand-strong) }
+.sp-meetings .sp-actions, .sp-meetings .sp-confirm { flex-basis: 100% }
+.sp-subform { margin-bottom: 14px; padding: 14px; border: 1px solid var(--lf-line); border-radius: 12px; background: var(--lf-subtle) }
+.sp-drafts .sp-chip { margin-left: 6px }
+
+/* ---------- Analytics ---------- */
+.sp-period { display: flex; flex-wrap: wrap; align-items: center; gap: 10px }
+.sp-analytics-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 16px }
+.sp-results { padding: 0 22px 20px }
+.sp-bars { display: grid; gap: 10px; padding: 0 22px 20px }
+.sp-bars li { display: grid; grid-template-columns: minmax(90px, 34%) minmax(0, 1fr) auto; align-items: center; gap: 12px; font-size: 13px }
+.sp-bar-label { overflow: hidden; color: var(--lf-text); text-overflow: ellipsis; white-space: nowrap }
+.sp-bar-track { height: 8px; overflow: hidden; border-radius: 999px; background: var(--lf-track) }
+.sp-bar-track i { display: block; height: 100%; border-radius: inherit; background: var(--sp-stage, var(--lf-brand)) }
+.sp-bar-track i:not([style*='width: 0%']) { min-width: 3px }
+.sp-bar-value { color: var(--lf-ink); font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap }
+.sp-closing { padding: 0 22px 18px }
+.sp-closing li { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 12px; padding: 9px 0; border-top: 1px solid var(--lf-line); font-size: 13.5px }
+.sp-closing li:first-child { border-top: 0 }
+.sp-footnote { margin: 0 0 16px; color: var(--lf-muted); font-size: 12.5px }
+
+/* ---------- Settings ---------- */
+.sp-settings h3 { margin: 18px 0 6px; color: var(--lf-ink); font-size: 15px }
+.sp-settings h3:first-of-type { margin-top: 4px }
+.sp-settings h4 { margin: 16px 0 8px; font-size: 13.5px }
+.sp-stage-list { display: grid; gap: 6px; margin: 12px 0 }
+.sp-stage-list li { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid var(--lf-line); border-radius: 12px; background: var(--lf-surface); box-shadow: inset 3px 0 0 var(--sp-stage) }
+.sp-stage-list li > input { flex: 1 1 160px; min-width: 0 }
+.sp-swatch { width: 12px; height: 12px }
+.sp-prob { display: inline-flex; align-items: center; gap: 4px; margin: 0; color: var(--lf-muted); font-size: 13px }
+.sp-prob input { width: 58px }
+.sp-count { min-width: 56px }
+.sp-row-actions { display: inline-flex; align-items: center; gap: 4px; margin-left: auto }
+.sp-row-actions .primary { min-height: 32px; padding: 0 12px; font-size: 13px }
+.sp-row-actions .icon-button { width: 32px; min-width: 32px; height: 32px; min-height: 32px }
+.sp-color { margin: 0 }
+.sp-color select { box-shadow: inset 4px 0 0 var(--sp-stage) }
+.sp-color.is-compact select { width: 112px; padding-left: 14px }
+.sp-add-stage { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) auto; align-items: end; gap: 0 10px; padding: 12px; border: 1px dashed var(--lf-line-strong); border-radius: 12px }
+.sp-add-stage label { margin-bottom: 0 }
+.sp-add-stage .secondary { min-height: 42px }
+.sp-archived li { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 6px 0 }
+.sp-deal-settings { margin-top: 8px; padding-top: 6px; border-top: 1px solid var(--lf-line) }
+dialog:has(.sp-settings) { width: min(820px, calc(100vw - 32px)) }
+
+/* ---------- Lead pieces ---------- */
+.sp-lead-deals { margin-top: 18px }
+.sp-lead-deals h3 { margin: 0 }
+.sp-lead-deals ul { margin: 0; padding: 0; list-style: none }
+.sp-lead-deals li { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; padding: 8px 0; border-top: 1px solid var(--lf-line); font-size: 13.5px }
+.sp-lead-deals li > .sp-muted { flex-basis: 100% }
+.sp-suggest-lead { margin: 0 28px 16px }
+.sp-suggest-lead ul { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none }
+.sp-suggest-lead li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px }
+.sp-suggest-lead .secondary { min-height: 32px; padding: 0 12px; font-size: 13px }
+
+/* ---------- Task form ---------- */
+.task-form-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 14px }
+.task-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1100px) {
+  .sp-summary { grid-template-columns: repeat(2, minmax(0, 1fr)) }
+  .sp-facts { grid-template-columns: repeat(3, minmax(0, 1fr)) }
+}
+@media (max-width: 760px) {
+  .sp-board { grid-template-columns: repeat(var(--sp-columns, 10), minmax(248px, 84vw)); padding-inline: 12px; scroll-snap-type: x mandatory }
+  .sp-column { scroll-snap-align: start }
+  .sp-card { cursor: default }
+  .sp-section-grid, .sp-analytics-grid, .sp-row, .sp-row-3, .sp-dl, .task-form-row { grid-template-columns: minmax(0, 1fr) }
+  .sp-facts { grid-template-columns: repeat(2, minmax(0, 1fr)) }
+  .sp-detail { padding: 16px }
+  dialog#deal-detail > .modal-head { padding: 14px 16px }
+  .sp-add-stage { grid-template-columns: minmax(0, 1fr) }
+  .sp-add-stage label { margin-bottom: 10px }
+  .sp-row-actions { margin-left: 0 }
+  .sp-heading-actions { width: 100% }
+  .sp-heading-actions .view-toggle { margin-right: auto }
+  .sp-closing li { grid-template-columns: minmax(0, 1fr) auto }
+  .sp-closing li > span:last-child { grid-column: 1 / -1 }
+  .sp-suggest-lead { margin-inline: 16px }
+}
+@media (max-width: 480px) {
+  .sp-summary { grid-template-columns: minmax(0, 1fr) }
+  .sp-summary strong { font-size: 19px }
+  .sp-bars li { grid-template-columns: minmax(0, 1fr) auto; }
+  .sp-bar-track { grid-column: 1 / -1; grid-row: 2 }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sp-card, .sp-column { transition: none }
+  .sp-card:hover { transform: none }
+}

@@ -5,9 +5,9 @@ import { ActivityTimeline } from './components/ActivityTimeline'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { LeadForm } from './components/LeadForm'
 import { Modal } from './components/Modal'
-import { activity, changeStatus, createLead, createTask, statuses, today, toggleTask, updateLead, sources, type Data, type Lead, type LeadInput } from './lib/model'
+import { activity, cancelTask, changeStatus, createLead, createTask, statuses, toggleTask, updateLead, sources, type Data, type Lead, type LeadInput } from './lib/model'
 import { isData, STORAGE_KEY } from './lib/storage'
-import { accessDenied, loadWorkspace, saveWorkspace, type WorkspaceSummary } from './lib/backend'
+import { accessDenied, listWorkspaceMembers, loadWorkspace, saveWorkspace, type WorkspaceSummary } from './lib/backend'
 import { useAuth, useWorkspaces } from './lib/session'
 import { sampleData } from './lib/seed'
 import { Sidebar, type Page } from './components/Sidebar'
@@ -34,6 +34,15 @@ import { navigation } from './lib/pages'
 import { longDayLabel } from './lib/insights'
 import { ThemeToggle } from './components/ThemeToggle'
 import { setPreference } from './lib/theme'
+import { SalesPipeline } from './components/SalesPipeline'
+import { SalesAnalytics } from './components/SalesAnalytics'
+import { DealDetail } from './components/DealDetail'
+import { DealForm, type DealStart } from './components/DealForm'
+import { PipelineSettings } from './components/PipelineSettings'
+import { LeadDeals, StageSuggestion } from './components/LeadDeals'
+import { TaskForm } from './components/TaskForm'
+import { salesReminders, type SalesMember, type SalesReminders } from './lib/sales'
+import './components/Sales.css'
 const isMac=typeof navigator!=='undefined'&&/Mac|iPhone|iPad/.test(navigator.userAgent)
 
 
@@ -47,6 +56,8 @@ const headings:Record<Page,[string,string]>={
  'Follow-ups':['Follow-ups','Make the next conversation happen.'],
  Onboarding:['Client onboarding','Collect what each new client needs to provide, review it, and know exactly when they’re ready for delivery.'],
  Activity:['Activity','A running history of your workspace.'],
+ 'Sales pipeline':['Sales pipeline','Every deal, where it stands and what it’s worth.'],
+ 'Sales analytics':['Sales analytics','Pipeline value, win rate and why deals are won or lost, from your own deals.'],
  Integrations:['Integrations','Connect your website and tools. Keep every opportunity in one place.'],
  Settings:['Workspace settings','Details, members, and your access for this workspace.'],
 }
@@ -83,16 +94,25 @@ function App({workspace,page,onPageChange:setPage,initialNotice}:{workspace:Work
  const [reportLead,setReportLead]=useState<string|null>(null)
  const [leadTab,setLeadTab]=useState<LeadTab>('report')
  const [outreachContact,setOutreachContact]=useState<string|null>(null)
- const [formError,setFormError]=useState('')
  const [notice,setNotice]=useState<string[]>(()=>initialNotice?[initialNotice]:[])
  const [showNotices,setShowNotices]=useState(false)
  const [resetVersion,setResetVersion]=useState(0)
  const [taskLead,setTaskLead]=useState('')
- const [taskDue,setTaskDue]=useState(today())
- const [taskNotes,setTaskNotes]=useState('')
  const [taskFilter,setTaskFilter]=useState('Open')
  // A lead handed to Client onboarding to prefill a new request. Cleared by any other navigation.
  const [onboardingLead,setOnboardingLead]=useState<Lead|null>(null)
+ // M9: the deal open in the deal view, a deal being created, pipeline settings, a draft just marked sent or replied (to
+ // suggest a stage), and a counter that tells sales views to reload after a change.
+ const [openDeal,setOpenDeal]=useState<string|null>(null)
+ const [dealStart,setDealStart]=useState<DealStart|null>(null)
+ const [pipelineSettings,setPipelineSettings]=useState(false)
+ const [outreachEvent,setOutreachEvent]=useState<{status:'sent'|'replied';draftId:string}|null>(null)
+ const [salesVersion,setSalesVersion]=useState(0)
+ const [reminders,setReminders]=useState<SalesReminders|null>(null)
+ const [members,setMembers]=useState<SalesMember[]>([])
+ // Meetings and expected closes for the notification centre, and member names for assignments. Both optional.
+ useEffect(()=>{let active=true;salesReminders(workspace.id).then(value=>{if(active)setReminders(value)}).catch(()=>{if(active)setReminders(null)});return()=>{active=false}},[workspace.id,salesVersion,day])
+ useEffect(()=>{let active=true;listWorkspaceMembers(workspace.id).then(list=>{if(active)setMembers(list.map(member=>({id:member.userId,name:member.displayName||member.email||'Member',role:member.role})))}).catch(()=>{/* Names are optional. */});return()=>{active=false}},[workspace.id])
  // An unsaved attempt belongs to this workspace, so switching waits until it is retried or discarded.
  useEffect(()=>{setLocked(busy||!!pending)},[busy,pending,setLocked])
  useEffect(()=>()=>setLocked(false),[setLocked])
@@ -128,7 +148,10 @@ function App({workspace,page,onPageChange:setPage,initialNotice}:{workspace:Work
    finally{setBusy(false);saving.current=false}
  }
  async function leave(){const problem=await signOut();if(problem)setError(problem)}
- function openModal(kind:'lead'|'edit'|'task'|'reset'|'import',leadId=''){setFormError('');setTaskLead(leadId||data?.leads[0]?.id||'');setTaskDue(today());setTaskNotes('');setModal(kind)}
+ function openModal(kind:'lead'|'edit'|'task'|'reset'|'import',leadId=''){setTaskLead(leadId||data?.leads[0]?.id||'');setModal(kind)}
+ function salesChanged(message?:string){setSalesVersion(value=>value+1);if(message)setNotice(n=>[message,...n].slice(0,20))}
+ function showDeal(dealId:string){setSelected(null);setReportLead(null);setDealStart(null);setOpenDeal(dealId)}
+ function startDeal(start:DealStart){setSelected(null);setReportLead(null);setOutreachEvent(null);setOpenDeal(null);setDealStart(start)}
  function navigateTo(next:Page){setPage(next);setShowNotices(false);setOnboardingLead(null);if(next==='Leads'){setSearch('');setSourceFilter('All sources');setFilter('All statuses')}if(next==='Follow-ups')setTaskFilter('Open')}
  const due=data?data.tasks.filter(t=>isTaskDue(t,day)):[]
  // Matches save_workspace_for: only owners and admins may remove records, which a reset does.
@@ -137,10 +160,10 @@ function App({workspace,page,onPageChange:setPage,initialNotice}:{workspace:Work
  const [hour]=useState(()=>new Date().getHours())
  const freshCount=data?data.leads.filter(l=>l.status==='New').length:0
  const [title,description]=page==='Overview'&&data&&data.leads.length?[`Good ${hour<12?'morning':hour<18?'afternoon':'evening'}`,`${due.length} follow-up${due.length===1?'':'s'} due · ${freshCount} new lead${freshCount===1?'':'s'} · ${data.leads.length} in your pipeline`]:headings[page]
- const dataPage=page!=='Integrations'&&page!=='Settings'&&page!=='Onboarding'&&page!=='Discovery'
+ const dataPage=page!=='Integrations'&&page!=='Settings'&&page!=='Onboarding'&&page!=='Discovery'&&page!=='Sales pipeline'&&page!=='Sales analytics'
  function shell(content:ReactNode){
   return <div className="app-shell" aria-busy={busy||!data} onClickCapture={event=>{if((busy||pending)&&!(event.target as HTMLElement).closest('[data-recovery]')){event.preventDefault();event.stopPropagation()}}}><a className="skip-link" href="#main-content">Skip to content</a><Sidebar page={page} dueCount={due.length} email={user.email} role={workspace.role} onNavigate={navigateTo} onReset={canReset?()=>data&&openModal('reset'):undefined}/>
-  <main id="main-content" tabIndex={-1}><header className="topbar"><div className="breadcrumb"><span className="breadcrumb-workspace">{workspace.name}</span> <span>/</span> <strong>{page}</strong></div><button className="command-trigger" aria-label="Search or jump to" aria-keyshortcuts="Control+K Meta+K" onClick={()=>setPalette(true)}><Icon name="search" size={16}/><span>Search or jump to…</span><kbd>{isMac?'⌘K':'Ctrl K'}</kbd></button><div className="header-actions"><ThemeToggle/><span className={'local-label'+(pending?' is-unsaved':busy?' is-saving':'')}><span className="live-dot"/>{pending?'Not saved':busy?'Saving…':'All changes saved'}</span><button className="text-button" data-recovery disabled={busy||!!pending} onClick={leave}>Sign out</button>{data&&<><button className="text-button" disabled={busy||!!pending} onClick={reload}>Refresh</button><NotificationCenter key={resetVersion} events={notice} tasks={data.tasks} leads={data.leads} day={day} open={showNotices} onOpen={setShowNotices} onClear={()=>setNotice([])} onReview={setSelected}/></>}</div></header>
+  <main id="main-content" tabIndex={-1}><header className="topbar"><div className="breadcrumb"><span className="breadcrumb-workspace">{workspace.name}</span> <span>/</span> <strong>{page}</strong></div><button className="command-trigger" aria-label="Search or jump to" aria-keyshortcuts="Control+K Meta+K" onClick={()=>setPalette(true)}><Icon name="search" size={16}/><span>Search or jump to…</span><kbd>{isMac?'⌘K':'Ctrl K'}</kbd></button><div className="header-actions"><ThemeToggle/><span className={'local-label'+(pending?' is-unsaved':busy?' is-saving':'')}><span className="live-dot"/>{pending?'Not saved':busy?'Saving…':'All changes saved'}</span><button className="text-button" data-recovery disabled={busy||!!pending} onClick={leave}>Sign out</button>{data&&<><button className="text-button" disabled={busy||!!pending} onClick={reload}>Refresh</button><NotificationCenter key={resetVersion} events={notice} tasks={data.tasks} leads={data.leads} day={day} open={showNotices} onOpen={setShowNotices} onClear={()=>setNotice([])} onReview={setSelected} sales={reminders} onOpenDeal={showDeal} userId={user.id}/></>}</div></header>
   <div className="content">{content}
   <footer>{canReset&&<button className="mobile-reset text-button" onClick={()=>data&&openModal('reset')}>Reset demo data</button>}Private to members of this workspace.<span>LeadFlow · {workspace.name}</span></footer></div></main></div>
  }
@@ -154,6 +177,7 @@ function App({workspace,page,onPageChange:setPage,initialNotice}:{workspace:Work
   ...navigation.map(item=>({id:`page-${item.page}`,group:'Go to' as const,label:item.page,icon:item.icon,run:()=>navigateTo(item.page)})),
   {id:'add-lead',group:'Actions',label:'Add a lead',icon:'plus',run:()=>openModal('lead')},
   {id:'add-task',group:'Actions',label:'Plan a follow-up',icon:'calendar',run:()=>openModal('task')},
+  {id:'add-deal',group:'Actions',label:'Create a deal',hint:'Track an opportunity through the sales pipeline',icon:'deal',run:()=>startDeal({})},
   {id:'discover',group:'Actions',label:'Find businesses',hint:'Directory search, Apollo or CSV',icon:'compass',run:()=>navigateTo('Discovery')},
   {id:'reload',group:'Actions',label:'Reload workspace',icon:'reset',run:()=>void reload()},
   {id:'theme-dark',group:'Actions',label:'Switch to dark theme',icon:'moon',run:()=>setPreference('dark')},
@@ -164,11 +188,26 @@ function App({workspace,page,onPageChange:setPage,initialNotice}:{workspace:Work
  // Warns before creating a lead that matches one already here, using the same rules as imports.
  function findDuplicate(input:LeadInput){const match=duplicateIndex(data!.leads,[]).find({businessName:input.company,contactName:input.name,email:input.email,phone:input.phone,website:input.website??'',city:input.city??'',postcode:input.postcode??''});return match?.lead?{lead:match.lead,reason:reasonLabels[match.reason]}:null}
 
- const tasks=data.tasks.filter(t=>taskFilter==='All'||(taskFilter==='Completed'?t.completed:taskFilter==='Due'?isTaskDue(t,day):taskFilter==='Overdue'?taskState(t,day)==='Overdue':taskFilter==='Upcoming'?taskState(t,day)==='Upcoming':!t.completed)).sort((a,b)=>a.due.localeCompare(b.due))
+ const open=(t:typeof data.tasks[number])=>!t.completed&&!t.cancelled
+ const tasks=data.tasks.filter(t=>{switch(taskFilter){
+  case 'All':return true
+  case 'Completed':return t.completed
+  case 'Cancelled':return !!t.cancelled
+  case 'Due':return isTaskDue(t,day)
+  case 'Today':return taskState(t,day)==='Due today'
+  case 'Overdue':return taskState(t,day)==='Overdue'
+  case 'Upcoming':return taskState(t,day)==='Upcoming'
+  case 'Assigned to me':return open(t)&&t.assigneeId===user.id
+  case 'Deals':return open(t)&&!!t.dealId
+  default:return open(t)
+ }}).sort((a,b)=>a.due.localeCompare(b.due))
+ const memberNames=new Map(members.map(member=>[member.id,member.name]))
  function showLeads(status = 'All statuses'){setSearch('');setSourceFilter('All sources');setFilter(status);setPage('Leads')}
  function showDueTasks(){setPage('Follow-ups');setTaskFilter('Due')}
  const displayedLeads=page==='Overview'?visible.toSorted((a,b)=>b.createdAt.localeCompare(a.createdAt)).slice(0,5):visible
- function taskList(items:typeof tasks){return <TaskList day={day} tasks={items} leads={data!.leads} onSelect={setSelected} onToggle={task=>commit(toggleTask(data!,task.id),task.completed?'Follow-up reopened.':'Follow-up completed. Nice work!')}/>}
+ function taskList(items:typeof tasks){return <TaskList day={day} tasks={items} leads={data!.leads} members={memberNames} onSelect={setSelected} onOpenDeal={showDeal}
+  onCancel={task=>commit(cancelTask(data!,task.id),task.cancelled?'Follow-up restored.':'Follow-up cancelled.')}
+  onToggle={task=>commit(toggleTask(data!,task.id),task.completed?'Follow-up reopened.':'Follow-up completed. Nice work!')}/>}
  return <>{shell(<>{notice[0]&&<div className="toast" role="status">✓ {notice[0]}</div>}{busy&&<p role="status">Saving or loading workspace…</p>}{error&&<div className="error-banner" role="alert">{error}{pending&&<button data-recovery className="secondary" disabled={busy} onClick={()=>commit(pending.next,pending.message,pending.force,pending.id)}>Retry saving</button>}<button data-recovery className="secondary" disabled={busy} onClick={reload}>Reload workspace{pending?' and discard attempt':''}</button>{accessLost&&<button data-recovery className="secondary" disabled={busy} onClick={()=>void refresh()}>Refresh workspace list</button>}</div>}
  {dataPage&&legacyError&&<p role="alert">{legacyError}</p>}
  {dataPage&&legacy&&data.leads.length===0&&<div className="error-banner">Found {legacy.leads.length} leads saved by M1 in this browser. <button className="secondary" onClick={()=>openModal('import')}>Import browser data</button></div>}
@@ -177,26 +216,39 @@ function App({workspace,page,onPageChange:setPage,initialNotice}:{workspace:Work
  {page==='Integrations'&&<IntegrationsHub workspaceId={workspace.id} role={workspace.role}/>}
  {page==='Settings'&&<><WorkspaceSettings workspace={workspace}/><AgencyServices workspace={workspace}/><OutreachSettings workspace={workspace}/></>}
  {page==='Onboarding'&&<ClientOnboarding workspace={workspace} leads={data.leads} startLead={onboardingLead}/>}
+ {page==='Sales pipeline'&&<SalesPipeline workspace={workspace} version={salesVersion} onOpenDeal={showDeal} onCreateDeal={()=>startDeal({})} onSettings={()=>setPipelineSettings(true)} onNotice={message=>salesChanged(message)}/>}
+ {page==='Sales analytics'&&<SalesAnalytics workspace={workspace} version={salesVersion} onOpenDeal={showDeal} onOpenPipeline={()=>navigateTo('Sales pipeline')}/>}
  {page==='Discovery'&&<LeadDiscovery workspace={workspace} leads={data.leads} blocked={busy||!!pending} onImported={async message=>{forgetOrigins(workspace.id);await reload();setNotice(n=>[message,...n].slice(0,20))}} onAddLead={()=>openModal('lead')}/>}
  {page==='Overview'&&<DashboardOverview day={day} leads={data.leads} tasks={data.tasks} onLeads={showLeads} onFollowUps={showDueTasks} onOpenLead={setSelected} onPlan={leadId=>openModal('task',leadId)} onDiscovery={()=>navigateTo('Discovery')}/>}
  {(page==='Overview'||page==='Leads')&&<section className="panel leads-panel"><div className="section-heading"><div><h2>{page==='Overview'?'Recent leads':'All leads'} <span className="number-tag">{data.leads.length}</span></h2><p>{page==='Overview'?'Your five most recent opportunities.':'Every conversation in one place.'}</p></div>{page==='Overview'&&<button className="text-button" onClick={()=>showLeads()}>View all leads <Icon name="arrow" size={16}/></button>}{page==='Leads'&&<div className="view-toggle" role="group" aria-label="Lead view"><button aria-pressed={leadView==='table'} onClick={()=>setLeadView('table')}><Icon name="list" size={15}/>Table</button><button aria-pressed={leadView==='board'} onClick={()=>setLeadView('board')}><Icon name="columns" size={15}/>Board</button></div>}</div><div className="filters"><label className="search"><Icon name="search" size={18}/><input aria-label="Search leads" placeholder="Search name, company, or email…" value={search} onChange={e=>setSearch(e.target.value)}/></label><select aria-label="Filter by status" value={filter} onChange={e=>setFilter(e.target.value)}><option>All statuses</option>{statuses.map(s=><option key={s}>{s}</option>)}</select><select aria-label="Filter by source" value={sourceFilter} onChange={event=>setSourceFilter(event.target.value)}><option>All sources</option>{sources.map(source=><option key={source}>{source}</option>)}</select>{lists.length>0&&<select aria-label="Filter by list" value={listFilter} onChange={event=>setListFilter(event.target.value)}><option value="">All lists</option>{lists.map(list=><option key={list.id} value={list.id}>{list.name} ({list.leadIds.length})</option>)}</select>}<span className="results" role="status">{visible.length} results</span>{(search||filter!=='All statuses'||sourceFilter!=='All sources'||listFilter)&&<button className="text-button" onClick={()=>{setSearch('');setFilter('All statuses');setSourceFilter('All sources');setListFilter('')}}>Clear filters</button>}</div>{page==='Leads'&&leadView==='board'?<LeadBoard leads={displayedLeads} onSelect={setSelected} onStatus={(lead,status)=>commit(changeStatus(data,lead.id,status),`${lead.name} moved to ${status}.`)}/>:<LeadTable leads={displayedLeads} onSelect={setSelected} onAdd={()=>openModal('lead')} onStatus={(lead,status)=>commit(changeStatus(data,lead.id,status),`${lead.name} moved to ${status}.`)}/>}<div className="table-footer">Showing {displayedLeads.length} of {visible.length} matching leads<span>All sample contacts are fictional</span></div></section>}
  {page==='Overview'&&<div className="overview-bottom"><section className="panel"><div className="section-heading"><div><h2>On your radar</h2><p>Follow-ups due today or earlier</p></div><button className="text-button" onClick={()=>{setPage('Follow-ups');setTaskFilter('Open')}}>View all <Icon name="arrow" size={14}/></button></div>{taskList(due)}</section><section className="panel"><div className="section-heading"><div><h2>Recent activity</h2><p>The latest changes in this workspace</p></div><button className="text-button" onClick={()=>navigateTo('Activity')}>Open activity <Icon name="arrow" size={14}/></button></div><ActivityTimeline activities={data.activities.toSorted((a,b)=>b.at.localeCompare(a.at)).slice(0,6)} leads={data.leads} onSelect={setSelected}/></section></div>}
- {page==='Follow-ups'&&<section className="panel"><div className="section-heading"><h2>Your next steps</h2><select aria-label="Filter tasks" value={taskFilter} onChange={e=>setTaskFilter(e.target.value)}>{['Open','Due','Overdue','Upcoming','Completed','All'].map(s=><option key={s}>{s}</option>)}</select></div>{taskList(tasks)}</section>}
+ {page==='Follow-ups'&&<section className="panel"><div className="section-heading"><h2>Your next steps</h2><select aria-label="Filter tasks" value={taskFilter} onChange={e=>setTaskFilter(e.target.value)}>{['Open','Due','Today','Overdue','Upcoming','Assigned to me','Deals','Completed','Cancelled','All'].map(s=><option key={s}>{s}</option>)}</select></div>{taskList(tasks)}</section>}
  {page==='Activity'&&<section className="panel"><div className="section-heading"><h2>Workspace activity</h2><span className="soft-tag">{data.activities.length} events</span></div><ActivityTimeline activities={data.activities} leads={data.leads} onSelect={setSelected}/></section>}
  </>)}
  {(modal==='lead'||modal==='edit')&&<Modal title={modal==='edit'?'Edit lead':'Capture a new lead'} onClose={()=>setModal(null)}><p className="modal-intro">{modal==='edit'?'Keep contact details and your next steps up to date.':'Start a conversation worth following up on.'}</p><LeadForm initial={modal==='edit'&&activeLead?activeLead:blank} initialStatus={modal==="edit"?activeLead?.status:undefined} findDuplicate={modal==="lead"?findDuplicate:undefined} onCancel={()=>setModal(null)} onSave={async(input,status)=>{const next=modal==='edit'&&activeLead?updateLead(data,activeLead.id,input,status):createLead(data,input);const saved=await commit(next,modal==='edit'?`${input.name.trim()} was updated.${activeLead&&activeLead.status!==status?' Status changed to '+status+'.':''}`:`${input.name.trim()} was added to your leads.`);if(saved)setModal(null)}}/></Modal>}
- {modal==='task'&&<Modal title="Plan a follow-up" onClose={()=>setModal(null)}>{data.leads.length===0?<div className="empty"><p>Add a lead before scheduling a follow-up.</p><button className="primary" onClick={()=>openModal('lead')}>Add lead</button></div>:<form onSubmit={async e=>{e.preventDefault();try{const saved=await commit(createTask(data,taskLead,taskDue,taskNotes),'Follow-up scheduled.');if(saved)setModal(null)}catch(err){setFormError(err instanceof Error?err.message:'Unable to create task.')}}}><label>Lead *<select value={taskLead} required onChange={e=>setTaskLead(e.target.value)}>{data.leads.map(l=><option key={l.id} value={l.id}>{l.name} · {l.company||l.email}</option>)}</select></label><label>Due date *<input type="date" required min="0001-01-01" max="9999-12-31" aria-describedby="due-date-help" value={taskDue} onChange={e=>setTaskDue(e.target.value)}/></label><p id="due-date-help" className="muted">Dates use your local calendar. Past dates are allowed and marked overdue; tasks due today become overdue tomorrow.</p><label>Notes *<textarea required maxLength={2000} rows={4} placeholder="What’s the next step?" value={taskNotes} onChange={e=>setTaskNotes(e.target.value)}/></label>{formError&&<p role="alert" className="field-error">{formError}</p>}<div className="modal-actions"><button type="button" className="secondary" onClick={()=>setModal(null)}>Cancel</button><button className="primary">Schedule follow-up</button></div></form>}</Modal>}
+ {modal==='task'&&<Modal title="Plan a follow-up" onClose={()=>setModal(null)}>{data.leads.length===0?<div className="empty"><p>Add a lead before scheduling a follow-up.</p><button className="primary" onClick={()=>openModal('lead')}>Add lead</button></div>
+  :<TaskForm workspaceId={workspace.id} leads={data.leads} initialLeadId={taskLead} members={members} onCancel={()=>setModal(null)} onSubmit={async(leadId,due,notes,options)=>{const saved=await commit(createTask(data,leadId,due,notes,options),'Follow-up scheduled.');if(saved)setModal(null);return saved}}/>}</Modal>}
  {modal==='reset'&&<Modal title="Reset your demo workspace?" onClose={()=>setModal(null)}><p>This replaces all leads, follow-ups, and activity in <strong>{workspace.name}</strong> with fresh fictional sample data, for everyone in this workspace. Browser demo records remain untouched. This cannot be undone.</p><div className="modal-actions"><button className="secondary" onClick={()=>setModal(null)}>Keep my data</button><button className="primary" onClick={async()=>{if(!await commit(sampleData(),'Demo data restored.',true))return;setResetVersion(value=>value+1);setShowNotices(false);setSourceFilter('All sources');setTaskFilter('Open');setSearch('');setFilter('All statuses');setSelected(null);setModal(null)}}>Reset demo data</button></div></Modal>}
  {modal==='import'&&<Modal title="Import browser data?" onClose={()=>setModal(null)}><p>Copy {legacy?.leads.length} leads, {legacy?.tasks.length} follow-ups, and their history into {workspace.name}. The original browser data will be kept. No existing server records will be merged or replaced.</p><div className="modal-actions"><button className="secondary" onClick={()=>setModal(null)}>Cancel</button><button className="primary" onClick={async()=>{if(legacy&&data.leads.length===0&&await commit(legacy,'Browser data imported.'))setModal(null)}}>Confirm import</button></div></Modal>}
- {activeLead&&!modal&&<Modal variant="drawer" title={activeLead.name} onClose={()=>setSelected(null)}><div className="lead-summary"><div className="lead-hero"><span className={'avatar avatar-lg tone-'+(activeLead.name.length%4)} aria-hidden="true">{activeLead.name.split(' ').map(part=>part[0]).slice(0,2).join('')}</span><div><span className={'status '+activeLead.status.toLowerCase()}>{activeLead.status}</span><p>{activeLead.company||'Independent contact'} · {activeLead.service}</p></div></div><div className="lead-contact">{activeLead.email&&<a href={`mailto:${activeLead.email}`}>{activeLead.email}</a>}{activeLead.phone&&<p><a href={`tel:${activeLead.phone}`}>{activeLead.phone}</a></p>}<p className="muted">Source: {activeLead.source}</p></div><LeadProvenance workspaceId={workspace.id} lead={activeLead}/><p className="message">{activeLead.message||'No message provided.'}</p><div className="lead-actions"><button className="primary" onClick={()=>openModal('task',activeLead.id)}>＋ Add follow-up</button><button className="secondary" onClick={()=>openModal('edit')}>Edit lead</button><button className="secondary" onClick={()=>{setReportLead(activeLead.id);setLeadTab('report');setSelected(null)}}>Business report</button><button className="secondary" onClick={()=>{setReportLead(activeLead.id);setLeadTab('contacts');setSelected(null)}}>Contacts</button><button className="secondary" onClick={()=>{setReportLead(activeLead.id);setLeadTab('outreach');setOutreachContact(null);setSelected(null)}}>Outreach</button><button className="secondary" onClick={()=>{setOnboardingLead(activeLead);setSelected(null);setPage('Onboarding')}}>Start client onboarding</button></div></div><h3>Follow-ups</h3>{taskList(data.tasks.filter(t=>t.leadId===activeLead.id))}<h3>Activity history</h3><ActivityTimeline activities={data.activities.filter(a=>a.leadId===activeLead.id)}/></Modal>}
- {reportTarget&&!modal&&<Modal id="business-report" title={`${leadTabs.find(([tab])=>tab===leadTab)![1]} · ${reportTarget.company||reportTarget.name}`} onClose={()=>{setSelected(reportTarget.id);setReportLead(null);setOutreachContact(null)}}>
+ {activeLead&&!modal&&<Modal variant="drawer" title={activeLead.name} onClose={()=>setSelected(null)}><div className="lead-summary"><div className="lead-hero"><span className={'avatar avatar-lg tone-'+(activeLead.name.length%4)} aria-hidden="true">{activeLead.name.split(' ').map(part=>part[0]).slice(0,2).join('')}</span><div><span className={'status '+activeLead.status.toLowerCase()}>{activeLead.status}</span><p>{activeLead.company||'Independent contact'} · {activeLead.service}</p></div></div><div className="lead-contact">{activeLead.email&&<a href={`mailto:${activeLead.email}`}>{activeLead.email}</a>}{activeLead.phone&&<p><a href={`tel:${activeLead.phone}`}>{activeLead.phone}</a></p>}<p className="muted">Source: {activeLead.source}</p></div><LeadProvenance workspaceId={workspace.id} lead={activeLead}/><p className="message">{activeLead.message||'No message provided.'}</p><div className="lead-actions"><button className="primary" onClick={()=>openModal('task',activeLead.id)}>＋ Add follow-up</button><button className="secondary" onClick={()=>openModal('edit')}>Edit lead</button><button className="secondary" onClick={()=>{setReportLead(activeLead.id);setLeadTab('report');setSelected(null)}}>Business report</button><button className="secondary" onClick={()=>{setReportLead(activeLead.id);setLeadTab('contacts');setSelected(null)}}>Contacts</button><button className="secondary" onClick={()=>{setReportLead(activeLead.id);setLeadTab('outreach');setOutreachContact(null);setSelected(null)}}>Outreach</button><button className="secondary" onClick={()=>{setOnboardingLead(activeLead);setSelected(null);setPage('Onboarding')}}>Start client onboarding</button></div>
+  <LeadDeals workspaceId={workspace.id} leadId={activeLead.id} version={salesVersion} onOpenDeal={showDeal} onCreate={()=>startDeal({leadId:activeLead.id,source:'lead'})}/></div><h3>Follow-ups</h3>{taskList(data.tasks.filter(t=>t.leadId===activeLead.id))}<h3>Activity history</h3><ActivityTimeline activities={data.activities.filter(a=>a.leadId===activeLead.id)}/></Modal>}
+ {reportTarget&&!modal&&<Modal id="business-report" title={`${leadTabs.find(([tab])=>tab===leadTab)![1]} · ${reportTarget.company||reportTarget.name}`} onClose={()=>{setSelected(reportTarget.id);setReportLead(null);setOutreachContact(null);setOutreachEvent(null)}}>
   <div className="lead-tabs" role="tablist" aria-label="Lead workspace">{leadTabs.map(([tab,label])=><button key={tab} role="tab" aria-selected={leadTab===tab} className={leadTab===tab?'active':''} onClick={()=>setLeadTab(tab)}>{label}</button>)}</div>
-  {leadTab==='report'&&<BusinessReport workspace={workspace} lead={reportTarget} onEditLead={()=>{setSelected(reportTarget.id);setReportLead(null);openModal('edit')}}/>}
+  {outreachEvent&&leadTab==='outreach'&&<StageSuggestion key={`${outreachEvent.draftId}:${outreachEvent.status}`} workspaceId={workspace.id} leadId={reportTarget.id} event={outreachEvent} onDismiss={()=>setOutreachEvent(null)}
+   onMoved={message=>salesChanged(message)} onCreateDeal={draftId=>startDeal({leadId:reportTarget.id,sourceDraftId:draftId,source:'outreach'})}/>}
+  {leadTab==='report'&&<BusinessReport workspace={workspace} lead={reportTarget} onEditLead={()=>{setSelected(reportTarget.id);setReportLead(null);openModal('edit')}} onCreateDeal={opportunity=>startDeal({leadId:reportTarget.id,opportunityId:opportunity.id,source:'opportunity'})}/>}
   {leadTab==='contacts'&&<LeadContacts workspace={workspace} lead={reportTarget} onWriteTo={contactId=>{setOutreachContact(contactId);setLeadTab('outreach')}}/>}
   {leadTab==='outreach'&&<OutreachStudio key={outreachContact??'any'} workspace={workspace} lead={reportTarget} initialContactId={outreachContact} onShowContacts={()=>setLeadTab('contacts')} onShowReport={()=>setLeadTab('report')}
    onPlanFollowUp={(due,notes)=>commit(createTask(data,reportTarget.id,due,notes),'Follow-up reminder added.')}
-   onLogActivity={text=>commit({...data,activities:[activity(reportTarget.id,text),...data.activities]},'Outreach marked as sent.')}/>}
+   onLogActivity={text=>commit({...data,activities:[activity(reportTarget.id,text),...data.activities]},'Outreach marked as sent.')}
+   onStatusChanged={(draft,status)=>{if(status==='sent'||status==='replied')setOutreachEvent({status,draftId:draft.id})}}/>}
  </Modal>}
+ {dealStart&&<DealForm workspaceId={workspace.id} leads={data.leads} start={dealStart} onClose={()=>setDealStart(null)} onOpenDeal={showDeal}
+  onCreated={deal=>{setDealStart(null);salesChanged(`Deal “${deal.title}” created.`);setOpenDeal(deal.id)}}/>}
+ {openDeal&&<DealDetail key={openDeal} workspace={workspace} dealId={openDeal} data={data} onClose={()=>setOpenDeal(null)} onCommit={(next,message)=>commit(next,message)} onOpenDeal={showDeal}
+  onOpenLead={leadId=>{setOpenDeal(null);setSelected(leadId)}} onOpenOutreach={leadId=>{setOpenDeal(null);setReportLead(leadId);setLeadTab('outreach');setOutreachContact(null)}}
+  onStartOnboarding={lead=>{setOpenDeal(null);setOnboardingLead(lead);setPage('Onboarding')}} onChanged={message=>salesChanged(message)}/>}
+ {pipelineSettings&&<PipelineSettings workspaceId={workspace.id} onClose={()=>setPipelineSettings(false)} onChanged={message=>salesChanged(message)}/>}
  {palette&&<CommandPalette commands={commands} onClose={()=>setPalette(false)}/>}
  </>
 }

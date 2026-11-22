@@ -111,7 +111,7 @@ function FindingCard({ finding, evidence, canReview, onVerify, onShowEvidence }:
   </article>
 }
 
-function OpportunityCard({ opportunity, findings, onStatus, onNotes, busy }: { opportunity: Opportunity; findings: Map<string, Finding>; onStatus: (status: OpportunityStatus) => void; onNotes: (notes: string) => void; busy: boolean }) {
+function OpportunityCard({ opportunity, findings, onStatus, onNotes, busy, onCreateDeal }: { opportunity: Opportunity; findings: Map<string, Finding>; onStatus: (status: OpportunityStatus) => void; onNotes: (notes: string) => void; onCreateDeal?: () => void; busy: boolean }) {
   const [notes, setNotes] = useState(opportunity.notes)
   const basis = opportunity.findingIds.map(id => findings.get(id)).filter((item): item is Finding => !!item)
   return <article className={`br-opportunity status-${opportunity.status} priority-${opportunity.priority}`}>
@@ -128,6 +128,7 @@ function OpportunityCard({ opportunity, findings, onStatus, onNotes, busy }: { o
       <div className="br-actions">
         {(['accepted', 'needs_verification', 'dismissed'] as const).map(status => <button key={status} className={opportunity.status === status ? 'primary' : 'secondary'} disabled={busy}
           aria-pressed={opportunity.status === status} onClick={() => onStatus(opportunity.status === status ? 'suggested' : status)}>{status === 'accepted' ? 'Accept' : status === 'dismissed' ? 'Dismiss' : 'Needs verification'}</button>)}
+        {onCreateDeal && opportunity.status !== 'dismissed' && <button className="secondary" onClick={onCreateDeal}>Create deal</button>}
       </div>
       <label className="br-notes">Notes<textarea rows={2} maxLength={2000} value={notes} placeholder="What you’ll mention, what to check first…" onChange={event => setNotes(event.target.value)}
         onBlur={() => { if (notes !== opportunity.notes) onNotes(notes) }} /></label>
@@ -136,7 +137,7 @@ function OpportunityCard({ opportunity, findings, onStatus, onNotes, busy }: { o
 }
 
 /** The business intelligence report for one lead: start, progress, findings with evidence, opportunities, history. */
-export function BusinessReport({ workspace, lead, onEditLead }: { workspace: WorkspaceSummary; lead: Lead; onEditLead: () => void }) {
+export function BusinessReport({ workspace, lead, onEditLead, onCreateDeal }: { workspace: WorkspaceSummary; lead: Lead; onEditLead: () => void; onCreateDeal?: (opportunity: Opportunity) => void }) {
   const [history, setHistory] = useState<AnalysisSummary[] | null>(null)
   const [report, setReport] = useState<Report | null>(null)
   const [previous, setPrevious] = useState<Report | null>(null)
@@ -354,7 +355,7 @@ export function BusinessReport({ workspace, lead, onEditLead }: { workspace: Wor
 
       {tab === 'opportunities' && <section className="br-opps">
         <p className="br-muted">Suggestions based on the findings and your agency services. They describe what could help, not promised results.</p>
-        {report.opportunities.map(item => <OpportunityCard key={item.id} opportunity={item} findings={findings} busy={busy} onStatus={status => void updateOpportunity(item, status, null)} onNotes={notes => void updateOpportunity(item, null, notes)} />)}
+        {report.opportunities.map(item => <OpportunityCard key={item.id} opportunity={item} findings={findings} busy={busy} onStatus={status => void updateOpportunity(item, status, null)} onNotes={notes => void updateOpportunity(item, null, notes)} onCreateDeal={onCreateDeal && (() => onCreateDeal(item))} />)}
         {!report.opportunities.length && <p className="br-muted">No opportunities were found.</p>}
       </section>}
 

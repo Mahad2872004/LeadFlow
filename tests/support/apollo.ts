@@ -25,7 +25,8 @@ export function createApolloHarness(db: PGlite, overrides: Record<string, string
     DISCOVERY_ALLOWED_ORIGINS: 'http://127.0.0.1:5175,http://127.0.0.1:4175', APOLLO_API_KEYS: `primary:${apolloKeys.primary},second:${apolloKeys.second}`, ...overrides }
   const state: ApolloState = { people: [], organizations: [], calls: [], failures: [], hold: null,
     creditStats: { credit_usage_stats: { lead_credit: { limit: 70, consumed: 3, left_over: 67 }, direct_dial_credit: { limit: 5, consumed: 0, left_over: 5 } },
-      current_credit_cycle: { start_date: '2026-10-20T00:00:00Z', end_date: '2026-11-20T00:00:00Z' } } }
+      // A cycle around today, so the test doesn't depend on the date it runs.
+      current_credit_cycle: { start_date: new Date(Date.now() - 10 * 86_400_000).toISOString(), end_date: new Date(Date.now() + 20 * 86_400_000).toISOString() } } }
   const apollo = async (url: URL, init: RequestInit | undefined): Promise<Response> => {
     const headers = new Headers(init?.headers), key = headers.get('x-api-key') ?? '', path = url.pathname.replace('/api/v1', '')
     const body = init?.body ? JSON.parse(String(init.body)) : null

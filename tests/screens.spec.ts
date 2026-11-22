@@ -143,4 +143,42 @@ test('app screens', async ({ page }) => {
     await report.getByRole('button', { name: 'Analyze business' }).click(); await expect(report.locator('.br-state')).toHaveText('Completed', { timeout: 90000 }); await shot(page, 'report-done')
     for (const [tab, name] of [[/^Findings/, 'report-findings'], [/^Opportunities/, 'report-opportunities'], [/^Evidence/, 'report-evidence'], [/^Details/, 'report-details']] as const) { await report.getByRole('tab', { name: tab }).click(); await page.waitForTimeout(300); await shot(page, name) }
   })
+  await step('sales pipeline', async () => {
+    // Deals at different stages, in two currencies, made through the same database functions the app uses.
+    const leads = (await db.query<{ id: string }>('select id from public.leads where workspace_id=$1 order by "createdAt" desc limit 6', [owner.id])).rows.map(row => row.id)
+    const stages = (await rpc('select public.sales_pipeline_for($1) as r', [owner.id]))[0].r.stages as { id: string; key: string }[]
+    const stage = (key: string) => stages.find(item => item.key === key)!.id
+    const soon = (days: number) => new Date(Date.now() + days * 86_400_000).toISOString().slice(0, 10)
+    const deals: { id: string; version: number }[] = []
+    for (const [index, deal] of [
+      { title: 'Website redesign', value: '8500', stageId: stage('proposal'), probability: '60', expectedCloseDate: soon(9), priority: 'high' },
+      { title: 'Local SEO retainer', value: '1200', stageId: stage('meeting'), expectedCloseDate: soon(21) },
+      { title: 'Booking automation', value: '3400', currency: 'GBP', stageId: stage('negotiation'), expectedCloseDate: soon(2) },
+      { title: 'Brand refresh', value: '5000', stageId: stage('qualified') },
+      { title: 'Social media setup', stageId: stage('new') },
+      { title: 'Ads management', value: '2400', stageId: stage('contacted'), expectedCloseDate: soon(-3) },
+    ].entries()) {
+      if (index === 2) await rpc('select public.save_sales_settings($1,$2)', [owner.id, JSON.stringify({ currencies: ['USD', 'GBP', 'EUR'] })])
+      deals.push((await rpc('select public.create_deal($1,$2,$3,false) as r', [owner.id, JSON.stringify({ leadId: leads[index], currency: 'USD', ...deal }), crypto.randomUUID()]))[0].r)
+    }
+    const [won, lost] = [(await rpc('select public.create_deal($1,$2,$3,false) as r', [owner.id, JSON.stringify({ leadId: leads[0], title: 'Landing pages', value: '1800' }), crypto.randomUUID()]))[0].r,
+      (await rpc('select public.create_deal($1,$2,$3,false) as r', [owner.id, JSON.stringify({ leadId: leads[1], title: 'Email campaigns', value: '900' }), crypto.randomUUID()]))[0].r]
+    await rpc('select public.close_deal($1,$2,$3,$4,$5,$6)', [owner.id, won.id, 'won', JSON.stringify({ wonValue: '2000' }), won.version, crypto.randomUUID()])
+    await rpc('select public.close_deal($1,$2,$3,$4,$5,$6)', [owner.id, lost.id, 'lost', JSON.stringify({ reason: 'Budget constraints' }), lost.version, crypto.randomUUID()])
+    await rpc('select public.record_deal_activity($1,$2,$3,$4)', [owner.id, deals[0].id, JSON.stringify({ kind: 'reply', sentiment: 'positive', channel: 'Email', details: 'Asked for two options and a timeline.' }), crypto.randomUUID()])
+    await rpc('select public.record_deal_activity($1,$2,$3,$4)', [owner.id, deals[0].id, JSON.stringify({ kind: 'call', outcome: 'interested', nextAction: 'Send the proposal by Friday', details: 'Budget approved for Q1.' }), crypto.randomUUID()])
+    await rpc('select public.save_deal_meeting($1,$2,$3,$4)', [owner.id, deals[0].id, JSON.stringify({ title: 'Proposal walkthrough', startsAt: new Date(Date.now() + 30 * 3600_000).toISOString(), timezone: 'America/Chicago', meetingUrl: 'https://meet.example/abc', agenda: 'Scope, timeline, price' }), crypto.randomUUID()])
+    await nav(page, 'Sales pipeline'); await expect(page.locator('.sp-card').first()).toBeVisible(); await shot(page, 'sales-board')
+    await page.getByRole('button', { name: 'List', exact: true }).click(); await expect(page.locator('.sp-table')).toBeVisible(); await shot(page, 'sales-list')
+    await page.getByRole('button', { name: 'Board', exact: true }).click()
+    await page.getByRole('button', { name: 'New deal' }).click(); await expect(page.getByRole('dialog', { name: 'New deal' })).toBeVisible(); await page.waitForTimeout(500); await shot(page, 'sales-new-deal'); await page.keyboard.press('Escape')
+    await page.getByRole('button', { name: 'Open deal Website redesign' }).click()
+    const detail = page.locator('dialog#deal-detail'); await expect(detail.locator('.sp-facts')).toBeVisible(); await shot(page, 'deal-overview')
+    await detail.getByRole('tab', { name: 'Timeline' }).click(); await expect(detail.locator('.sp-events')).toBeVisible(); await shot(page, 'deal-timeline')
+    await detail.getByRole('tab', { name: /^Follow-ups & meetings/ }).click(); await shot(page, 'deal-work')
+    await detail.getByRole('tab', { name: 'Overview' }).click(); await detail.getByRole('button', { name: 'Mark as won' }).click(); await page.waitForTimeout(300); await shot(page, 'deal-won-dialog'); await page.keyboard.press('Escape')
+    await page.keyboard.press('Escape')
+    await page.getByRole('button', { name: 'Pipeline settings' }).click(); await expect(page.getByRole('dialog', { name: 'Pipeline settings' })).toBeVisible(); await shot(page, 'sales-settings'); await page.keyboard.press('Escape')
+    await nav(page, 'Sales analytics'); await expect(page.locator('.sp-summary')).toBeVisible(); await page.waitForTimeout(300); await shot(page, 'sales-analytics')
+  })
 })

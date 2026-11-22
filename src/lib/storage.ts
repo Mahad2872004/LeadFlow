@@ -1,5 +1,5 @@
 import { isCalendarDate } from './dates'
-import { businessFields, statuses, validateLead, type Data, type LeadInput } from './model'
+import { businessFields, priorities, statuses, taskTypes, validateLead, type Data, type LeadInput } from './model'
 import { sampleData } from './seed'
 export const STORAGE_KEY = 'leadflow.demo.v1'
 type StoragePort = Pick<Storage, 'getItem' | 'setItem'>
@@ -29,7 +29,13 @@ export function isData(value: unknown): value is Data {
   const fields = ['name', 'email', 'phone', 'company', 'service', 'source', 'message'] as const satisfies readonly (keyof LeadInput)[]
   if (!leads.every(lead => record(lead) && strings(lead, [...fields, 'id', 'createdAt']) && businessFields.every(key => lead[key] === undefined || typeof lead[key] === 'string') && validateLead(lead) === null && statuses.some(status => status === lead.status) && timestamp(lead.createdAt))) return false
   const leadIds = new Set(leads.map(lead => lead.id))
-  return tasks.every(task => record(task) && strings(task, ['id', 'leadId', 'due', 'notes']) && isCalendarDate(task.due) && task.notes.trim().length > 0 && task.notes.length <= 2000 && typeof task.completed === 'boolean' && leadIds.has(task.leadId))
+  const optionalText = (value: unknown) => value === undefined || value === null || typeof value === 'string'
+  const optionalTime = (value: unknown) => value === undefined || value === null || (typeof value === 'string' && Number.isFinite(new Date(value).getTime()))
+  return tasks.every(task => record(task) && strings(task, ['id', 'leadId', 'due', 'notes']) && isCalendarDate(task.due) && task.notes.trim().length > 0 && task.notes.length <= 2000 && typeof task.completed === 'boolean' && leadIds.has(task.leadId)
+    // M9 fields are optional; the database checks that deals, contacts and assignees belong to the workspace and lead.
+    && optionalText(task.dealId) && optionalText(task.contactId) && optionalText(task.assigneeId) && optionalTime(task.createdAt) && optionalTime(task.completedAt)
+    && (task.taskType === undefined || taskTypes.some(type => type === task.taskType)) && (task.priority === undefined || priorities.some(priority => priority === task.priority))
+    && (task.cancelled === undefined || (typeof task.cancelled === 'boolean' && !(task.cancelled && task.completed))) && (task.description === undefined || (typeof task.description === 'string' && task.description.length <= 2000)))
     && activities.every(event => record(event) && strings(event, ['id', 'leadId', 'text', 'at']) && event.text.trim().length > 0 && timestamp(event.at) && leadIds.has(event.leadId))
 }
 export function loadData(storage?: StoragePort): {data: Data; error: string | null} {
