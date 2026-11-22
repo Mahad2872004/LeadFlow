@@ -9,11 +9,12 @@ export function isCalendarDate(value: string): boolean {
   const leap=year%4===0&&(year%100!==0||year%400===0)
   return day<=[31,leap?29:28,31,30,31,30,31,31,30,31,30,31][month-1]
 }
-export type TaskState = 'Completed' | 'Overdue' | 'Due today' | 'Upcoming'
-export function taskState(task:{due:string;completed:boolean},day=localDate()):TaskState {
+export type TaskState = 'Completed' | 'Cancelled' | 'Overdue' | 'Due today' | 'Upcoming'
+export function taskState(task:{due:string;completed:boolean;cancelled?:boolean},day=localDate()):TaskState {
   if(task.completed) return 'Completed'
+  if(task.cancelled) return 'Cancelled'
   return task.due<day?'Overdue':task.due===day?'Due today':'Upcoming'
 }
-export function isTaskDue(task:{due:string;completed:boolean},day=localDate()):boolean {
-  return !task.completed&&isCalendarDate(task.due)&&task.due<=day
+export function isTaskDue(task:{due:string;completed:boolean;cancelled?:boolean},day=localDate()):boolean {
+  return !task.completed&&!task.cancelled&&isCalendarDate(task.due)&&task.due<=day
 }

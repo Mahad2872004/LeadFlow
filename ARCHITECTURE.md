@@ -91,6 +91,19 @@ M8 builds on the business report (M7) and Apollo (M6B) instead of adding paralle
 
 Details: [docs/OUTREACH.md](docs/OUTREACH.md).
 
+## Sales pipeline and deals (M9, implemented locally)
+
+M9 adds deals on top of leads, reports, contacts, outreach and follow-ups rather than a separate CRM.
+
+- **Deals and stages:** private tables (`sales_stages`, `sales_settings`, `deals`, `deal_stage_history`, `deal_activities`, `deal_meetings`, `client_handoffs`) behind role-checked functions. Deals point to leads by `(workspace_id, lead_id)` without a foreign key, like analyses and contacts, because snapshot saves replace leads. They reference contacts, opportunities, services and drafts with `on delete set null` and keep name snapshots.
+- **Writes are row-level, not snapshot:** each move, edit, close or reopen is its own transaction with a version check and a request ID, and writes the stage history and timeline entry with it. The board shows moves at once and undoes them if the save fails.
+- **Follow-ups stay in the snapshot:** `public.follow_up_tasks` gains optional deal, contact, type, priority, cancellation, assignee, description and timestamps. `save_workspace_for` stores them; composite foreign keys and a trigger keep deals, contacts and assignees in the task's workspace and lead. Older clients keep working.
+- **Timeline without copies:** `deal_timeline` reads deal activities, stage history, the deal's tasks, the lead's outreach drafts and versions, contacts and the lead's activity history in one query.
+- **Analytics in SQL:** `sales_analytics` groups every amount by currency and never converts; win rate counts deals closed in the period.
+- **Handoff for M10:** one `client_handoffs` row per won deal, created only on confirmation; the UI then opens the existing client onboarding.
+
+Details: [docs/SALES-PIPELINE.md](docs/SALES-PIPELINE.md).
+
 ## Current ingress and delivery
 
 Public intake validates origin, normalized fields, payload size, request UUID, honeypot, Turnstile success/action/hostname and durable quotas. The destination is deployment-secret configuration, not a client-selected owner. Inbound automation rejects browser-Origin requests and validates its bearer credential; the database derives the owner from the credential. Origin rejection alone is not authentication.

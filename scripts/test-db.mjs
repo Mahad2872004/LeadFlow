@@ -10,7 +10,9 @@ const empty={version:1,leads:[],tasks:[],activities:[]}
 const lead={id:'legacy-lead',name:'Test Lead',email:'test@example.com',phone:'',company:'',service:'Other',source:'Website',message:'',status:'New',createdAt:'2026-10-18T00:00:00.000Z'}
 const data={version:1,leads:[lead],tasks:[{id:'task',leadId:lead.id,due:'2026-10-19',notes:'Call back',completed:false}],activities:[{id:'event',leadId:lead.id,text:'Lead captured',at:lead.createdAt}]}
 // Since 202610310001 every loaded lead also carries the optional business fields, empty unless set.
-const stored={...data,leads:data.leads.map(l=>({...l,website:'',industry:'',address:'',city:'',region:'',postcode:'',country:''}))}
+// Since 202611230001 every loaded follow-up also carries the optional sales fields (deal, contact, type, priority...), defaulted.
+const taskDefaults={dealId:null,contactId:null,taskType:'follow_up',priority:'medium',cancelled:false,description:'',assigneeId:null,createdAt:null,completedAt:null}
+const stored={...data,leads:data.leads.map(l=>({...l,website:'',industry:'',address:'',city:'',region:'',postcode:'',country:''})),tasks:data.tasks.map(t=>({...t,...taskDefaults}))}
 async function save(payload,revision,id=crypto.randomUUID()){return (await db.query('select public.save_workspace($1::jsonb,$2::bigint,$3::uuid) as revision',[JSON.stringify(payload),revision,id])).rows[0].revision}
 async function load(){return (await db.query('select public.load_workspace() as snapshot')).rows[0].snapshot}
 async function denied(operation,pattern){await assert.rejects(operation,pattern)}

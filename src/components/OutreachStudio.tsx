@@ -40,9 +40,11 @@ function Versions({ workspaceId, draft, busy, onRestore }: { workspaceId: string
  * Outreach for one lead: choose an opportunity, a contact, a channel and an angle; generate a draft grounded in the
  * business report; edit, save, copy and track it. Nothing is sent from LeadFlow, and "sent" is only ever set by a person.
  */
-export function OutreachStudio({ workspace, lead, initialContactId, onPlanFollowUp, onLogActivity, onShowContacts, onShowReport }: {
+export function OutreachStudio({ workspace, lead, initialContactId, onPlanFollowUp, onLogActivity, onShowContacts, onShowReport, onStatusChanged }: {
   workspace: WorkspaceSummary; lead: Lead; initialContactId: string | null
   onPlanFollowUp: (due: string, notes: string) => Promise<boolean>; onLogActivity: (text: string) => Promise<boolean>; onShowContacts: () => void; onShowReport: () => void
+  /** A person marked a draft sent or replied; the app may suggest moving the lead's deals (M9), never automatically. */
+  onStatusChanged?: (draft: Draft, status: DraftStatus) => void
 }) {
   const [contacts, setContacts] = useState<LeadContact[] | null>(null), [report, setReport] = useState<Report | null>(null), [drafts, setDrafts] = useState<Draft[]>([])
   const [preferences, setPreferences] = useState<Preferences | null>(null), [config, setConfig] = useState<OutreachConfig | null>(null)
@@ -107,6 +109,7 @@ export function OutreachStudio({ workspace, lead, initialContactId, onPlanFollow
     if (!draft) return
     await guarded(async () => {
       const updated = await setDraftStatus(workspace.id, draft.id, next); replace(updated); setConfirm(null)
+      if (next === 'sent' || next === 'replied') onStatusChanged?.(updated, next)
       if (next === 'sent') {
         const to = draft.contactName ? ` to ${draft.contactName}` : ''
         // The draft is marked either way; the activity entry goes through the workspace's normal save, which can be retried.

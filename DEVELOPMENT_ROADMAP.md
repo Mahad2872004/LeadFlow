@@ -1,6 +1,6 @@
 # LeadFlow development roadmap
 
-Updated 19 October 2026 after M5 audit/research; M8 added 19 November 2026. This canonical file was absent before M5. Earlier completion claims are qualified below by actual repository and verification evidence; they are not blanket production-readiness claims.
+Updated 19 October 2026 after M5 audit/research; M8 added 19 November 2026; M9 added 23 November 2026. This canonical file was absent before M5. Earlier completion claims are qualified below by actual repository and verification evidence; they are not blanket production-readiness claims.
 
 ## M1 — Lead-management UI
 
@@ -187,6 +187,29 @@ Details, configuration, security and limitations: [docs/OUTREACH.md](docs/OUTREA
 2. Fill in Settings → Outreach.
 3. Run contact searches and drafts on two or three real leads, and review each detail and draft by hand.
 
+## M9 — Sales pipeline and deal management
+
+**Status: implemented and verified locally, 23 November 2026. Migration `202611230001` is not applied to the hosted project and the frontend isn't deployed. No Edge Function changes.**
+
+- **Pipeline:** configurable stages (ten defaults; rename, colour, default probability, add, reorder, archive with same-kind reassignment, restore), board with drag and drop and a Move menu for keyboards and phones, sortable paged list, summary per currency.
+- **Deals:** several per lead; created from the pipeline, a lead, a report opportunity or outreach, keeping those links; duplicate warning; value, currency, probability, weighted value, expected close, owner, priority, notes; versioned edits with history.
+- **Deal view:** overview with business, contacts, opportunity and findings, stage history; a merged timeline (notes, calls, replies, proposals, stage changes, meetings, follow-ups, outreach, lead history) with filters; follow-ups and meetings; outreach drafts.
+- **Follow-ups:** the existing tasks gain type, priority, details, deal, contact, assignee and cancellation, with Today, Assigned to me, Deals and Cancelled filters.
+- **Won, lost, reopen and handoff:** final value; reasons from a configurable list; explicit reopen; one confirmed client handoff per won deal, then client onboarding.
+- **Suggestions, not automation:** after a recorded reply, interested call, proposal or meeting, or outreach marked sent or replied, LeadFlow offers the matching stage. Nothing moves without a click.
+- **Analytics:** periods (7/30/90 days, quarter, year, custom), open and weighted pipeline, won and lost per currency, win rate over closed deals with a small-sample caution, stages, lost reasons, sources, services, cycle length, overdue follow-ups, deals closing soon.
+- **Notifications:** meetings in the next 48 hours and expected closes within 3 days or overdue, in the in-app bell.
+
+**Not built:** the optional AI sales assistant; email, calendar or inbox integration; currency conversion; custom fields, products, quotes; email or push notifications.
+
+Details: [docs/SALES-PIPELINE.md](docs/SALES-PIPELINE.md).
+
+**Next:**
+1. Apply `202611230001` to the hosted project and deploy the frontend.
+2. Review stages, currencies and lost reasons in Pipeline settings.
+3. Move two or three real leads through the pipeline and check the analytics by hand.
+4. M10 (client management) starts from `client_handoffs`; not started, awaiting approval.
+
 ## Production readiness and controlled beta (formerly listed as M7; not scheduled)
 
 **Status: not started; contingent on M6 and evidence.**
@@ -219,6 +242,26 @@ Use consented, bounded beta accounts with a named operator and support channel. 
 Next steps: apply `202610200002` and `202610200003`, deploy `submit-inquiry`, then the frontend; hosted two-account verification; a decision on opening public sign-up; then invitations and member management. See [docs/MULTI-TENANCY.md](docs/MULTI-TENANCY.md).
 
 ## Current verification ledger
+
+**M9 sales pipeline and deal management, 23 November 2026 (local).** All passed:
+- `npx oxlint` (no warnings), `npx tsc -b`, `npm run check:edge` and `npm run build`;
+- the new `npm run test:sales`;
+- `test:db` and `test:tenancy` (new task fields; exact grant list updated), `test:m3`, `test:integrations`, `test:onboarding`, `test:discovery`, `test:apollo`, `test:analysis` and `test:outreach` (both now roll back M9 first);
+- `npx playwright test`: 48/48, including 3 new sales tests;
+- `npm run test:production`: 48/48.
+
+No outside service was contacted; websites and the AI provider were simulated for the business report the tests use.
+
+**Found and fixed by these tests:**
+- the board's empty state never showed (it counted won columns, not won deals);
+- a period with no activity showed "No deals to analyse yet" even though deals existed;
+- a conflicting move's explanation disappeared when the board reloaded;
+- reopening a lost deal tripped a check while its lost reason was still set;
+- the Won column totalled the original value instead of the final won value;
+- average sales cycle could be negative for a deal created and closed the same day;
+- the "track this conversation as a deal" prompt took over the outreach dialog's status message;
+- a paging query passed an extra column to the deal formatter; a missing parenthesis in `sales_analytics`.
+- Unrelated to M9: `test:apollo` had started failing on 21 November because its simulated Apollo credit cycle ended on 20 November 2026; the fixture now uses dates around the day the test runs.
 
 **M8 contact intelligence and outreach, 19 November 2026 (local).** All passed:
 - `npm run lint` (no warnings), `npx tsc -b`, `npm run check:edge` and `npm run build`;

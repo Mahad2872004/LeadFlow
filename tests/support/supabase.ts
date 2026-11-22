@@ -121,8 +121,9 @@ export class SupabaseMock {
       })
       reply = fn.rettype === 'void' ? { status: 204 } : { status: 200, body: result ?? null }
     } catch (error) {
-      const { code, message } = error as { code?: string; message: string }
-      reply = { status: code === '42501' ? (caller.role === 'anon' ? 401 : 403) : 400, body: { code, message, details: null, hint: null } }
+      // PostgREST returns PostgreSQL's DETAIL as "details" (create_deal uses it for the existing deal's ID).
+      const { code, message, detail } = error as { code?: string; message: string; detail?: string }
+      reply = { status: code === '42501' ? (caller.role === 'anon' ? 401 : 403) : 400, body: { code, message, details: detail ?? null, hint: null } }
     }
     return this.reply(route, this.options.afterRpc?.(name, reply) ?? reply)
   }

@@ -388,9 +388,10 @@ assert.ok(/contacts [0-9a-f-]{36} website -> verify \(saved\)/.test(logText)&&/o
 
 // 19. Rollback removes everything M8 added and keeps leads and reports; the migration re-applies.
 const leadCount=await op('select count(*)::int from public.leads'),analyses=await op('select count(*)::int from leadflow_private.business_analyses')
-await actAs(db,null,'postgres');await db.exec(readFileSync('supabase/rollbacks/202611190001_outreach_intelligence.down.sql','utf8'))
+// M9 (sales pipeline) builds on contacts and drafts, so it is rolled back first and re-applied after.
+await actAs(db,null,'postgres');await db.exec(readFileSync('supabase/rollbacks/202611230001_sales_pipeline.down.sql','utf8'));await db.exec(readFileSync('supabase/rollbacks/202611190001_outreach_intelligence.down.sql','utf8'))
 assert.equal(await op("select to_regclass('leadflow_private.lead_contacts')"),null);assert.deepEqual([await op('select count(*)::int from public.leads'),await op('select count(*)::int from leadflow_private.business_analyses')],[leadCount,analyses])
-await db.exec(readFileSync('supabase/migrations/202611190001_outreach_intelligence.sql','utf8'))
+await db.exec(readFileSync('supabase/migrations/202611190001_outreach_intelligence.sql','utf8'));await db.exec(readFileSync('supabase/migrations/202611230001_sales_pipeline.sql','utf8'))
 assert.deepEqual((await contactsOf(owner,'studio')).contacts,[])
 
 printLog('PASS Contact intelligence and outreach: exact grants and private tables; email, phone and WhatsApp normalization; people only with a name and a job title; robots.txt; honest email statuses; explainable confidence; discovery from websites and business reports with per-detail sources and evidence; idempotent, single-active, recent-checked jobs; partial and failed searches; merging that protects confirmed and edited details with suggestions; manual contacts, roles and deletions discovery respects; Apollo people from workspace data only; workspace isolation; outreach settings; recommendations and fenced prompts; grounded, checked, idempotent drafts with refused unsupported claims, channel limits and failed-usage records; versions, protected edits, stale saves, manual sent status, follow-ups; verify refresh and the worker; erasure; log hygiene; rollback and re-apply.')

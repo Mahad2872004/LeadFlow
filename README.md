@@ -40,6 +40,10 @@ Open a lead → **Business report** to analyze its public website: pages, SEO ba
 
 Open a lead → **Contacts** to find its public business contacts (from its website, its business report and, if your workspace uses Apollo, decision-makers), each with its sources, email and phone status, and an explained confidence level. Add, edit, confirm and delete contacts; later searches never overwrite what your team confirmed or edited. Lead → **Outreach** prepares email, WhatsApp and LinkedIn drafts grounded in the business report's findings, with versions, follow-up reminders and a status only a person changes. LeadFlow never sends messages. See [docs/OUTREACH.md](docs/OUTREACH.md).
 
+## Sales pipeline and deals (M9)
+
+**Sales pipeline** tracks deals from first contact to won or lost: a board you can drag cards across (or use each card's Move menu), a sortable list, deals created from leads, business report opportunities and outreach, a timeline of notes, calls, replies, meetings, follow-ups and outreach, won and lost workflows with reasons, an explicit handoff to client work, and **Sales analytics** with win rate and pipeline value per currency. Follow-ups gain types, priorities, assignees, deals and cancellation. Stages only change when a person chooses; LeadFlow suggests the next stage after something is recorded. Implemented and verified locally; the migration isn't applied to the hosted project yet. See [docs/SALES-PIPELINE.md](docs/SALES-PIPELINE.md).
+
 ## Set up a Supabase project
 
 1. Create a Supabase project. In Authentication, disable anonymous sign-ins. Either keep public sign-up disabled and create users with a confirmed email in the dashboard, or enable it after following the [sign-up checklist](docs/MULTI-TENANCY.md#onboarding-and-workspace-management) (redirect URLs, SMTP, password length). Each account gets its own personal workspace. Accounts share data only through explicit workspace membership (see [multi-tenancy](docs/MULTI-TENANCY.md)).
@@ -87,6 +91,9 @@ npm run test:tenancy
 npm run test:onboarding
 npm run test:discovery
 npm run test:apollo
+npm run test:analysis
+npm run test:outreach
+npm run test:sales
 npm run check:edge
 npm test
 npm run test:production

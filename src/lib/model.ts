@@ -10,7 +10,21 @@ export const businessFields = ['website', 'industry', 'address', 'city', 'region
 export type BusinessDetails = Record<typeof businessFields[number], string>
 export interface Lead extends Partial<BusinessDetails> { id: string; name: string; email: string; phone: string; company: string; service: string; source: string; message: string; status: Status; createdAt: string }
 export type LeadInput = Omit<Lead, 'id' | 'status' | 'createdAt'>
-export interface Task { id: string; leadId: string; due: string; notes: string; completed: boolean }
+/** Kinds of follow-up (M9). Tasks are reminders: none of them sends anything. */
+export const taskTypes = ['follow_up', 'call', 'email', 'whatsapp', 'meeting', 'proposal', 'proposal_review', 'internal', 'custom'] as const
+export type TaskType = typeof taskTypes[number]
+export const priorities = ['low', 'medium', 'high'] as const
+export type Priority = typeof priorities[number]
+/**
+ * A follow-up. Since M9 it can belong to a deal and a contact of its lead, have a type, priority, description and assignee,
+ * and be cancelled. Those fields are optional so follow-ups saved before M9 (and M1 browser data) keep their shape.
+ */
+export interface Task {
+  id: string; leadId: string; due: string; notes: string; completed: boolean
+  dealId?: string | null; contactId?: string | null; taskType?: TaskType; priority?: Priority; cancelled?: boolean; description?: string
+  assigneeId?: string | null; createdAt?: string | null; completedAt?: string | null
+}
+export type TaskOptions = Partial<Pick<Task, 'dealId' | 'contactId' | 'taskType' | 'priority' | 'description' | 'assigneeId'>>
 export interface Activity { id: string; leadId: string; text: string; at: string }
 export interface Data { version: 1; leads: Lead[]; tasks: Task[]; activities: Activity[] }
 export const today = localDate
@@ -72,11 +86,26 @@ export function changeStatus(data: Data, id: string, status: Status): Data {
   const lead = data.leads.find(l=>l.id===id); if (!lead || lead.status===status) return data
   return {...data, leads:data.leads.map(l=>l.id===id?{...l,status}:l),activities:[activity(id,`Status changed from ${lead.status} to ${status}`),...data.activities]}
 }
-export function createTask(data: Data, leadId: string, due: string, notes: string): Data {
+export function createTask(data: Data, leadId: string, due: string, notes: string, options: TaskOptions = {}): Data {
   if (!data.leads.some(l=>l.id===leadId) || !isCalendarDate(due) || !notes.trim() || notes.trim().length>2000) throw new Error('Choose a lead, a valid due date, and add follow-up notes.')
-  return {...data,tasks:[{id:uid(),leadId,due,notes:notes.trim(),completed:false},...data.tasks],activities:[activity(leadId,`Follow-up scheduled for ${due}: ${notes.trim()}`),...data.activities]}
+  if ((options.description ?? '').length > 2000) throw new Error('Keep the description under 2,000 characters.')
+  if (options.taskType && !taskTypes.includes(options.taskType)) throw new Error('Choose a follow-up type.')
+  if (options.priority && !priorities.includes(options.priority)) throw new Error('Choose a priority.')
+  // The database checks that the deal and contact belong to this lead and that the assignee is a member.
+  const extra: TaskOptions = Object.fromEntries(Object.entries({ ...options, description: options.description?.trim() || undefined }).filter(([, value]) => value !== undefined && value !== null && value !== ''))
+  const task: Task = { id: uid(), leadId, due, notes: notes.trim(), completed: false, ...extra, createdAt: new Date().toISOString() }
+  return {...data,tasks:[task,...data.tasks],activities:[activity(leadId,`Follow-up scheduled for ${due}: ${notes.trim()}`),...data.activities]}
 }
 export function toggleTask(data: Data, id: string): Data {
   const task=data.tasks.find(t=>t.id===id); if(!task) return data
-  return {...data,tasks:data.tasks.map(t=>t.id===id?{...t,completed:!t.completed}:t),activities:[activity(task.leadId,`Follow-up ${task.completed?'reopened':'completed'}: ${task.notes}`),...data.activities]}
+  const completing = !task.completed
+  // Completion time is recorded for follow-ups that track it (M9); older ones keep their shape.
+  const stamp = task.createdAt !== undefined || task.cancelled !== undefined ? { cancelled: false, completedAt: completing ? new Date().toISOString() : null } : {}
+  return {...data,tasks:data.tasks.map(t=>t.id===id?{...t,...stamp,completed:completing}:t),activities:[activity(task.leadId,`Follow-up ${completing?'completed':'reopened'}: ${task.notes}`),...data.activities]}
+}
+/** Cancels an open follow-up, or reopens a cancelled one. Cancelled follow-ups stay in the history. */
+export function cancelTask(data: Data, id: string): Data {
+  const task=data.tasks.find(t=>t.id===id); if(!task || task.completed) return data
+  const cancelling = !task.cancelled
+  return {...data,tasks:data.tasks.map(t=>t.id===id?{...t,cancelled:cancelling,completedAt:cancelling?new Date().toISOString():null}:t),activities:[activity(task.leadId,`Follow-up ${cancelling?'cancelled':'reopened'}: ${task.notes}`),...data.activities]}
 }
