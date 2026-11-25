@@ -56,6 +56,19 @@ The M6A onboarding engine gains configurable stages, internal agency steps, elev
 
 Implemented and verified locally. On 26 November 2026 the migration was applied to the hosted project, and the new `client-files` and updated `client-portal` Edge Functions were deployed. The frontend isn't deployed, and hosted file storage hasn't been tried yet. See [docs/CLIENT-MANAGEMENT.md](docs/CLIENT-MANAGEMENT.md).
 
+## Project and delivery management (M11)
+
+**Projects** takes onboarded clients into delivery:
+- projects created from a completed onboarding (only what was confirmed), from a client or by hand, several per client;
+- three starter templates, plus your own;
+- milestones and deliverables;
+- project tasks in the existing follow-up list, with a board, dependencies that can't loop, effort and labels;
+- a Gantt-style timeline, a deadline calendar, progress and health from documented rules, and project files in M10's private storage;
+- an internal history with notes;
+- an optional AI assistant whose summaries, risks, plans and task breakdowns are suggestions until a person adds them.
+
+Implemented and verified locally. On 26 November 2026 the migration was applied to the hosted project, and `project-assistant` and the updated `client-files` were deployed. The frontend isn't deployed yet. See [docs/PROJECTS.md](docs/PROJECTS.md).
+
 ## Set up a Supabase project
 
 1. Create a Supabase project. In Authentication, disable anonymous sign-ins. Either keep public sign-up disabled and create users with a confirmed email in the dashboard, or enable it after following the [sign-up checklist](docs/MULTI-TENANCY.md#onboarding-and-workspace-management) (redirect URLs, SMTP, password length). Each account gets its own personal workspace. Accounts share data only through explicit workspace membership (see [multi-tenancy](docs/MULTI-TENANCY.md)).
@@ -107,6 +120,7 @@ npm run test:analysis
 npm run test:outreach
 npm run test:sales
 npm run test:clients
+npm run test:projects
 npm run check:edge
 npm test
 npm run test:production

@@ -43,3 +43,7 @@ verify_jwt = false
 [functions.client-files]
 # Callers are checked by passing their token to the database (analysis_member_role and the document functions).
 verify_jwt = false
+
+[functions.project-assistant]
+# Callers are checked by passing their token to the database (analysis_member_role and project_ai_context).
+verify_jwt = false

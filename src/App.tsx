@@ -17,6 +17,9 @@ import { TaskList } from './components/TaskList'
 import { Icon } from './components/Icon'
 import { WorkspaceSettings } from './components/WorkspaceSettings'
 import './App.css'
+import './interactions.css'
+import { Toast } from './components/Toast'
+import { useEnterMotion } from './hooks/useMotion'
 import { IntegrationsHub } from './components/IntegrationsHub'
 import { ClientOnboarding } from './components/ClientOnboarding'
 import { LeadDiscovery } from './components/LeadDiscovery'
@@ -47,6 +50,9 @@ import { Clients } from './components/Clients'
 import { ClientWorkspace, type ClientTab } from './components/ClientWorkspace'
 import { ConvertDealDialog } from './components/ConvertDealDialog'
 import { clientIndex, type ClientIndexEntry } from './lib/clients'
+import { Projects, type PortfolioTab } from './components/Projects'
+import { ProjectWorkspace, type ProjectTab } from './components/ProjectWorkspace'
+import { projectIndex, type ProjectIndexEntry } from './lib/projects'
 const isMac=typeof navigator!=='undefined'&&/Mac|iPhone|iPad/.test(navigator.userAgent)
 
 
@@ -59,6 +65,7 @@ const headings:Record<Page,[string,string]>={
  Discovery:['Lead discovery','Find people and companies with Apollo, import a list, or add businesses yourself.'],
  'Follow-ups':['Follow-ups','Make the next conversation happen.'],
  Clients:['Clients','Everyone you’ve won: contacts, agreed services, scope, onboarding and documents in one place.'],
+ Projects:['Projects','Plan and deliver client work: milestones, deliverables, tasks and deadlines in one place.'],
  Onboarding:['Client onboarding','Collect what each new client needs to provide, review it, and know exactly when they’re ready for delivery.'],
  Activity:['Activity','A running history of your workspace.'],
  'Sales pipeline':['Sales pipeline','Every deal, where it stands and what it’s worth.'],
@@ -122,6 +129,15 @@ function App({workspace,page,onPageChange:setPage,initialNotice}:{workspace:Work
  const [converting,setConverting]=useState<string|null>(null)
  const [clientsVersion,setClientsVersion]=useState(0)
  useEffect(()=>{let active=true;clientIndex(workspace.id).then(list=>{if(active)setClients(list)}).catch(()=>{/* Client names are optional; tasks fall back to “Client”. */});return()=>{active=false}},[workspace.id,clientsVersion])
+ // M11: every project's name (for project tasks), the project open on the Projects page, and a reload counter.
+ const [projects,setProjects]=useState<ProjectIndexEntry[]>([])
+ const [openProject,setOpenProject]=useState<{id:string;tab?:ProjectTab}|null>(null)
+ // Each page, client or project opens with a short fade so the change of place is visible.
+ const contentRef=useRef<HTMLDivElement>(null)
+ useEnterMotion(contentRef,`${page}:${openClient?.id??''}:${openProject?.id??''}`)
+ const [portfolioTab,setPortfolioTab]=useState<PortfolioTab|undefined>(undefined)
+ const [projectsVersion,setProjectsVersion]=useState(0)
+ useEffect(()=>{let active=true;projectIndex(workspace.id).then(list=>{if(active)setProjects(list)}).catch(()=>{/* Project names are optional; tasks fall back to “Project”. */});return()=>{active=false}},[workspace.id,projectsVersion])
  // Meetings and expected closes for the notification centre, and member names for assignments. Both optional.
  useEffect(()=>{let active=true;salesReminders(workspace.id).then(value=>{if(active)setReminders(value)}).catch(()=>{if(active)setReminders(null)});return()=>{active=false}},[workspace.id,salesVersion,day])
  useEffect(()=>{let active=true;listWorkspaceMembers(workspace.id).then(list=>{if(active)setMembers(list.map(member=>({id:member.userId,name:member.displayName||member.email||'Member',role:member.role})))}).catch(()=>{/* Names are optional. */});return()=>{active=false}},[workspace.id])
@@ -165,21 +181,26 @@ function App({workspace,page,onPageChange:setPage,initialNotice}:{workspace:Work
  function showDeal(dealId:string){setSelected(null);setReportLead(null);setDealStart(null);setOpenDeal(dealId)}
  function startDeal(start:DealStart){setSelected(null);setReportLead(null);setOutreachEvent(null);setOpenDeal(null);setDealStart(start)}
  function clientsChanged(message?:string){setClientsVersion(value=>value+1);if(message)setNotice(n=>[message,...n].slice(0,20))}
- function showClient(id:string,tab?:ClientTab,request?:string|null){setSelected(null);setReportLead(null);setOpenDeal(null);setShowNotices(false);setOpenClient({id,tab,request});setPage('Clients')}
- function navigateTo(next:Page){setPage(next);setShowNotices(false);setOnboardingLead(null);setOpenClient(null);if(next==='Leads'){setSearch('');setSourceFilter('All sources');setFilter('All statuses')}if(next==='Follow-ups')setTaskFilter('Open')}
+ function showClient(id:string,tab?:ClientTab,request?:string|null){setSelected(null);setReportLead(null);setOpenDeal(null);setShowNotices(false);setOpenProject(null);setOpenClient({id,tab,request});setPage('Clients')}
+ function projectsChanged(message?:string){setProjectsVersion(value=>value+1);setClientsVersion(value=>value+1);if(message)setNotice(n=>[message,...n].slice(0,20))}
+ function showProject(id:string,tab?:ProjectTab){setSelected(null);setReportLead(null);setOpenDeal(null);setShowNotices(false);setOpenClient(null);setOpenProject({id,tab});setProjectsVersion(value=>value+1);setPage('Projects')}
+ // A project created with tasks, or a milestone or deliverable removed, changed tasks on the server: load the snapshot again.
+ async function workspaceChanged(){await reload()}
+ function navigateTo(next:Page){setPage(next);setShowNotices(false);setOnboardingLead(null);setOpenClient(null);setOpenProject(null);setPortfolioTab(undefined);if(next==='Leads'){setSearch('');setSourceFilter('All sources');setFilter('All statuses')}if(next==='Follow-ups')setTaskFilter('Open')}
  const due=data?data.tasks.filter(t=>isTaskDue(t,day)):[]
  // Matches save_workspace_for: only owners and admins may remove records, which a reset does.
  const canReset=workspace.role!=='member'
  const emptyHint=`Your database workspace is empty. Add a lead, import browser data${canReset?', or use Reset demo data to load fictional samples':''}.`
  const [hour]=useState(()=>new Date().getHours())
  const clientNames=new Map(clients.map(client=>[client.id,client.name]))
+ const projectNames=new Map(projects.map(project=>[project.id,project.name]))
  const freshCount=data?data.leads.filter(l=>l.status==='New').length:0
  const [title,description]=page==='Overview'&&data&&data.leads.length?[`Good ${hour<12?'morning':hour<18?'afternoon':'evening'}`,`${due.length} follow-up${due.length===1?'':'s'} due · ${freshCount} new lead${freshCount===1?'':'s'} · ${data.leads.length} in your pipeline`]:headings[page]
- const dataPage=page!=='Integrations'&&page!=='Settings'&&page!=='Onboarding'&&page!=='Clients'&&page!=='Discovery'&&page!=='Sales pipeline'&&page!=='Sales analytics'
+ const dataPage=page!=='Integrations'&&page!=='Settings'&&page!=='Onboarding'&&page!=='Clients'&&page!=='Projects'&&page!=='Discovery'&&page!=='Sales pipeline'&&page!=='Sales analytics'
  function shell(content:ReactNode){
   return <div className="app-shell" aria-busy={busy||!data} onClickCapture={event=>{if((busy||pending)&&!(event.target as HTMLElement).closest('[data-recovery]')){event.preventDefault();event.stopPropagation()}}}><a className="skip-link" href="#main-content">Skip to content</a><Sidebar page={page} dueCount={due.length} email={user.email} role={workspace.role} onNavigate={navigateTo} onReset={canReset?()=>data&&openModal('reset'):undefined}/>
   <main id="main-content" tabIndex={-1}><header className="topbar"><div className="breadcrumb"><span className="breadcrumb-workspace">{workspace.name}</span> <span>/</span> <strong>{page}</strong></div><button className="command-trigger" aria-label="Search or jump to" aria-keyshortcuts="Control+K Meta+K" onClick={()=>setPalette(true)}><Icon name="search" size={16}/><span>Search or jump to…</span><kbd>{isMac?'⌘K':'Ctrl K'}</kbd></button><div className="header-actions"><ThemeToggle/><span className={'local-label'+(pending?' is-unsaved':busy?' is-saving':'')}><span className="live-dot"/>{pending?'Not saved':busy?'Saving…':'All changes saved'}</span><button className="text-button" data-recovery disabled={busy||!!pending} onClick={leave}>Sign out</button>{data&&<><button className="text-button" disabled={busy||!!pending} onClick={reload}>Refresh</button><NotificationCenter key={resetVersion} events={notice} tasks={data.tasks} leads={data.leads} day={day} open={showNotices} onOpen={setShowNotices} onClear={()=>setNotice([])} onReview={setSelected} sales={reminders} onOpenDeal={showDeal} userId={user.id} clients={clientNames} onOpenClient={id=>showClient(id,'tasks')}/></>}</div></header>
-  <div className="content">{content}
+  <div className="content" ref={contentRef}>{content}
   <footer>{canReset&&<button className="mobile-reset text-button" onClick={()=>data&&openModal('reset')}>Reset demo data</button>}Private to members of this workspace.<span>LeadFlow · {workspace.name}</span></footer></div></main></div>
  }
  if(!data) return shell(error?<div className="error-banner load-error" role="alert"><p><strong>We couldn’t open {workspace.name}.</strong> {error}</p><button className="secondary" disabled={busy} onClick={reload}>Retry loading</button><button className="secondary" onClick={()=>void refresh()}>Refresh workspace list</button></div>
@@ -194,6 +215,7 @@ function App({workspace,page,onPageChange:setPage,initialNotice}:{workspace:Work
   {id:'add-task',group:'Actions',label:'Plan a follow-up',icon:'calendar',run:()=>openModal('task')},
   {id:'add-deal',group:'Actions',label:'Create a deal',hint:'Track an opportunity through the sales pipeline',icon:'deal',run:()=>startDeal({})},
   {id:'clients',group:'Actions',label:'Open clients',hint:'Clients, onboarding and documents',icon:'building',run:()=>navigateTo('Clients')},
+  {id:'my-project-tasks',group:'Actions',label:'My project tasks',hint:'Project tasks assigned to you',icon:'project',run:()=>{navigateTo('Projects');setPortfolioTab('my_tasks')}},
   {id:'discover',group:'Actions',label:'Find businesses',hint:'Directory search, Apollo or CSV',icon:'compass',run:()=>navigateTo('Discovery')},
   {id:'reload',group:'Actions',label:'Reload workspace',icon:'reset',run:()=>void reload()},
   {id:'theme-dark',group:'Actions',label:'Switch to dark theme',icon:'moon',run:()=>setPreference('dark')},
@@ -201,6 +223,7 @@ function App({workspace,page,onPageChange:setPage,initialNotice}:{workspace:Work
   {id:'theme-system',group:'Actions',label:'Match system theme',hint:'Follow your device setting',icon:'gear',run:()=>setPreference('system')},
   ...data.leads.toSorted((a,b)=>b.createdAt.localeCompare(a.createdAt)).map(lead=>({id:`lead-${lead.id}`,group:'Leads' as const,label:lead.name,hint:[lead.company,lead.email].filter(Boolean).join(' · '),icon:'users' as const,run:()=>setSelected(lead.id)})),
   ...clients.filter(client=>client.status!=='archived').map(client=>({id:`client-${client.id}`,group:'Clients' as const,label:client.name,hint:'Client',icon:'building' as const,run:()=>showClient(client.id)})),
+  ...projects.filter(project=>project.status!=='cancelled').map(project=>({id:`project-${project.id}`,group:'Clients' as const,label:project.name,hint:`Project · ${clientNames.get(project.clientId)??'client'}`,icon:'project' as const,run:()=>showProject(project.id)})),
  ]
  // Warns before creating a lead that matches one already here, using the same rules as imports.
  function findDuplicate(input:LeadInput){const match=duplicateIndex(data!.leads,[]).find({businessName:input.company,contactName:input.name,email:input.email,phone:input.phone,website:input.website??'',city:input.city??'',postcode:input.postcode??''});return match?.lead?{lead:match.lead,reason:reasonLabels[match.reason]}:null}
@@ -216,17 +239,18 @@ function App({workspace,page,onPageChange:setPage,initialNotice}:{workspace:Work
   case 'Upcoming':return taskState(t,day)==='Upcoming'
   case 'Assigned to me':return open(t)&&t.assigneeId===user.id
   case 'Deals':return open(t)&&!!t.dealId
-  case 'Clients':return open(t)&&!!t.clientId
+  case 'Clients':return open(t)&&!!t.clientId&&!t.projectId
+  case 'Projects':return open(t)&&!!t.projectId
   default:return open(t)
  }}).sort((a,b)=>a.due.localeCompare(b.due))
  const memberNames=new Map(members.map(member=>[member.id,member.name]))
  function showLeads(status = 'All statuses'){setSearch('');setSourceFilter('All sources');setFilter(status);setPage('Leads')}
  function showDueTasks(){setPage('Follow-ups');setTaskFilter('Due')}
  const displayedLeads=page==='Overview'?visible.toSorted((a,b)=>b.createdAt.localeCompare(a.createdAt)).slice(0,5):visible
- function taskList(items:typeof tasks){return <TaskList day={day} tasks={items} leads={data!.leads} members={memberNames} onSelect={setSelected} onOpenDeal={showDeal} clients={clientNames} onOpenClient={id=>showClient(id,'tasks')}
+ function taskList(items:typeof tasks){return <TaskList day={day} tasks={items} leads={data!.leads} members={memberNames} onSelect={setSelected} onOpenDeal={showDeal} clients={clientNames} onOpenClient={id=>showClient(id,'tasks')} projects={projectNames} onOpenProject={id=>showProject(id,'tasks')}
   onCancel={task=>commit(cancelTask(data!,task.id),task.cancelled?'Follow-up restored.':'Follow-up cancelled.')}
   onToggle={task=>commit(toggleTask(data!,task.id),task.completed?'Follow-up reopened.':'Follow-up completed. Nice work!')}/>}
- return <>{shell(<>{notice[0]&&<div className="toast" role="status">✓ {notice[0]}</div>}{busy&&<p role="status">Saving or loading workspace…</p>}{error&&<div className="error-banner" role="alert">{error}{pending&&<button data-recovery className="secondary" disabled={busy} onClick={()=>commit(pending.next,pending.message,pending.force,pending.id)}>Retry saving</button>}<button data-recovery className="secondary" disabled={busy} onClick={reload}>Reload workspace{pending?' and discard attempt':''}</button>{accessLost&&<button data-recovery className="secondary" disabled={busy} onClick={()=>void refresh()}>Refresh workspace list</button>}</div>}
+ return <>{shell(<><Toast events={notice}/>{busy&&<p role="status">Saving or loading workspace…</p>}{error&&<div className="error-banner" role="alert">{error}{pending&&<button data-recovery className="secondary" disabled={busy} onClick={()=>commit(pending.next,pending.message,pending.force,pending.id)}>Retry saving</button>}<button data-recovery className="secondary" disabled={busy} onClick={reload}>Reload workspace{pending?' and discard attempt':''}</button>{accessLost&&<button data-recovery className="secondary" disabled={busy} onClick={()=>void refresh()}>Refresh workspace list</button>}</div>}
  {dataPage&&legacyError&&<p role="alert">{legacyError}</p>}
  {dataPage&&legacy&&data.leads.length===0&&<div className="error-banner">Found {legacy.leads.length} leads saved by M1 in this browser. <button className="secondary" onClick={()=>openModal('import')}>Import browser data</button></div>}
  {dataPage&&data.leads.length===0&&(page==='Overview'?<section className="panel welcome-panel"><div><p className="eyebrow">GETTING STARTED</p><h2>{workspace.name} is ready for its first lead</h2><p>{emptyHint}</p></div><div className="welcome-actions"><button className="primary" onClick={()=>openModal('lead')}><Icon name="plus" size={17}/> Add your first lead</button><button className="secondary" onClick={()=>setPage('Integrations')}>Connect your website</button></div></section>:<p>{emptyHint}</p>)}
@@ -235,16 +259,21 @@ function App({workspace,page,onPageChange:setPage,initialNotice}:{workspace:Work
  {page==='Settings'&&<><WorkspaceSettings workspace={workspace}/><AgencyServices workspace={workspace}/><OutreachSettings workspace={workspace}/></>}
  {page==='Onboarding'&&<ClientOnboarding workspace={workspace} leads={data.leads} startLead={onboardingLead} onOpenClient={id=>showClient(id,'onboarding')}/>}
  {page==='Clients'&&(openClient?<ClientWorkspace key={openClient.id} workspace={workspace} clientId={openClient.id} data={data} day={day} members={members} leads={data.leads} initialTab={openClient.tab} initialRequest={openClient.request??null}
-   onBack={()=>setOpenClient(null)} onCommit={(next,message)=>commit(next,message)} onOpenDeal={showDeal} onOpenLead={leadId=>setSelected(leadId)} onChanged={clientsChanged}/>
+   onBack={()=>setOpenClient(null)} onCommit={(next,message)=>commit(next,message)} onOpenDeal={showDeal} onOpenLead={leadId=>setSelected(leadId)} onChanged={clientsChanged}
+   clients={clients} onOpenProject={id=>{projectsChanged();showProject(id)}} onWorkspaceChanged={workspaceChanged}/>
   :<Clients workspace={workspace} day={day} leads={data.leads} members={members} clients={clients} version={clientsVersion} onOpenClient={id=>showClient(id)} onConvertDeal={setConverting}
    onShowTasks={()=>{navigateTo('Follow-ups');setTaskFilter('Clients')}} onChanged={clientsChanged}/>)}
+ {page==='Projects'&&(openProject?<ProjectWorkspace key={openProject.id} workspace={workspace} projectId={openProject.id} data={data} day={day} userId={user.id} members={members} initialTab={openProject.tab}
+   onBack={()=>setOpenProject(null)} onCommit={(next,message)=>commit(next,message)} onOpenClient={id=>showClient(id,'projects')} onOpenDeal={showDeal} onWorkspaceChanged={workspaceChanged} onChanged={projectsChanged}/>
+  :<Projects workspace={workspace} data={data} day={day} userId={user.id} members={members} clients={clients} version={projectsVersion} initialTab={portfolioTab} onOpenProject={id=>showProject(id)}
+   onOpenClient={id=>showClient(id,'projects')} onWorkspaceChanged={workspaceChanged} onCommit={(next,message)=>commit(next,message)} onChanged={projectsChanged}/>)}
  {page==='Sales pipeline'&&<SalesPipeline workspace={workspace} version={salesVersion} onOpenDeal={showDeal} onCreateDeal={()=>startDeal({})} onSettings={()=>setPipelineSettings(true)} onNotice={message=>salesChanged(message)}/>}
  {page==='Sales analytics'&&<SalesAnalytics workspace={workspace} version={salesVersion} onOpenDeal={showDeal} onOpenPipeline={()=>navigateTo('Sales pipeline')}/>}
  {page==='Discovery'&&<LeadDiscovery workspace={workspace} leads={data.leads} blocked={busy||!!pending} onImported={async message=>{forgetOrigins(workspace.id);await reload();setNotice(n=>[message,...n].slice(0,20))}} onAddLead={()=>openModal('lead')}/>}
  {page==='Overview'&&<DashboardOverview day={day} leads={data.leads} tasks={data.tasks} onLeads={showLeads} onFollowUps={showDueTasks} onOpenLead={setSelected} onPlan={leadId=>openModal('task',leadId)} onDiscovery={()=>navigateTo('Discovery')}/>}
  {(page==='Overview'||page==='Leads')&&<section className="panel leads-panel"><div className="section-heading"><div><h2>{page==='Overview'?'Recent leads':'All leads'} <span className="number-tag">{data.leads.length}</span></h2><p>{page==='Overview'?'Your five most recent opportunities.':'Every conversation in one place.'}</p></div>{page==='Overview'&&<button className="text-button" onClick={()=>showLeads()}>View all leads <Icon name="arrow" size={16}/></button>}{page==='Leads'&&<div className="view-toggle" role="group" aria-label="Lead view"><button aria-pressed={leadView==='table'} onClick={()=>setLeadView('table')}><Icon name="list" size={15}/>Table</button><button aria-pressed={leadView==='board'} onClick={()=>setLeadView('board')}><Icon name="columns" size={15}/>Board</button></div>}</div><div className="filters"><label className="search"><Icon name="search" size={18}/><input aria-label="Search leads" placeholder="Search name, company, or email…" value={search} onChange={e=>setSearch(e.target.value)}/></label><select aria-label="Filter by status" value={filter} onChange={e=>setFilter(e.target.value)}><option>All statuses</option>{statuses.map(s=><option key={s}>{s}</option>)}</select><select aria-label="Filter by source" value={sourceFilter} onChange={event=>setSourceFilter(event.target.value)}><option>All sources</option>{sources.map(source=><option key={source}>{source}</option>)}</select>{lists.length>0&&<select aria-label="Filter by list" value={listFilter} onChange={event=>setListFilter(event.target.value)}><option value="">All lists</option>{lists.map(list=><option key={list.id} value={list.id}>{list.name} ({list.leadIds.length})</option>)}</select>}<span className="results" role="status">{visible.length} results</span>{(search||filter!=='All statuses'||sourceFilter!=='All sources'||listFilter)&&<button className="text-button" onClick={()=>{setSearch('');setFilter('All statuses');setSourceFilter('All sources');setListFilter('')}}>Clear filters</button>}</div>{page==='Leads'&&leadView==='board'?<LeadBoard leads={displayedLeads} onSelect={setSelected} onStatus={(lead,status)=>commit(changeStatus(data,lead.id,status),`${lead.name} moved to ${status}.`)}/>:<LeadTable leads={displayedLeads} onSelect={setSelected} onAdd={()=>openModal('lead')} onStatus={(lead,status)=>commit(changeStatus(data,lead.id,status),`${lead.name} moved to ${status}.`)}/>}<div className="table-footer">Showing {displayedLeads.length} of {visible.length} matching leads<span>All sample contacts are fictional</span></div></section>}
  {page==='Overview'&&<div className="overview-bottom"><section className="panel"><div className="section-heading"><div><h2>On your radar</h2><p>Follow-ups due today or earlier</p></div><button className="text-button" onClick={()=>{setPage('Follow-ups');setTaskFilter('Open')}}>View all <Icon name="arrow" size={14}/></button></div>{taskList(due)}</section><section className="panel"><div className="section-heading"><div><h2>Recent activity</h2><p>The latest changes in this workspace</p></div><button className="text-button" onClick={()=>navigateTo('Activity')}>Open activity <Icon name="arrow" size={14}/></button></div><ActivityTimeline activities={data.activities.toSorted((a,b)=>b.at.localeCompare(a.at)).slice(0,6)} leads={data.leads} onSelect={setSelected}/></section></div>}
- {page==='Follow-ups'&&<section className="panel"><div className="section-heading"><h2>Your next steps</h2><select aria-label="Filter tasks" value={taskFilter} onChange={e=>setTaskFilter(e.target.value)}>{['Open','Due','Today','Overdue','Upcoming','Assigned to me','Deals','Clients','Completed','Cancelled','All'].map(s=><option key={s}>{s}</option>)}</select></div>{taskList(tasks)}</section>}
+ {page==='Follow-ups'&&<section className="panel"><div className="section-heading"><h2>Your next steps</h2><select aria-label="Filter tasks" value={taskFilter} onChange={e=>setTaskFilter(e.target.value)}>{['Open','Due','Today','Overdue','Upcoming','Assigned to me','Deals','Clients','Projects','Completed','Cancelled','All'].map(s=><option key={s}>{s}</option>)}</select></div>{taskList(tasks)}</section>}
  {page==='Activity'&&<section className="panel"><div className="section-heading"><h2>Workspace activity</h2><span className="soft-tag">{data.activities.length} events</span></div><ActivityTimeline activities={data.activities} leads={data.leads} onSelect={setSelected}/></section>}
  </>)}
  {(modal==='lead'||modal==='edit')&&<Modal title={modal==='edit'?'Edit lead':'Capture a new lead'} onClose={()=>setModal(null)}><p className="modal-intro">{modal==='edit'?'Keep contact details and your next steps up to date.':'Start a conversation worth following up on.'}</p><LeadForm initial={modal==='edit'&&activeLead?activeLead:blank} initialStatus={modal==="edit"?activeLead?.status:undefined} findDuplicate={modal==="lead"?findDuplicate:undefined} onCancel={()=>setModal(null)} onSave={async(input,status)=>{const next=modal==='edit'&&activeLead?updateLead(data,activeLead.id,input,status):createLead(data,input);const saved=await commit(next,modal==='edit'?`${input.name.trim()} was updated.${activeLead&&activeLead.status!==status?' Status changed to '+status+'.':''}`:`${input.name.trim()} was added to your leads.`);if(saved)setModal(null)}}/></Modal>}

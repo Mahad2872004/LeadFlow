@@ -29,6 +29,22 @@ flowchart LR
 
 The diagram describes logical flow, not a deployed scheduler guarantee. Public visitors never receive read access to lead records. Marketing illustrations use fictional data.
 
+**Interaction layer (app):** motion and feedback live in a few shared places, not in each page.
+- `src/interactions.css` holds:
+  - press feedback;
+  - hover lifts;
+  - tab-panel and list entrances (staggered by `nth-child`);
+  - bars that fill on first appearance;
+  - the toast's layout.
+  Every movement is inside `prefers-reduced-motion: no-preference`, and App.css also stops all animation under `reduce`.
+  Entrances use `backwards` fill, so a finished entrance releases `transform` for hover states.
+- `src/hooks/useMotion.ts` has two hooks, and both do nothing under reduced motion:
+  - `useEnterMotion` fades the content area in on each page or opened record. It uses the Web Animations API before paint and does not remount anything.
+  - `useCountUp` counts the metric cards up to their value. The accessible label always carries the real value.
+- `Toast` shows the newest message. It closes after 7 seconds or from its close button, and holds while pointed at or focused. The notification center keeps the history.
+
+Tab panels that change content per tab are keyed by tab, so their entrance replays. Covered by `tests/interactions.spec.ts`.
+
 ## Data and persistence
 
 - Migration `202610180001_m2.sql`: public workspaces, leads, follow-up tasks, activity history, request receipts. `owner_id` is the Auth user's UUID, not an organization membership. Composite keys/foreign keys constrain related records to one owner. RLS allows own-row selects; writes use explicit-owner, empty-search-path security-definer RPCs.
@@ -124,6 +140,31 @@ M10 adds clients on top of deals, contacts, follow-ups and the M6A onboarding en
 - **Portal boundary:** `portal_view` adds field settings, stage names, the client's own uploads, files shared by the team and the shared scope. It still excludes internal steps, notes, deal values, members and anything about other clients.
 
 Details: [docs/CLIENT-MANAGEMENT.md](docs/CLIENT-MANAGEMENT.md).
+
+## Project and delivery management (M11; database and Edge Functions deployed, frontend not)
+
+M11 adds projects on top of clients, the onboarding completion snapshot, follow-up tasks, the client activity history and M10 file storage.
+
+- **Projects and plans:** private tables for projects, their service and contact links, milestones, deliverables and templates, behind role-checked functions.
+  - `create_project` creates the project, its links and a reviewed plan (milestones, deliverables, tasks linked by plan references) in one transaction, idempotent per request ID.
+  - The setup reads the M10 completion snapshot (or the client's currently confirmed scope) and composes an editable brief from confirmed items only.
+- **Tasks stay in the snapshot:**
+  - `follow_up_tasks` gains project, milestone, deliverable, work status, start date, effort, labels and dependencies.
+  - `save_workspace_for` checks labels and runs `check_task_dependencies`: same project, never circular, via a recursive transitive closure over the workspace's dependency edges.
+  - The task trigger checks that project, client, milestone and deliverable belong together.
+  - Functions that write tasks (plans, milestone and deliverable removal) bump the workspace revision, so stale sessions get a conflict and reload instead of overwriting.
+- **Computed, not stored:** `project_progress` (deliverables, else tasks, never mixed) and `project_health` (documented rules with reasons), evaluated in the workspace's time zone; they feed the list, dashboard, calendar and detail.
+- **Reuse:**
+  - project events and notes are `client_activities` rows with a `project_id`, so they also show in the client's history;
+  - the project timeline adds task and file events from their own rows;
+  - project files are `client_documents` rows with project, milestone, deliverable and task links, always internal (a check constraint) and therefore never on the portal;
+  - `client-files` signs uploads, downloads and image and PDF previews.
+- **AI:**
+  - `project-assistant` reads the project as the member (`project_ai_context`) and reduces it to numbered facts;
+  - it sends untrusted text only inside an escaped JSON data block and validates answers strictly;
+  - it counts requests in the outreach usage ledger (`project_ai_reserve`) and never writes records. Approved plans go through `apply_project_plan`.
+
+Details: [docs/PROJECTS.md](docs/PROJECTS.md).
 
 ## Current ingress and delivery
 

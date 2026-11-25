@@ -4,6 +4,7 @@ import { marketingPages, type MarketingPath } from './content'
 import { Glyph } from './Glyph'
 import { Brand, CTA, FAQs, FinalCTA, Intro, TextLink } from './shared'
 import { primaryLabel } from './access'
+import { useSpotlight } from './motion'
 import { ThemeToggle } from '../components/ThemeToggle'
 import Home from './Home'
 import { Features, Integrations, Pricing, Solutions } from './Pages'
@@ -58,6 +59,7 @@ export default function Marketing({ path }: { path: string }) {
   const known = Object.hasOwn(marketingPages, path)
   const meta = known ? marketingPages[path as MarketingPath] : { title: 'Page not found — LeadFlow', description: 'Find your way back to LeadFlow.' }
   useReveal(root, path)
+  useSpotlight(root, path)
   useEffect(() => {
     document.title = meta.title
     document.querySelector('meta[name="description"]')?.setAttribute('content', meta.description)
@@ -98,7 +100,7 @@ export default function Marketing({ path }: { path: string }) {
           <div className="mk-footer-top">
             <div className="mk-footer-brand">
               <Brand />
-              <p>AI-assisted prospecting for agencies and service businesses. Find the right leads, know what they need, and follow through.</p>
+              <p>AI-assisted prospecting and delivery for agencies and service businesses. Find the right leads, win the work, and deliver it.</p>
             </div>
             <div className="mk-footer-col"><strong>Product</strong><a href="/features">Features</a><a href="/integrations">Integrations</a><a href="/solutions">Solutions</a><a href="/pricing">Proposed pricing</a></div>
             <div className="mk-footer-col"><strong>Learn</strong><a href="/resources">Resources</a><a href="/faq">FAQ</a><a href="/security">Security</a><a href="/inquiry">Contact</a></div>

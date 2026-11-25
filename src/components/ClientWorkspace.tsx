@@ -8,6 +8,7 @@ import { ClientMark, ClientStatusChip, OnboardingMeter } from './Clients'
 import { ClientScope } from './ClientScope'
 import { ClientDocuments } from './ClientDocuments'
 import { ClientActivity } from './ClientActivity'
+import { ClientProjects } from './ClientProjects'
 import type { WorkspaceSummary } from '../lib/backend'
 import { cancelTask, clientTaskTypes, createClientTask, priorities, toggleTask, today, type Data, type Lead, type Priority, type TaskType } from '../lib/model'
 import { errorText, money, priorityLabels, shortDate, taskTypeLabels, dateTime, type SalesMember } from '../lib/sales'
@@ -16,7 +17,7 @@ import { loadOverview, serviceLabels, type TemplateSummary } from '../lib/onboar
 import {
   clientHandoff, clientStatusLabels, completeOnboarding, completionCheck, conflict, contactRoleLabels, contactRoles, channelLabels, deleteClientContact, loadClient, markWelcomeSent,
   preferredChannels, saveClientContact, saveWelcome, setClientStatus, startOnboarding, updateClient, welcomeChannelLabels, welcomeChannels, welcomeDraft,
-  type ClientContact, type ClientContactRole, type ClientDetail, type CompletionItem, type ContactInput, type Handoff, type PreferredChannel, type ProfileFields, type WelcomeChannel,
+  type ClientContact, type ClientContactRole, type ClientDetail, type ClientIndexEntry, type CompletionItem, type ContactInput, type Handoff, type PreferredChannel, type ProfileFields, type WelcomeChannel,
 } from '../lib/clients'
 
 export type ClientTab = 'overview' | 'contacts' | 'onboarding' | 'scope' | 'documents' | 'tasks' | 'activity' | 'projects'
@@ -28,9 +29,11 @@ export type Act = (action: () => Promise<string | void>) => Promise<boolean>
  * One client's workspace: profile, contacts, onboarding, agreed services and scope, documents, tasks, history and notes.
  * Every change goes through a role-checked database function; archived clients are read-only until unarchived.
  */
-export function ClientWorkspace({ workspace, clientId, data, day, members, leads, initialTab = 'overview', initialRequest = null, onBack, onCommit, onOpenDeal, onOpenLead, onChanged }: {
-  workspace: WorkspaceSummary; clientId: string; data: Data; day: string; members: SalesMember[]; leads: Lead[]; initialTab?: ClientTab; initialRequest?: string | null
-  onBack: () => void; onCommit: (next: Data, message: string) => Promise<boolean>; onOpenDeal: (dealId: string) => void; onOpenLead: (leadId: string) => void; onChanged: (message?: string) => void
+export function ClientWorkspace({ workspace, clientId, data, day, members, leads, clients = [], initialTab = 'overview', initialRequest = null, onBack, onCommit, onOpenDeal, onOpenLead, onOpenProject, onWorkspaceChanged, onChanged }: {
+  workspace: WorkspaceSummary; clientId: string; data: Data; day: string; members: SalesMember[]; leads: Lead[]; clients?: ClientIndexEntry[]; initialTab?: ClientTab; initialRequest?: string | null
+  onBack: () => void; onCommit: (next: Data, message: string) => Promise<boolean>; onOpenDeal: (dealId: string) => void; onOpenLead: (leadId: string) => void
+  /** M11: open a project; reload the workspace snapshot after a project was created with tasks. */
+  onOpenProject?: (projectId: string) => void; onWorkspaceChanged?: () => Promise<void>; onChanged: (message?: string) => void
 }) {
   const [detail, setDetail] = useState<ClientDetail | null>(null), [tab, setTab] = useState<ClientTab>(initialTab), [openRequest, setOpenRequest] = useState<string | null>(initialRequest)
   const [error, setError] = useState(''), [notice, setNotice] = useState(''), [busy, setBusy] = useState(false), [loadError, setLoadError] = useState(''), [revision, setRevision] = useState(0)
@@ -83,7 +86,7 @@ export function ClientWorkspace({ workspace, clientId, data, day, members, leads
     {error && <p className="sp-error" role="alert">{error}</p>}
     <div className="sp-tabs cl-tabs" role="tablist" aria-label="Client sections">{tabs.map(([key, label]) => <button key={key} role="tab" aria-selected={tab === key} className={tab === key ? 'active' : ''} onClick={() => { setTab(key); if (key !== 'onboarding') setOpenRequest(null) }}>
       {label}{key === 'tasks' && openTasks > 0 && <span className="number-tag">{openTasks}</span>}{key === 'documents' && detail.documentCount > 0 && <span className="number-tag">{detail.documentCount}</span>}</button>)}</div>
-    <div className="cl-tab-body" role="tabpanel" aria-label={tabs.find(([key]) => key === tab)![1]}>
+    <div key={tab} className="cl-tab-body" role="tabpanel" aria-label={tabs.find(([key]) => key === tab)![1]}>
       {tab === 'overview' && <Overview workspace={workspace} detail={detail} busy={busy} locked={locked} manager={manager} revision={revision} act={act} onOpenTab={setTab} />}
       {tab === 'contacts' && <Contacts workspace={workspace} detail={detail} busy={busy} locked={locked} act={act} />}
       {tab === 'onboarding' && (openRequest
@@ -93,7 +96,11 @@ export function ClientWorkspace({ workspace, clientId, data, day, members, leads
       {tab === 'documents' && <ClientDocuments workspace={workspace} detail={detail} locked={locked} manager={manager} onChanged={message => { void load().catch(() => undefined); setNotice(message); onChanged(message) }} />}
       {tab === 'tasks' && <Tasks detail={detail} data={data} day={day} members={members} locked={locked} onCommit={onCommit} />}
       {tab === 'activity' && <ClientActivity workspace={workspace} detail={detail} revision={revision} />}
-      {tab === 'projects' && <Projects workspace={workspace} detail={detail} onOpenTab={setTab} />}
+      {tab === 'projects' && <>
+        {onOpenProject && <ClientProjects workspace={workspace} client={detail} members={members} clients={clients} version={revision} onOpenProject={onOpenProject}
+          onCreated={(result, name) => { void (async () => { if (result.workspaceChanged) await onWorkspaceChanged?.(); setNotice(`Project “${name}” created.`); onChanged(`Project “${name}” created.`); onOpenProject(result.id) })() }} />}
+        <HandoffRecord workspace={workspace} detail={detail} onOpenTab={setTab} />
+      </>}
     </div>
     {statusDialog && <StatusDialog kind={statusDialog} name={detail.name} busy={busy} onClose={() => setStatusDialog(null)}
       onConfirm={async reason => { if (await act(async () => { await setClientStatus(workspace.id, detail.id, statusDialog, detail.version, reason); return statusDialog === 'archived' ? `${detail.name} was archived.` : `${detail.name} was unarchived.` })) setStatusDialog(null) }} />}
@@ -412,10 +419,10 @@ function ClientTaskDialog({ detail, members, onClose, onSubmit }: { detail: Clie
   </Modal>
 }
 
-// ---------- Projects (M11) ----------
+// ---------- Onboarding handoff ----------
 
-/** Delivery projects arrive in M11. Until then this shows the handoff record onboarding completion saved for it. */
-function Projects({ workspace, detail, onOpenTab }: { workspace: WorkspaceSummary; detail: ClientDetail; onOpenTab: (tab: ClientTab) => void }) {
+/** The handoff record onboarding completion saved; projects created from the completed onboarding start from it. */
+function HandoffRecord({ workspace, detail, onOpenTab }: { workspace: WorkspaceSummary; detail: ClientDetail; onOpenTab: (tab: ClientTab) => void }) {
   const [handoff, setHandoff] = useState<Handoff | null>(null), [error, setError] = useState('')
   useEffect(() => {
     let active = true
@@ -424,7 +431,7 @@ function Projects({ workspace, detail, onOpenTab }: { workspace: WorkspaceSummar
   }, [workspace.id, detail.id, detail.completion])
   const snapshot = handoff?.snapshot as { contacts?: unknown[]; services?: { name: string }[]; requirements?: unknown[]; documents?: unknown[]; onboarding?: unknown[]; scope?: { sequence: number } | null } | undefined
   return <section className="panel cl-section">
-    <div className="section-heading"><div><h2>Projects</h2><p>Project delivery is the next milestone (M11) and isn’t available yet.</p></div></div>
+    <div className="section-heading"><div><h2>Onboarding handoff</h2><p>What was agreed when onboarding was completed. New projects from the completed onboarding start from it.</p></div></div>
     <div className="cl-projects">
       {!detail.completion ? <div className="empty"><h3>Not ready for delivery yet</h3><p>When onboarding is completed, LeadFlow saves a handoff record (contacts, confirmed services, scope, requirements and documents) for project delivery.</p><button className="secondary" onClick={() => onOpenTab('overview')}>See what’s outstanding</button></div>
         : error ? <p className="sp-error" role="alert">{error}</p> : !snapshot ? <p className="sp-muted">Loading the handoff record…</p>

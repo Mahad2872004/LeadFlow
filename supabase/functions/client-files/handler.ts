@@ -1,6 +1,6 @@
 import { boundedJson } from '../_shared/request.ts'
 import { rpc, rpcAs, RpcError, type Runtime } from '../_shared/runtime.ts'
-import { documentType, documentTypes, ensureBucket, inspectUpload, maxDocumentBytes, removeObject, signedDownloadUrl, signedUploadUrl, StorageError } from '../_shared/files.ts'
+import { documentType, documentTypes, ensureBucket, inspectUpload, maxDocumentBytes, previewExtensions, removeObject, signedDownloadUrl, signedPreviewUrl, signedUploadUrl, StorageError } from '../_shared/files.ts'
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 /**
@@ -50,9 +50,11 @@ export function createClientFilesHandler(runtime: Runtime) {
         const type = documentType(body.fileName)
         if (!type) return respond(422, { error: 'This type of file can’t be uploaded. Use PDF, images, Office documents, text, CSV, ZIP, MP4, MOV, WebM, MP3 or PSD.' })
         if (await limited()) return respond(429, { error: 'Too many uploads this minute. Try again shortly.' })
+        // M11: a file can belong to one of the client's projects (and its milestone, deliverable or task); the database checks them.
         const document = await asUser<{ id: string; path: string }>('begin_client_document', { target_workspace: workspaceId, target_client: body.clientId,
           details: { fileName: body.fileName, mimeType: type.mime, size: body.size, category: body.category, description: body.description, visibility: body.visibility,
-            requestId: body.requestId, stageId: body.stageId }, max_bytes: maxDocumentBytes(runtime) })
+            requestId: body.requestId, stageId: body.stageId, projectId: body.projectId, milestoneId: body.milestoneId, deliverableId: body.deliverableId, taskId: body.taskId },
+          max_bytes: maxDocumentBytes(runtime) })
         if (document instanceof Response) return document
         await ensureBucket(runtime)
         const uploadUrl = await signedUploadUrl(runtime, document.path)
@@ -60,13 +62,16 @@ export function createClientFilesHandler(runtime: Runtime) {
         return respond(200, { document: { id: document.id, mimeType: type.mime }, uploadUrl })
       }
 
-      if (action === 'finish' || action === 'download') {
+      if (action === 'finish' || action === 'download' || action === 'preview') {
         if (typeof body.documentId !== 'string' || !uuid.test(body.documentId)) return respond(400, { error: 'Reload the page and try again.' })
         const document = await asUser<{ id: string; path: string; fileName: string; extension: string; status: string }>('client_document_access', { target_workspace: workspaceId, target_document: body.documentId })
         if (document instanceof Response) return document
-        if (action === 'download') {
+        if (action === 'download' || action === 'preview') {
           if (document.status !== 'available') return respond(409, { error: 'This file is still being checked. Try again in a moment.' })
-          return respond(200, { url: await signedDownloadUrl(runtime, document.path, document.fileName) })
+          if (action === 'download') return respond(200, { url: await signedDownloadUrl(runtime, document.path, document.fileName) })
+          // Only images and PDFs open in the browser; everything else downloads.
+          if (!previewExtensions.includes(document.extension)) return respond(422, { error: 'This type of file can’t be previewed. Download it instead.' })
+          return respond(200, { url: await signedPreviewUrl(runtime, document.path) })
         }
         if (document.status !== 'pending') return respond(200, { document: await rpc(runtime, 'finish_client_document', { target_document: document.id, ok: true, actual_size: null, reason: null }) })
         const checked = await inspectUpload(runtime, document.path, document.extension)

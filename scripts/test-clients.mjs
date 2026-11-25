@@ -463,13 +463,15 @@ for(const [sql,params] of [['select public.client_detail($1,$2)',[O,client]],['s
 // 16. Rollback keeps leads, deals and M6A requests, removes M10 data, and the migration applies again.
 await actAs(db,null,'postgres')
 const requestsBefore=await one('select count(*)::int from leadflow_private.onboarding_requests')
+// M11 (projects) builds on clients, so it is rolled back first and re-applied after.
+await db.exec(readFileSync('supabase/rollbacks/202611260001_project_delivery.down.sql','utf8'))
 await db.exec(readFileSync('supabase/rollbacks/202611250001_client_management.down.sql','utf8'))
 assert.equal(await one("select to_regclass('leadflow_private.clients')"),null)
 assert.equal(await one('select count(*)::int from leadflow_private.onboarding_requests'),requestsBefore)
 assert.equal(await one('select count(*)::int from leadflow_private.deals where id=$1',[harborDeal.id]),1)
 tasks=(await snapshot(member)).data.tasks;assert.ok(!tasks.some(t=>t.id==='t-client'),'client tasks are removed');assert.ok(tasks.every(t=>!('clientId' in t)))
 await save(member,data=>({...data,tasks:[...data.tasks,{id:'t-after',leadId:'studio',due:'2026-12-02',notes:'After rollback',completed:false}]}))
-await actAs(db,null,'postgres');await db.exec(migrationSql('202611250001_client_management.sql'))
+await actAs(db,null,'postgres');await db.exec(migrationSql('202611250001_client_management.sql'));await db.exec(migrationSql('202611260001_project_delivery.sql'))
 assert.equal((await as(member,'select public.clients_for($1,$2)',[W,{}])).total,0)
 assert.equal((await snapshot(member)).data.tasks.find(t=>t.id==='t-after').clientId,null)
 

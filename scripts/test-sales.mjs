@@ -208,7 +208,7 @@ assert.equal(await op("select count(*)::int from leadflow_private.deal_activitie
 const task=(taskId,fields={})=>({id:taskId,leadId:'harbor',due:'2026-11-20',notes:'Send pricing',completed:false,...fields})
 await save(member,data=>({...data,tasks:[...data.tasks,task('t-legacy')]}))
 let tasks=(await snapshot(member)).data.tasks
-assert.deepEqual(tasks.find(item=>item.id==='t-legacy'),{id:'t-legacy',leadId:'harbor',due:'2026-11-20',notes:'Send pricing',completed:false,dealId:null,contactId:null,taskType:'follow_up',priority:'medium',cancelled:false,description:'',assigneeId:null,createdAt:null,completedAt:null,clientId:null,onboardingRequestId:null,onboardingItemId:null},'older clients keep working')
+assert.deepEqual(tasks.find(item=>item.id==='t-legacy'),{id:'t-legacy',leadId:'harbor',due:'2026-11-20',notes:'Send pricing',completed:false,dealId:null,contactId:null,taskType:'follow_up',priority:'medium',cancelled:false,description:'',assigneeId:null,createdAt:null,completedAt:null,clientId:null,onboardingRequestId:null,onboardingItemId:null,projectId:null,milestoneId:null,deliverableId:null,status:'todo',startDate:null,estimateHours:null,actualHours:null,labels:[],dependsOn:[]},'older clients keep working')
 await save(member,data=>({...data,tasks:[...data.tasks,task('t-deal',{dealId:seo.id,contactId:contact,taskType:'call',priority:'high',description:'Ask about budget',assigneeId:member,createdAt:'2026-11-18T10:00:00Z'}),
   task('t-done',{dealId:seo.id,taskType:'email',completed:true,createdAt:'2026-11-10T10:00:00Z',completedAt:'2026-11-12T10:00:00Z'}),task('t-bakery',{leadId:'bakery',dealId:bakery.id,due:'2026-11-01'})]}))
 await assert.rejects(()=>save(member,data=>({...data,tasks:[...data.tasks,task('t-wrong',{dealId:retainer.id})]})),/same lead/)
@@ -391,15 +391,16 @@ assert.equal((await as(member,'select public.deal_detail($1,$2)',[W,seo.id])).co
 assert.equal((await snapshot(member)).data.tasks.find(item=>item.id==='t-deal').contactId,null)
 
 // 23. Rollback removes the pipeline and keeps leads and tasks; the migration applies again.
-// M10 (clients) builds on deals and the task columns, so it is rolled back first and re-applied after.
+// M10 (clients) and M11 (projects) build on deals and the task columns, so they are rolled back first and re-applied after.
 await actAs(db,null,'postgres')
+await db.exec(readFileSync('supabase/rollbacks/202611260001_project_delivery.down.sql','utf8'))
 await db.exec(readFileSync('supabase/rollbacks/202611250001_client_management.down.sql','utf8'))
 await db.exec(readFileSync('supabase/rollbacks/202611230001_sales_pipeline.down.sql','utf8'))
 assert.equal(await one("select to_regclass('leadflow_private.deals')"),null)
 const kept=(await snapshot(member)).data
 assert.ok(kept.tasks.some(item=>item.id==='t-deal'));assert.equal('dealId' in kept.tasks[0],false)
 await save(member,data=>({...data,tasks:[...data.tasks,task('t-after-rollback')]}))
-await actAs(db,null,'postgres');await db.exec(migrationSql('202611230001_sales_pipeline.sql'));await db.exec(migrationSql('202611250001_client_management.sql'))
+await actAs(db,null,'postgres');await db.exec(migrationSql('202611230001_sales_pipeline.sql'));await db.exec(migrationSql('202611250001_client_management.sql'));await db.exec(migrationSql('202611260001_project_delivery.sql'))
 assert.equal((await as(member,'select public.sales_pipeline_for($1)',[W])).stages.length,10)
 assert.equal((await snapshot(member)).data.tasks.find(item=>item.id==='t-after-rollback').taskType,'follow_up')
 

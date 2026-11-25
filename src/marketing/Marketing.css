@@ -1,5 +1,5 @@
 /* LeadFlow marketing site. Scoped under .marketing; the dashboard has its own styles.
-   Sections: tokens · base · layout · buttons · header · hero · windows & illustrations · sections · pages · footer · dark theme · motion · responsive */
+   Sections: tokens · base · layout · buttons · header · hero · windows & illustrations · sections · interactive sections · pages · footer · dark theme · motion · responsive */
 
 /* ---------- Tokens ---------- */
 .marketing {
@@ -19,8 +19,8 @@
   --shadow-lg: 0 2px 6px rgba(10, 24, 19, .05), 0 30px 70px -24px rgba(10, 24, 19, .3);
   --ease: cubic-bezier(.16, 1, .3, 1);
 }
-/* Light surface tokens. Illustrations reset them so they stay light inside dark sections. */
-.marketing, .mk-window, .mk-mock {
+/* Light surface tokens. Illustrations and demos reset them so they stay light inside dark sections. */
+.marketing, .mk-window, .mk-mock, .mk-demo-ui {
   --ink: #0a1813;
   --text: #2b3833;
   --muted: #55635d;
@@ -536,6 +536,228 @@
 .mk-final p:not(.mk-eyebrow):not(.mk-fine) { max-width: 560px; margin: 20px auto 0; font-size: 18px }
 .mk-final .mk-actions { justify-content: center }
 
+/* ---------- Interactive sections ---------- */
+/* Hero lifecycle rail: each stage selects its step in "How it works". */
+.mk-hero-flow { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin: 26px auto 0; list-style: none; counter-reset: flow }
+.mk-hero-flow li { display: inline-flex; align-items: center; gap: 6px; counter-increment: flow }
+.mk-hero-flow li + li::before { content: ''; width: 12px; height: 1px; background: rgba(214, 255, 236, .3) }
+.mk-hero-flow a { display: inline-flex; align-items: center; gap: 7px; min-height: 34px; padding: 0 13px; border: 1px solid rgba(255, 255, 255, .12); border-radius: 999px; background: rgba(255, 255, 255, .04); color: var(--text) !important; font-size: 13.5px; font-weight: 550; text-decoration: none; transition: border-color .2s, background .2s, color .2s }
+.mk-hero-flow a::before { content: counter(flow); font-family: var(--mono); font-size: 11px; color: var(--mint) }
+.mk-hero-flow a:hover { border-color: rgba(196, 242, 106, .5); background: rgba(196, 242, 106, .08); color: #fff !important }
+
+/* How it works: autoplay timer and control */
+.mk-how-side { display: grid; gap: 14px; align-content: start; min-width: 0 }
+.mk-how-tab { position: relative; overflow: hidden }
+.mk-how-timer { position: absolute; right: 18px; bottom: 0; left: 18px; height: 2px; overflow: hidden; border-radius: 2px; background: rgba(10, 24, 19, .07) }
+.mk-how-timer span { display: block; height: 100%; background: linear-gradient(90deg, var(--brand), #a6e35b); transform: scaleX(0); transform-origin: left }
+[data-autoplay=paused] .mk-how-timer span { opacity: .55 }
+.mk-how-toggle { justify-self: start; display: inline-flex; align-items: center; gap: 8px; min-height: 38px; margin-left: 8px; padding: 0 14px; border: 1px solid var(--line-strong); border-radius: 999px; background: transparent; font-size: 13px; font-weight: 600; color: var(--text) }
+.mk-how-toggle:hover { border-color: var(--ink); color: var(--ink) }
+.mk-how-try { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; margin-top: 18px; font-size: 14px; font-weight: 600; color: var(--brand-strong) !important; text-decoration: none }
+.mk-how-try:hover { text-decoration: underline; text-underline-offset: 4px }
+.mk-how-try svg { transition: transform .2s var(--ease) }
+.mk-how-try:hover svg { transform: translateX(3px) }
+
+/* Product preview: projects view and view change */
+.mk-switch { flex-wrap: wrap; max-width: 100% }
+.mk-view { animation: mk-rise .35s var(--ease) both }
+.mk-progress-cell { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; min-width: 0 }
+.mk-progress-cell b { font-family: var(--mono); font-size: 12px; color: var(--ink) }
+.mk-count { font-variant-numeric: tabular-nums }
+
+/* Health chips (preview, visuals, demos), matching the app's states */
+.mk-health { display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px; border-radius: 999px; font-size: 11.5px; font-style: normal; font-weight: 650; white-space: nowrap; transition: background-color .3s, color .3s }
+.mk-health::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor }
+.mk-health.is-on_track { background: #e6f5ed; color: #0d6a45 }
+.mk-health.is-at_risk { background: #fff2dc; color: #865600 }
+.mk-health.is-delayed { background: #fdecea; color: #a1301e }
+.mk-badge { transition: background-color .3s, color .3s }
+
+/* Mini pipeline board (visual and win demo) */
+.mk-mock { container-type: inline-size }
+.mk-mini-board { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px }
+.mk-mini-col { display: grid; align-content: start; gap: 6px; min-width: 0; min-height: 132px; padding: 8px; border-radius: 12px; background: #eef3f0 }
+.mk-mini-col.is-won { background: linear-gradient(180deg, #e2f5ea, #eef8f2); box-shadow: inset 0 0 0 1px #c4e8d6 }
+.mk-mini-col-head { display: flex; justify-content: space-between; align-items: center; gap: 6px; padding: 2px 4px 4px; font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--muted) }
+.mk-mini-col-head b { padding: 0 7px; border-radius: 999px; background: #fff; font-size: 11px; color: var(--text) }
+.mk-deal { display: grid; gap: 1px; min-width: 0; padding: 9px 10px; border: 1px solid var(--line); border-radius: 10px; background: #fff; box-shadow: var(--shadow-sm) }
+.mk-deal strong { overflow: hidden; font-size: 12.5px; white-space: nowrap; text-overflow: ellipsis; color: var(--ink) }
+.mk-deal small { overflow: hidden; font-size: 11.5px; white-space: nowrap; text-overflow: ellipsis; color: var(--muted) }
+.mk-deal b { margin-top: 4px; font-size: 11.5px; font-weight: 650; color: var(--brand-strong) }
+.mk-deal.is-focus { border-color: #9fd8bd; box-shadow: 0 0 0 3px rgba(14, 122, 85, .1), var(--shadow-sm) }
+.mk-deal.is-won { animation: mk-land .55s var(--ease) both }
+.mk-mini-empty { padding: 10px 4px; border: 1px dashed var(--line-strong); border-radius: 10px; font-size: 11.5px; text-align: center; color: var(--faint) }
+@container (max-width: 400px) {
+  .mk-mini-board { grid-template-columns: minmax(0, 1fr) }
+  .mk-mini-col { min-height: 0 }
+}
+
+/* Onboarding stages (visual) */
+.mk-stage-dots { display: flex; flex-wrap: wrap; gap: 4px 6px; margin-bottom: 12px }
+.mk-stage-dots span { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px 2px 6px; border-radius: 999px; background: var(--subtle); font-size: 11px; font-weight: 600; color: var(--muted) }
+.mk-stage-dots i { width: 6px; height: 6px; border-radius: 50%; background: #c3cec9 }
+.mk-stage-dots .is-done { background: var(--brand-soft); color: var(--brand-strong) }
+.mk-stage-dots .is-done i { background: var(--brand) }
+.mk-stage-dots .is-current { background: #fff2dc; color: #865600 }
+.mk-stage-dots .is-current i { background: #d08a16 }
+
+/* Project progress and timeline (visual and deliver demo) */
+.mk-project-progress { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 4px 10px; font-size: 13px; font-weight: 600; color: var(--ink) }
+.mk-project-progress b { font-family: var(--mono); color: var(--brand) }
+.mk-project-progress small { font-size: 12px; font-weight: 500; color: var(--muted) }
+.mk-reason { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 12px; font-size: 12.5px; color: var(--text) !important }
+.mk-reason svg { color: #a15c00 }
+.mk-reason b { color: var(--ink) }
+.mk-gantt { --pad: 0px; --label: 76px; position: relative; display: grid; gap: 7px; margin-top: 14px; padding: calc(var(--pad) + 18px) var(--pad) var(--pad) }
+.mk-gantt-row { display: grid; grid-template-columns: var(--label) minmax(0, 1fr); gap: 8px; align-items: center; font-size: 11.5px; font-weight: 600; color: var(--muted) }
+.mk-gantt-track { position: relative; height: 14px; border-radius: 6px; background: #f0f4f2 }
+.mk-gantt-track i { position: absolute; top: 0; bottom: 0; overflow: hidden; border-radius: 6px; background: #cfe9dc }
+.mk-gantt-track em { display: block; height: 100%; background: linear-gradient(90deg, var(--brand), #34c58c); transition: width .5s var(--ease) }
+.mk-gantt-today { position: absolute; top: var(--pad); bottom: var(--pad); left: calc(var(--pad) + var(--label) + 8px + (100% - 2 * var(--pad) - var(--label) - 8px) * var(--today, .5)); width: 0; padding-left: 4px; border-left: 1.5px dashed #c0392b; font-size: 10px; font-weight: 700; line-height: 1; white-space: nowrap; color: #a1301e }
+.mk-gantt-live { --pad: 12px; margin-top: 0; border: 1px solid var(--line); border-radius: 14px; background: #fff }
+
+/* Home: "After the win" demos */
+.mk-demos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: stretch }
+.mk-demo { display: flex; flex-direction: column; gap: 18px; min-width: 0; padding: 24px; border: 1px solid var(--line); border-radius: 24px; background: #fff; box-shadow: var(--shadow-sm) }
+.mk-demo.is-wide { grid-column: 1 / -1 }
+.mk-demo-copy h3 { margin-top: 16px; font-size: 21px }
+.mk-demo-copy p { margin-top: 6px; font-size: 15px }
+.mk-demo-step { display: inline-flex; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--brand) }
+.mk-demo-foot { margin-top: auto }
+.mk-demo-ui { container-type: inline-size; flex: 1; display: grid; align-content: start; gap: 14px; min-width: 0; padding: 16px; border: 1px solid var(--line); border-radius: 18px; background: #fbfcfb; color: var(--text); font-size: 13px; line-height: 1.45 }
+.mk-demo-ui p { color: var(--muted) }
+.mk-demo-bar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px }
+.mk-demo-label { display: inline-flex; align-items: center; gap: 8px; font-size: 11.5px; font-weight: 600; color: var(--muted) }
+.mk-demo-label i { width: 7px; height: 7px; border-radius: 50%; background: #34c58c; box-shadow: 0 0 0 3px rgba(52, 197, 140, .18) }
+.mk-demo-reset { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 10px; border: 1px solid var(--line); border-radius: 8px; background: #fff; font-size: 12px !important; font-weight: 600; color: var(--text) !important; transition: border-color .2s }
+.mk-demo-reset:hover { border-color: var(--line-strong) }
+.mk-demo-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; min-height: 40px }
+.mk-demo-btn { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 16px; border: 0; border-radius: 10px; background: #0a1813; color: #fff !important; font-size: 13.5px; font-weight: 600; box-shadow: 0 1px 2px rgba(10, 24, 19, .2), 0 8px 18px -10px rgba(10, 24, 19, .5); transition: transform .15s var(--ease), background-color .2s, opacity .2s }
+.mk-demo-btn:hover:not(:disabled) { background: #1b3129; transform: translateY(-1px) }
+.mk-demo-btn:active:not(:disabled) { transform: scale(.97) }
+.mk-demo-btn:disabled { opacity: .45; cursor: not-allowed }
+.mk-demo-btn.is-ghost { background: #fff; color: var(--ink) !important; box-shadow: inset 0 0 0 1px var(--line-strong) }
+.mk-demo-done { display: flex; align-items: flex-start; gap: 8px; font-size: 13.5px; font-weight: 600; color: #0b6040 !important; animation: mk-rise .4s var(--ease) both }
+.mk-demo-done svg { flex-shrink: 0; margin-top: 1px }
+.mk-demo-hint { font-size: 12px; color: var(--muted) }
+.mk-check-row { display: grid; grid-template-columns: 18px minmax(0, 1fr) auto; gap: 10px; align-items: start; padding: 8px 6px; border-radius: 10px; cursor: pointer; transition: background-color .2s }
+.mk-check-row:hover { background: var(--subtle) }
+.mk-check-row input { width: 16px; height: 16px; margin: 2px 0 0; accent-color: var(--brand); cursor: pointer }
+.mk-check-row strong { display: block; font-size: 13px; font-weight: 600; color: var(--ink) }
+.mk-check-row small { display: block; font-size: 12px; color: var(--muted) }
+.mk-check-row.is-done strong { color: var(--brand-strong) }
+fieldset:disabled .mk-check-row { cursor: default; opacity: .75 }
+fieldset:disabled .mk-check-row input { cursor: default }
+.mk-review { display: grid; gap: 2px; min-width: 0; margin: 0; padding: 10px; border: 1px solid var(--line); border-radius: 14px; background: #fff; animation: mk-rise .35s var(--ease) both }
+.mk-review legend { padding: 0 6px; font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--muted) }
+.mk-client-card { display: grid; gap: 10px; padding: 14px; border: 1px solid #c4e8d6; border-radius: 14px; background: linear-gradient(135deg, #effaf4, #fff); animation: mk-land .6s var(--ease) both }
+.mk-client-top { display: flex; align-items: center; gap: 10px }
+.mk-client-top > span:nth-child(2) { flex: 1; min-width: 0 }
+.mk-client-top strong { display: block; font-size: 15px; color: var(--ink) }
+.mk-client-top small { display: block; font-size: 12px; color: var(--muted) }
+.mk-client-facts { display: grid; margin: 0 }
+.mk-client-facts div { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 10px; padding: 7px 0; border-top: 1px dashed var(--line) }
+.mk-client-facts dt { font-size: 12px; color: var(--muted) }
+.mk-client-facts dd { margin: 0; font-size: 12.5px; font-weight: 600; color: var(--ink) }
+.mk-deal-facts { padding: 2px 12px; border: 1px solid var(--line); border-radius: 14px; background: #fff }
+.mk-deal-facts div:first-child { border-top: 0 }
+@container (max-width: 360px) { .mk-client-facts div { grid-template-columns: minmax(0, 1fr); gap: 0 } }
+.mk-onboard { display: flex; align-items: center; gap: 14px; min-width: 0 }
+.mk-ring-wrap { position: relative; flex-shrink: 0; width: 76px; height: 76px }
+.mk-ring { width: 100%; height: 100%; transform: rotate(-90deg) }
+.mk-ring circle { fill: none; stroke-width: 7 }
+.mk-ring-track { stroke: #e3ebe7 }
+.mk-ring-fill { stroke: var(--brand); stroke-linecap: round; stroke-dasharray: 201.06; transition: stroke-dashoffset .6s var(--ease) }
+.mk-ring-label { position: absolute; inset: 0; display: grid; place-content: center; line-height: 1.15; text-align: center }
+.mk-ring-label strong { font-size: 14px; color: var(--ink) }
+.mk-ring-label small { font-size: 10.5px; color: var(--muted) }
+.mk-onboard-head { display: grid; justify-items: start; gap: 5px; min-width: 0 }
+.mk-onboard-head strong { font-size: 14px; color: var(--ink) }
+.mk-onboard-head small { font-size: 12px; color: var(--muted) }
+.mk-onboard-list { display: grid; gap: 2px; min-width: 0; margin: 0; padding: 4px; border: 1px solid var(--line); border-radius: 14px; background: #fff }
+.mk-who { align-self: center; padding: 1px 8px; border-radius: 999px; font-size: 11px; font-style: normal; font-weight: 600 }
+.mk-who.is-client { background: #e8eefb; color: #2f4f86 }
+.mk-who.is-agency { background: #f1ebfb; color: #593a8a }
+.mk-deliver { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); gap: 14px; min-width: 0 }
+.mk-task-board { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; min-width: 0 }
+.mk-task-col { display: grid; align-content: start; gap: 6px; min-width: 0; min-height: 230px; padding: 8px; border-radius: 12px; background: #eef3f0 }
+.mk-task-col.is-done { background: #e6f4ec }
+.mk-task-card { display: grid; gap: 6px; min-width: 0; padding: 9px 10px; border: 1px solid var(--line); border-radius: 10px; background: #fff; box-shadow: var(--shadow-sm); animation: mk-land .45s var(--ease) both; transition: border-color .3s, box-shadow .3s }
+.mk-task-card.is-overdue { border-color: #f1c3b9; box-shadow: 0 0 0 3px rgba(161, 48, 30, .08) }
+.mk-task-card strong { font-size: 12.5px; line-height: 1.35; color: var(--ink) }
+.mk-task-meta { display: flex; flex-wrap: wrap; gap: 4px }
+.mk-task-meta i { padding: 1px 7px; border-radius: 999px; background: var(--subtle); font-size: 10.5px; font-style: normal; font-weight: 600; color: var(--muted) }
+.mk-task-meta i.is-high { background: #fdecea; color: #a1301e }
+.mk-task-meta i.is-overdue { background: #a1301e; color: #fff }
+.mk-task-meta i.is-wait { background: #fff2dc; color: #865600 }
+.mk-task-move { display: flex; justify-content: flex-end; gap: 4px }
+.mk-task-move button { display: grid; place-items: center; width: 32px; height: 28px; border: 1px solid var(--line); border-radius: 8px; background: #fff; color: var(--text); transition: border-color .2s, color .2s, transform .15s }
+.mk-task-move button:hover { border-color: var(--brand); color: var(--brand) }
+.mk-task-move button:active { transform: scale(.93) }
+.mk-deliver-side { display: grid; align-content: start; gap: 10px; min-width: 0 }
+.mk-deliver-block { display: grid; gap: 8px; padding: 12px; border: 1px solid var(--line); border-radius: 14px; background: #fff }
+.mk-basis { font-size: 11.5px; color: var(--muted) }
+.mk-reasons { display: grid; gap: 6px; list-style: none }
+.mk-reasons li { display: grid; grid-template-columns: 16px minmax(0, 1fr); gap: 6px; font-size: 12px; color: var(--text); animation: mk-rise .35s var(--ease) both }
+.mk-reasons li.is-delayed svg { color: #a1301e }
+.mk-reasons li.is-at_risk svg { color: #a15c00 }
+.mk-switches { display: grid; gap: 2px; padding-top: 6px; border-top: 1px dashed var(--line) }
+.mk-switches button { display: flex; align-items: center; gap: 10px; min-height: 36px; padding: 4px 2px; border: 0; border-radius: 8px; background: none; font-size: 12.5px; font-weight: 550; color: var(--text); text-align: left }
+.mk-switch-knob { position: relative; flex-shrink: 0; width: 32px; height: 18px; border-radius: 999px; background: #cfd9d4; transition: background-color .2s }
+.mk-switch-knob::after { content: ''; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0, 0, 0, .2); transition: transform .2s var(--ease) }
+.mk-switches [aria-checked=true] .mk-switch-knob { background: #c77c0e }
+.mk-switches [aria-checked=true] .mk-switch-knob::after { transform: translateX(14px) }
+.mk-gantt-live { grid-column: 1 / -1 }
+@container (max-width: 640px) { .mk-deliver { grid-template-columns: minmax(0, 1fr) } }
+@container (max-width: 440px) {
+  .mk-task-board { grid-template-columns: minmax(0, 1fr) }
+  .mk-task-col { min-height: 0 }
+  .mk-gantt { --label: 64px }
+}
+
+/* Bento card visuals for the new capabilities */
+.mk-stage-strip { display: flex; gap: 4px; overflow: hidden; border-radius: 10px }
+.mk-stage-strip span { display: grid; min-width: 0; padding: 8px 10px; background: #e8eefb; color: #2f4f86; font-size: 11.5px; font-weight: 600; white-space: nowrap }
+.mk-stage-strip span:nth-child(2) { background: #fff1db; color: #835100 }
+.mk-stage-strip .is-won { background: #0a1813; color: var(--lime) }
+.mk-stage-strip b { font-size: 18px; letter-spacing: -.03em; line-height: 1.2 }
+.mk-proj-card { display: grid; gap: 4px }
+.mk-proj-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px }
+.mk-proj-top strong { display: block; font-size: 14px; color: var(--ink) }
+.mk-proj-top small { display: block; font-size: 12px; color: var(--muted) }
+.mk-proj-steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin-top: 10px; list-style: none }
+.mk-proj-steps li { position: relative; overflow: hidden; padding-top: 12px; font-size: 11.5px; font-weight: 600; white-space: nowrap; text-overflow: ellipsis; color: var(--muted) }
+.mk-proj-steps li::before { content: ''; position: absolute; top: 0; right: 0; left: 0; height: 4px; border-radius: 4px; background: var(--line-strong) }
+.mk-proj-steps .is-done, .mk-proj-steps .is-current { color: var(--ink) }
+.mk-proj-steps .is-done::before { background: var(--brand) }
+.mk-proj-steps .is-current::before { background: linear-gradient(90deg, var(--brand) 45%, var(--line-strong) 45%) }
+.mk-ai-card { display: grid; justify-items: start; gap: 8px }
+.mk-card .mk-ai-card p { margin: 0; font-size: 14px; font-weight: 550; color: var(--ink) }
+
+/* Product facts with counters */
+.mk-facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-top: 16px }
+.mk-fact { display: grid; align-content: start; gap: 8px; padding: 22px 24px; border: 1px solid var(--line); border-radius: 20px; background: #fff }
+.mk-fact strong { font-size: clamp(34px, 4vw, 46px); font-weight: 650; letter-spacing: -.04em; line-height: 1; color: var(--ink) }
+.mk-fact span { font-size: 14.5px; line-height: 1.5; color: var(--muted) }
+
+/* Features: the AI assistant note inside the Deliver stage */
+.mk-stage-extra { display: grid; justify-items: start; gap: 8px; margin-top: 24px; padding: 18px 20px; border: 1px solid var(--line); border-radius: 16px; background: #fff }
+.mk-stage-extra .mk-stage-eyebrow { margin-bottom: 0 }
+.mk-stage-extra strong { font-size: 16px; color: var(--ink) }
+.mk-stage-extra p { font-size: 15px }
+
+/* Pointer spotlight and hover lift. Only on devices that hover, and never with reduced motion (see useSpotlight). */
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  :is(.mk-card, .mk-use, .mk-method, .mk-demo, .mk-fact, .mk-sec-grid article, .mk-solution, .mk-index a) { position: relative; isolation: isolate }
+  :is(.mk-card, .mk-use, .mk-method, .mk-demo, .mk-fact, .mk-sec-grid article, .mk-solution, .mk-index a)::after {
+    content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none; opacity: 0; transition: opacity .35s;
+    background: radial-gradient(380px circle at var(--mx, 50%) var(--my, 0%), rgba(94, 224, 168, .17), transparent 62%);
+  }
+  :is(.mk-card, .mk-use, .mk-method, .mk-demo, .mk-fact, .mk-sec-grid article, .mk-solution, .mk-index a):hover::after { opacity: 1 }
+  :is(.mk-card, .mk-use, .mk-method, .mk-fact, .mk-sec-grid article) { transition: transform .35s var(--ease), box-shadow .35s var(--ease), border-color .35s }
+  :is(.mk-card, .mk-use, .mk-method, .mk-fact, .mk-sec-grid article):hover { transform: translateY(-3px); border-color: var(--line-strong); box-shadow: var(--shadow) }
+}
+
 /* ---------- Pages ---------- */
 .mk-intro { position: relative; isolation: isolate; padding: clamp(64px, 9vw, 120px) 0 clamp(48px, 6vw, 80px); text-align: center }
 .mk-intro::before { content: ''; position: absolute; inset: 0; z-index: -1; background-image: linear-gradient(rgba(10, 24, 19, .055) 1px, transparent 1px), linear-gradient(90deg, rgba(10, 24, 19, .055) 1px, transparent 1px); background-size: 56px 56px; background-position: center -1px; -webkit-mask-image: radial-gradient(ellipse 60% 80% at 50% 0%, #000 20%, transparent 75%); mask-image: radial-gradient(ellipse 60% 80% at 50% 0%, #000 20%, transparent 75%) }
@@ -674,7 +896,8 @@
   --shadow-lg: 0 2px 6px rgba(0, 0, 0, .3), 0 30px 70px -24px rgba(0, 0, 0, .7);
 }
 /* Illustrations keep the light brand colours too. */
-:root[data-theme="dark"] .marketing :is(.mk-window, .mk-mock) { color-scheme: light; --brand: #0e7a55; --brand-strong: #0a5c40; --brand-soft: #e5f4ed }
+:root[data-theme="dark"] .marketing :is(.mk-window, .mk-mock, .mk-demo-ui) { color-scheme: light; --brand: #0e7a55; --brand-strong: #0a5c40; --brand-soft: #e5f4ed }
+:root[data-theme="dark"] .marketing :is(.mk-window, .mk-mock, .mk-demo-ui) :focus-visible { outline-color: #0e7a55 }
 :root[data-theme="dark"] .marketing :is(h1, h2) em {
   background: linear-gradient(95deg, #7ff0bf 5%, var(--lime) 95%);
   -webkit-background-clip: text;
@@ -698,7 +921,7 @@
 :root[data-theme="dark"] .marketing .mk-status.is-beta { color: #c9b0f2 }
 :root[data-theme="dark"] .marketing .mk-status.is-planned { color: #a9c4ea }
 :root[data-theme="dark"] .marketing .mk-status.is-off { color: #a3b6ae }
-:root[data-theme="dark"] .marketing .mk-chip:not(.mk-window *, .mk-mock *) { background: var(--surface) }
+:root[data-theme="dark"] .marketing .mk-chip:not(.mk-window *, .mk-mock *, .mk-demo-ui *) { background: var(--surface) }
 :root[data-theme="dark"] .mk-section-tint { background: linear-gradient(180deg, #08140f, var(--canvas)) }
 :root[data-theme="dark"] .mk-providers li { color: var(--muted) }
 :root[data-theme="dark"] .mk-how-tab:hover { background: rgba(255, 255, 255, .04) }
@@ -707,7 +930,10 @@
 :root[data-theme="dark"] .mk-how-tab[aria-selected=true] .mk-how-n { background: rgba(196, 242, 106, .14); color: var(--lime) }
 :root[data-theme="dark"] :is(.mk-how-stage, .mk-stage-visual) { background: radial-gradient(70% 60% at 70% 20%, rgba(94, 224, 168, .12), transparent 70%), radial-gradient(60% 50% at 10% 90%, rgba(196, 242, 106, .06), transparent 70%), #0a1612 }
 :root[data-theme="dark"] .mk-how-stage::before { background-image: radial-gradient(rgba(214, 255, 236, .08) 1px, transparent 1px) }
-:root[data-theme="dark"] .marketing :is(.mk-card, .mk-map span, .mk-evidence article, .mk-use, .mk-faq-contact, .mk-stage-report, .mk-method, .mk-solution, .mk-plan:not(.is-featured), .mk-compare, .mk-index a, .mk-sec-grid article) { background-color: var(--surface) }
+:root[data-theme="dark"] .marketing :is(.mk-card, .mk-map span, .mk-evidence article, .mk-use, .mk-faq-contact, .mk-stage-report, .mk-method, .mk-solution, .mk-plan:not(.is-featured), .mk-compare, .mk-index a, .mk-sec-grid article, .mk-demo, .mk-fact, .mk-stage-extra) { background-color: var(--surface) }
+:root[data-theme="dark"] .mk-how-timer { background: rgba(255, 255, 255, .08) }
+:root[data-theme="dark"] .mk-how-toggle:hover { border-color: var(--lime); color: var(--lime) }
+:root[data-theme="dark"] .mk-proj-steps li::before { background: rgba(214, 255, 236, .16) }
 :root[data-theme="dark"] .mk-card.is-lg { background: radial-gradient(70% 90% at 100% 100%, rgba(94, 224, 168, .1), transparent 70%), var(--surface) }
 :root[data-theme="dark"] .mk-duo-owner { border-color: rgba(94, 224, 168, .2); background: radial-gradient(80% 60% at 0% 0%, rgba(94, 224, 168, .12), transparent 70%), var(--surface) }
 :root[data-theme="dark"] .mk-solution-icon { background: rgba(94, 224, 168, .12); color: var(--brand) }
@@ -725,6 +951,7 @@
 @keyframes mk-shimmer { from { background-position: 100% 0 } to { background-position: -100% 0 } }
 @keyframes mk-blink { 50% { opacity: 0 } }
 @keyframes mk-pop { from { opacity: 0; transform: scale(.85) } to { opacity: 1; transform: none } }
+@keyframes mk-land { from { opacity: 0; transform: translateY(-6px) scale(.96) } 60% { opacity: 1; transform: translateY(1px) scale(1.01) } to { opacity: 1; transform: none } }
 @keyframes mk-drift { from { transform: translateX(-56%) scale(1) } to { transform: translateX(-44%) scale(1.12) } }
 @media (prefers-reduced-motion: no-preference) {
   .mk-hero-copy > * { animation: mk-rise .9s var(--ease) both }
@@ -732,6 +959,7 @@
   .mk-hero-copy > :nth-child(3) { animation-delay: .12s }
   .mk-hero-copy > :nth-child(4) { animation-delay: .18s }
   .mk-hero-copy > :nth-child(5) { animation-delay: .24s }
+  .mk-hero-copy > :nth-child(6) { animation-delay: .3s }
   .mk-hero-visual { animation: mk-rise-lg 1.2s .2s var(--ease) both }
   .mk-stage::after { animation: mk-drift 14s ease-in-out infinite alternate }
   .mk-intro .mk-wrap > * { animation: mk-rise .8s var(--ease) both }
@@ -753,6 +981,7 @@
   .mk-card.is-lg { grid-column: span 2 }
   .mk-card.is-md, .mk-card.is-sm { grid-column: span 1 }
   .mk-methods { grid-template-columns: repeat(2, minmax(0, 1fr)) }
+  .mk-facts { grid-template-columns: repeat(2, minmax(0, 1fr)) }
 }
 @media (max-width: 1000px) {
   .mk-app { grid-template-columns: 60px minmax(0, 1fr) }
@@ -770,6 +999,8 @@
   .mk-evidence { grid-template-columns: repeat(2, minmax(0, 1fr)) }
   .mk-uses, .mk-plans { grid-template-columns: minmax(0, 1fr) }
   .mk-sec-aside { position: relative; top: 0 }
+  .mk-demos { grid-template-columns: minmax(0, 1fr) }
+  .mk-how-tab[aria-selected=false] .mk-how-copy strong { display: none }
 }
 @media (max-width: 940px) {
   /* The theme switch sits before the menu button on the right. */
@@ -834,6 +1065,12 @@
   .mk-checks-list li { grid-template-columns: 34px minmax(0, 1fr) }
   .mk-checks-list li > .mk-type { grid-column: 2; justify-self: start }
   .mk-sec-aside { padding: 24px }
+  .mk-hero-flow { gap: 6px }
+  .mk-hero-flow li + li::before { display: none }
+  .mk-demo { padding: 18px; border-radius: 20px }
+  .mk-demo-ui { padding: 12px }
+  .mk-fact { padding: 18px }
+  .mk-facts { gap: 10px }
 }
 @media (max-width: 400px) {
   .mk-chrome .mk-crumbs { font-size: 11.5px }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type CSSProperties } from 'react'
 import { Glyph } from './Glyph'
 import { Chrome } from './shared'
 
@@ -236,25 +236,72 @@ export function FollowVisual() {
           <li key={task}><span className="mk-checkbox" /><span><strong>{task}</strong></span><b className={due === 'Today' ? 'is-today' : ''}>{due}</b></li>
         ))}
       </ul>
-      <div className="mk-mock-foot"><span><Glyph name="clipboard" size={14} />Won? Start client onboarding</span><span className="mk-status is-beta">Beta</span></div>
+      <div className="mk-mock-foot"><span><Glyph name="trophy" size={14} />Interested? Track it as a deal</span><span className="mk-fake-button is-ghost">New deal</span></div>
+    </div>
+  )
+}
+
+export function PipelineVisual() {
+  const columns = [
+    ['Interested', [['Fieldwork Co.', 'Consulting sprint', '$2,500']]],
+    ['Proposal sent', [['Lumen Physio', 'Local SEO', '£1,200 / mo'], ['Sunday Goods', 'Paid ads setup', '$3,000']]],
+    ['Won', [['Harbor Dental', 'Online booking build', '$4,800']]],
+  ] as const
+  return (
+    <div className="mk-mock mk-win" role="img" aria-label="Illustration: a sales pipeline board with deals in Interested, Proposal sent and Won, a lost reason and win-rate analytics">
+      <div className="mk-mock-head"><span><strong>Sales pipeline</strong><small>Board · 3 open deals · USD and GBP kept apart</small></span><span className="mk-badge is-green">Win rate 60%</span></div>
+      <div className="mk-mini-board">
+        {columns.map(([name, deals]) => (
+          <div key={name} className={`mk-mini-col${name === 'Won' ? ' is-won' : ''}`}>
+            <span className="mk-mini-col-head">{name}<b>{deals.length}</b></span>
+            {deals.map(([company, title, value]) => (
+              <span key={company} className="mk-deal"><strong>{company}</strong><small>{title}</small><b>{value}</b></span>
+            ))}
+          </div>
+        ))}
+      </div>
+      <div className="mk-mock-foot"><span><Glyph name="info" size={14} />Lost: Northline Studio · reason “Budget moved to next year”</span><span className="mk-fake-button">Convert to client</span></div>
     </div>
   )
 }
 
 export function OnboardVisual() {
-  const items = [['Brand assets folder', 'Accepted'], ['Google Ads account access', 'Access confirmed'], ['Target audience and offer', 'Changes requested'], ['Monthly budget', 'Waiting']] as const
+  const items = [['Brand assets uploaded', 'Client · 3 files', 'ok'], ['Booking hours form', 'Client · submitted, accepted', 'ok'], ['Scope confirmed', 'Agency · a record, not a contract', 'ok'], ['Website hosting access', 'Client · changes requested', 'info'], ['Welcome message marked sent', 'Agency · you send it yourself', 'clock']] as const
+  const stages = ['Welcome', 'Business info', 'Requirements', 'Access', 'Scope', 'Final review']
   return (
-    <div className="mk-mock" role="img" aria-label="Illustration: a client onboarding checklist with accepted, requested and waiting items">
-      <div className="mk-mock-head"><span><strong>Paid advertising kickoff</strong><small>Sunday Goods · Client link active</small></span><span className="mk-badge is-amber">7 of 9 ready</span></div>
-      <div className="mk-bar mk-bar-lg"><span style={{ width: '78%' }} /></div>
+    <div className="mk-mock" role="img" aria-label="Illustration: a client onboarding checklist for a fictional dental practice, with stages, client and agency items and readiness">
+      <div className="mk-mock-head"><span><strong>Harbor Dental · Website kickoff</strong><small>Client link active · expires in 14 days</small></span><span className="mk-badge is-amber">Agency steps left</span></div>
+      <div className="mk-stage-dots" aria-hidden="true">{stages.map((stage, i) => <span key={stage} className={i < 4 ? 'is-done' : i === 4 ? 'is-current' : ''}><i />{stage}</span>)}</div>
       <ul className="mk-checks-list">
-        {items.map(([label, state]) => (
+        {items.map(([label, state, tone]) => (
           <li key={label}>
-            <span className={`mk-check-icon${state === 'Accepted' || state === 'Access confirmed' ? ' is-ok' : ''}`}><Glyph name={state === 'Waiting' ? 'clock' : state === 'Changes requested' ? 'info' : 'check'} size={16} /></span>
+            <span className={`mk-check-icon${tone === 'ok' ? ' is-ok' : ''}`}><Glyph name={tone === 'clock' ? 'clock' : tone === 'info' ? 'info' : 'check'} size={16} /></span>
             <span><strong>{label}</strong><small>{state}</small></span>
           </li>
         ))}
       </ul>
+    </div>
+  )
+}
+
+export function ProjectVisual() {
+  const milestones = [['Discovery', 0, 18, 1], ['Design', 14, 40, 1], ['Build', 36, 78, .45], ['Launch', 80, 92, 0]] as const
+  return (
+    <div className="mk-mock mk-project" role="img" aria-label="Illustration: a project for a fictional dental practice with 60 percent progress from deliverables, health at risk because a high-priority task is overdue, and a timeline of four milestones">
+      <div className="mk-mock-head"><span><strong>Harbor Dental · Website rebuild</strong><small>From completed onboarding · Target 12 Dec</small></span><span className="mk-health is-at_risk">At risk</span></div>
+      <div className="mk-project-progress"><span>Progress <b>60%</b></span><small>3 of 5 deliverables completed</small></div>
+      <div className="mk-bar mk-bar-lg"><span style={{ width: '60%' }} /></div>
+      <p className="mk-reason"><Glyph name="info" size={14} />A high-priority task is overdue: <b>Booking page build</b></p>
+      <div className="mk-gantt">
+        {milestones.map(([name, from, to, done]) => (
+          <div key={name} className="mk-gantt-row">
+            <span>{name}</span>
+            <span className="mk-gantt-track"><i style={{ left: `${from}%`, width: `${to - from}%` }}><em style={{ width: `${done * 100}%` }} /></i></span>
+          </div>
+        ))}
+        <span className="mk-gantt-today" style={{ '--today': .58 } as CSSProperties}>Today</span>
+      </div>
+      <div className="mk-mock-foot"><span><Glyph name="sparkles" size={14} />AI suggestion: split “Booking page build” into 3 tasks</span><span className="mk-fake-button is-ghost">Review</span></div>
     </div>
   )
 }

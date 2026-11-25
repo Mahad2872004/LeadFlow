@@ -69,14 +69,22 @@ export async function signedUploadUrl(runtime: Runtime, path: string) {
   if (!response.ok || typeof body.url !== 'string' || !body.url.includes('token=')) throw new StorageError('The upload couldn’t be prepared.')
   return `${base(runtime)}${body.url}`
 }
-/** A download link valid for 60 seconds, always served as an attachment under the file's own name. */
-export async function signedDownloadUrl(runtime: Runtime, path: string, fileName: string) {
+async function signedObjectUrl(runtime: Runtime, path: string) {
   const response = await runtime.fetch(`${base(runtime)}/object/sign/${documentBucket}/${objectPath(path)}`, { method: 'POST', headers: { ...auth(runtime), 'Content-Type': 'application/json' },
     body: JSON.stringify({ expiresIn: 60 }), signal: AbortSignal.timeout(10000) })
   const body = await response.json().catch(() => ({})) as { signedURL?: string }
   if (!response.ok || typeof body.signedURL !== 'string') throw new StorageError('The file couldn’t be opened.')
-  return `${base(runtime)}${body.signedURL}${body.signedURL.includes('?') ? '&' : '?'}download=${encodeURIComponent(fileName)}`
+  return `${base(runtime)}${body.signedURL}`
 }
+/** A download link valid for 60 seconds, always served as an attachment under the file's own name. */
+export async function signedDownloadUrl(runtime: Runtime, path: string, fileName: string) {
+  const url = await signedObjectUrl(runtime, path)
+  return `${url}${url.includes('?') ? '&' : '?'}download=${encodeURIComponent(fileName)}`
+}
+/** File types a browser can show safely on Storage's own domain: images and PDFs. Never HTML, SVG or text. */
+export const previewExtensions = ['pdf', 'png', 'jpg', 'jpeg', 'gif', 'webp']
+/** A link valid for 60 seconds that opens the file in the browser instead of downloading it. Only for previewExtensions. */
+export const signedPreviewUrl = (runtime: Runtime, path: string) => signedObjectUrl(runtime, path)
 export async function removeObject(runtime: Runtime, path: string) {
   const response = await runtime.fetch(`${base(runtime)}/object/${documentBucket}`, { method: 'DELETE', headers: { ...auth(runtime), 'Content-Type': 'application/json' },
     body: JSON.stringify({ prefixes: [path] }), signal: AbortSignal.timeout(10000) })

@@ -1,0 +1,248 @@
+/* M11: one project's workspace. Builds on the shared panel, table and sp-/cl- styles; uses design tokens for light and dark. */
+.pw-workspace { display: grid; gap: 14px; min-width: 0 }
+.pw-head { margin: 0; padding: 20px 22px }
+.pw-head-main { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 14px; margin-bottom: 16px }
+.pw-head-title { flex: 1 1 320px; min-width: 0 }
+.pw-kicker { margin: 0 0 4px; color: var(--lf-muted); font-size: 13px }
+.pw-head-title h2 { margin: 0 0 8px; color: var(--lf-ink); font-size: 22px; font-weight: 650; letter-spacing: -.02em; overflow-wrap: anywhere }
+.pw-head-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; margin: 0 }
+.pw-head-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px }
+.pw-head-actions select { min-height: 36px; padding: 6px 10px; border: 1px solid var(--lf-line-strong); border-radius: 9px; background: var(--lf-surface); color: var(--lf-ink); font: inherit; font-size: 13.5px }
+.pw-ai-menu { display: inline-flex; flex-wrap: wrap; gap: 6px }
+.pw-ai-menu .secondary { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 12px; font-size: 13px }
+.pw-facts { grid-template-columns: minmax(0, 1.6fr) repeat(4, minmax(0, 1fr)) }
+.pw-facts dd small { display: block; overflow: hidden; color: var(--lf-muted); font-size: 12px; font-weight: 400; text-overflow: ellipsis; white-space: nowrap }
+.pw-late { color: var(--lf-danger) }
+.pw-health-reasons { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 12px 0 0; padding: 0; list-style: none; color: var(--lf-muted); font-size: 12.5px }
+.pw-health-reasons li::before { content: '•'; margin-right: 6px; color: var(--lf-warning) }
+.pw-health-reasons li.is-delayed::before { color: var(--lf-danger) }
+.pw-tabs { margin: 0 }
+.pw-tab-body { min-width: 0 }
+.pw-section { margin: 0 }
+.pw-section > .empty { margin: 0 22px 22px }
+.pw-section > .filters { padding-top: 0 }
+
+/* Overview blocks: flat sections separated by rules, not nested cards. */
+.pw-overview, .pw-settings { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; overflow: hidden; border: 1px solid var(--lf-line); border-radius: var(--lf-radius-lg); background: var(--lf-line) }
+.pw-block { min-width: 0; padding: 18px 20px; background: var(--lf-surface); font-size: 14px; line-height: 1.55 }
+.pw-block.is-wide { grid-column: 1 / -1 }
+.pw-block-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px }
+.pw-block h3 { margin: 0; color: var(--lf-ink); font-size: 15px; font-weight: 650 }
+.pw-block h4 { margin: 14px 0 6px; color: var(--lf-ink); font-size: 13px }
+.pw-description { margin: 0 0 12px }
+.pw-brief { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 24px; margin: 0 }
+.pw-brief dt { color: var(--lf-muted); font-size: 12px; font-weight: 600; text-transform: none }
+.pw-brief dd { margin: 2px 0 0; color: var(--lf-text) }
+.pw-brief-form textarea { width: 100% }
+.pw-source { margin: 12px 0 0; color: var(--lf-muted); font-size: 12.5px }
+.pw-rules { display: grid; gap: 6px; margin: 0; padding-left: 18px; color: var(--lf-text); font-size: 13px }
+.pw-plain { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none }
+.pw-plain li { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 2px 12px }
+.pw-plain li small { display: block; flex-basis: 100%; color: var(--lf-muted); font-size: 12.5px }
+.pw-strip { display: flex; gap: 0; margin: 12px 0 4px; padding: 0; overflow-x: auto; list-style: none; scrollbar-width: thin }
+.pw-strip li { display: grid; flex: 1 0 96px; gap: 2px; padding: 0 8px 6px 0; border-top: 3px solid var(--lf-track); min-width: 96px }
+.pw-strip li.is-completed { border-top-color: var(--lf-success) }
+.pw-strip li.is-in_progress { border-top-color: var(--lf-brand) }
+.pw-strip li.is-overdue, .pw-strip li.is-delayed { border-top-color: var(--lf-danger) }
+.pw-strip li.is-cancelled { opacity: .55 }
+.pw-strip-dot { display: none }
+.pw-strip-name { overflow: hidden; padding-top: 6px; color: var(--lf-ink); font-size: 12.5px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap }
+.pw-strip small { color: var(--lf-muted); font-size: 11.5px }
+.pw-deadlines { display: grid; gap: 0; margin: 0; padding: 0; list-style: none }
+.pw-deadlines li { display: grid; grid-template-columns: 96px auto minmax(0, 1fr) auto; align-items: center; gap: 8px; padding: 7px 0; border-top: 1px solid var(--lf-line); font-size: 13px }
+.pw-deadlines li:first-child { border-top: 0 }
+.pw-deadlines time { color: var(--lf-muted) }
+.pw-deadlines span:last-of-type { overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.pw-deadlines li.is-overdue time, .pw-deadlines small { color: var(--lf-danger) }
+.pw-checks { display: grid; gap: 6px; margin: 0 0 12px; padding: 10px 12px; border: 1px solid var(--lf-line); border-radius: 10px }
+.pw-checks legend { padding: 0 4px; color: var(--lf-muted); font-size: 12.5px; font-weight: 600 }
+.pw-field { display: grid; gap: 6px; color: var(--lf-text); font-size: 13px; font-weight: 600 }
+.pw-field select, .pw-field input { min-height: 38px; padding: 6px 10px; border: 1px solid var(--lf-line-strong); border-radius: 9px; background: var(--lf-surface); color: var(--lf-ink); font: inherit; font-size: 13.5px }
+.pw-inline-form { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px }
+.pw-inline-form .pw-field { flex: 1 1 220px }
+.pw-status-buttons { display: flex; flex-wrap: wrap; gap: 6px }
+.pw-status-buttons .secondary { min-height: 32px; padding: 0 12px; font-size: 12.5px }
+.pw-plan-preview { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--lf-line) }
+.pw-plan-preview ol { margin-bottom: 12px; padding-left: 18px; list-style: decimal }
+.pw-plan-preview li { display: list-item }
+.pw-plan-preview small { display: inline; color: var(--lf-muted) }
+
+/* Status pills for milestones, deliverables and tasks. */
+.pw-pill { display: inline-flex; align-items: center; padding: 1px 8px; border: 1px solid var(--lf-line); border-radius: 999px; background: var(--lf-subtle); color: var(--lf-muted); font-size: 11.5px; font-weight: 600; line-height: 1.6; white-space: nowrap }
+.pw-pill.is-in_progress, .pw-pill.is-internal_review, .pw-pill.is-in_review { border-color: var(--lf-info-line); background: var(--lf-info-soft); color: var(--lf-info) }
+.pw-pill.is-ready_for_review { border-color: var(--lf-ai-line); background: var(--lf-ai-soft); color: var(--lf-ai) }
+.pw-pill.is-completed { border-color: var(--lf-success-line); background: var(--lf-success-soft); color: var(--lf-success) }
+.pw-pill.is-blocked, .pw-pill.is-delayed, .pw-pill.is-overdue, .pw-pill.is-sev-high { border-color: var(--lf-danger-line); background: var(--lf-danger-soft); color: var(--lf-danger) }
+.pw-pill.is-sev-medium { border-color: var(--lf-warning-line); background: var(--lf-warning-soft); color: var(--lf-text) }
+.pw-row-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px }
+.pw-row-head strong { color: var(--lf-ink); font-size: 14.5px }
+.pw-row-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 4px 12px }
+.pw-desc { margin: 6px 0 0; color: var(--lf-text); font-size: 13.5px }
+.pw-mini-select { min-height: 30px; padding: 2px 8px; border: 1px solid var(--lf-line-strong); border-radius: 8px; background: var(--lf-surface); color: var(--lf-ink); font: inherit; font-size: 12.5px }
+
+/* Milestones */
+.pw-milestones, .pw-deliverables, .pw-tasks { margin: 0; padding: 0 22px 18px; list-style: none }
+.pw-milestones li { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; align-items: start; gap: 4px 14px; padding: 14px 0; border-top: 1px solid var(--lf-line) }
+.pw-milestones li:first-child, .pw-deliverables li:first-child, .pw-tasks li:first-child { border-top: 0 }
+.pw-milestones p, .pw-deliverables p { margin: 4px 0 0 }
+.pw-step { display: grid; place-items: center; width: 28px; height: 28px; border: 1.5px solid var(--lf-line-strong); border-radius: 50%; color: var(--lf-muted); font-size: 12.5px; font-weight: 700 }
+.pw-milestones .is-completed .pw-step { border-color: var(--lf-success); background: var(--lf-success); color: #fff }
+.pw-milestones .is-in_progress .pw-step { border-color: var(--lf-brand); color: var(--lf-brand-strong) }
+.pw-milestones .is-overdue .pw-step, .pw-milestones .is-delayed .pw-step { border-color: var(--lf-danger); color: var(--lf-danger) }
+.pw-milestones .is-cancelled { opacity: .6 }
+.pw-move { display: inline-flex; gap: 2px }
+.pw-move .icon-button { width: 30px; height: 30px; min-width: 30px; min-height: 30px; font-size: 14px }
+
+/* Deliverables */
+.pw-deliverables li { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 6px 16px; padding: 14px 0; border-top: 1px solid var(--lf-line) }
+.pw-deliverables li.is-completed strong { color: var(--lf-muted) }
+.pw-status-groups section > h3, .pw-task-groups section > h3 { margin: 0; padding: 12px 22px 4px; color: var(--lf-muted); font-size: 12.5px; font-weight: 650; letter-spacing: .01em; text-transform: uppercase }
+
+/* Tasks: list */
+.pw-tasks li { display: grid; grid-template-columns: 20px minmax(0, 1fr) auto auto; align-items: start; gap: 4px 12px; padding: 12px 0; border-top: 1px solid var(--lf-line) }
+.pw-tasks input[type=checkbox] { width: 18px; height: 18px; margin: 3px 0 0; accent-color: var(--lf-brand) }
+.pw-tasks p { margin: 2px 0 0; font-size: 12.5px }
+.pw-task.is-done .pw-task-title { color: var(--lf-muted); text-decoration: line-through }
+.pw-task-title { padding: 0; border: 0; background: none; color: var(--lf-ink); font: inherit; font-size: 14px; font-weight: 600; text-align: left; cursor: pointer; overflow-wrap: anywhere }
+.pw-task-title:hover:not(:disabled) { text-decoration: underline }
+.pw-task-title:disabled { cursor: default }
+.pw-waiting { display: flex; align-items: center; gap: 5px; color: var(--lf-warning); font-size: 12.5px; font-weight: 600 }
+:root[data-theme="dark"] .pw-waiting { color: #f2c46d }
+.pw-due { display: grid; justify-items: end; color: var(--lf-muted); font-size: 12.5px; white-space: nowrap }
+.pw-due.is-overdue, .pw-due small { color: var(--lf-danger) }
+
+/* Tasks: board */
+.pw-board { display: grid; grid-template-columns: repeat(5, minmax(210px, 1fr)); gap: 10px; padding: 0 16px 18px; overflow-x: auto; overscroll-behavior-x: contain; contain: inline-size; scrollbar-width: thin }
+.pw-column { display: flex; flex-direction: column; min-width: 0; border: 1px solid var(--lf-line); border-radius: 12px; background: var(--lf-subtle) }
+.pw-column.is-droppable { border-style: dashed }
+.pw-column h3 { display: flex; align-items: center; justify-content: space-between; margin: 0; padding: 10px 12px 6px; color: var(--lf-ink); font-size: 13px; font-weight: 650 }
+.pw-column ul { display: grid; align-content: start; gap: 8px; min-height: 90px; margin: 0; padding: 4px 8px 10px; list-style: none }
+.pw-card { display: grid; gap: 6px; padding: 10px; border: 1px solid var(--lf-line); border-radius: 10px; background: var(--lf-surface); box-shadow: var(--lf-shadow-xs); cursor: grab }
+.pw-card p { margin: 0; font-size: 12px }
+.pw-card.is-overdue { border-color: var(--lf-danger-line) }
+.pw-column.is-completed .pw-task-title { color: var(--lf-muted) }
+.pw-column-empty { padding: 14px 6px; border: 1px dashed var(--lf-line-strong); border-radius: 10px; color: var(--lf-muted); font-size: 12px; text-align: center }
+
+/* Task dialog dependencies */
+.pw-deps input:not([type=checkbox]) { width: 100%; min-height: 34px; margin-bottom: 6px; padding: 4px 10px; border: 1px solid var(--lf-line-strong); border-radius: 8px; background: var(--lf-surface); color: var(--lf-ink); font: inherit }
+.pw-deps-list { display: grid; gap: 4px; max-height: 180px; overflow-y: auto }
+.pw-deps .is-disabled { color: var(--lf-faint) }
+
+/* Timeline */
+.pw-gantt { padding: 0 22px 8px }
+.pw-gantt-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-bottom: 10px; color: var(--lf-muted); font-size: 12px }
+.pw-gantt-legend span { display: inline-flex; align-items: center; gap: 6px }
+.pw-key { display: inline-block; width: 14px; height: 8px; border-radius: 4px; background: var(--lf-brand) }
+.pw-key.is-done { background: var(--lf-success) }
+.pw-key.is-overdue { background: var(--lf-danger) }
+.pw-key.is-today { width: 2px; height: 12px; border-radius: 0; background: var(--lf-warning) }
+.pw-gantt-scroll { overflow-x: auto; border: 1px solid var(--lf-line); border-radius: 12px; contain: inline-size; overscroll-behavior-x: contain; scrollbar-width: thin }
+.pw-gantt-grid { display: grid; width: max-content; min-width: 100% }
+.pw-gantt-row { display: flex; min-height: 30px; border-top: 1px solid var(--lf-line) }
+.pw-gantt-row:first-child { border-top: 0 }
+.pw-gantt-label { position: sticky; z-index: 2; left: 0; display: grid; align-content: center; flex: 0 0 230px; width: 230px; padding: 4px 10px; border-right: 1px solid var(--lf-line); background: var(--lf-surface); font-size: 12.5px }
+.pw-gantt-label span { overflow: hidden; color: var(--lf-text); text-overflow: ellipsis; white-space: nowrap }
+.pw-gantt-label small { overflow: hidden; color: var(--lf-muted); font-size: 11px; text-overflow: ellipsis; white-space: nowrap }
+.pw-gantt-row.is-project .pw-gantt-label span, .pw-gantt-row.is-milestone .pw-gantt-label span { color: var(--lf-ink); font-weight: 650 }
+.pw-gantt-row.is-group .pw-gantt-label span { color: var(--lf-muted); font-weight: 650 }
+.pw-gantt-row.depth-1 .pw-gantt-label { padding-left: 22px }
+.pw-gantt-row.is-milestone { background: var(--lf-subtle) }
+.pw-gantt-row.is-milestone .pw-gantt-label { background: var(--lf-subtle) }
+.pw-gantt-track { position: relative; flex: 0 0 auto }
+.pw-gantt-axis { min-height: 40px; background: var(--lf-subtle) }
+.pw-gantt-axis .pw-gantt-label { background: var(--lf-subtle); color: var(--lf-muted); font-weight: 650 }
+.pw-month { position: absolute; top: 4px; overflow: hidden; padding-left: 6px; border-left: 1px solid var(--lf-line-strong); color: var(--lf-ink); font-size: 11.5px; font-weight: 650; white-space: nowrap }
+.pw-tick { position: absolute; bottom: 4px; padding-left: 3px; border-left: 1px solid var(--lf-line); color: var(--lf-muted); font-size: 10.5px; white-space: nowrap }
+.pw-today { position: absolute; z-index: 1; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: var(--lf-warning); opacity: .7 }
+.pw-bar { position: absolute; top: 50%; height: 12px; margin-top: -6px; border-radius: 6px; background: var(--lf-brand); opacity: .85 }
+.pw-bar.is-milestone { height: 16px; margin-top: -8px; border-radius: 4px; background: var(--lf-ink); opacity: .75 }
+.pw-bar.is-project { height: 18px; margin-top: -9px; border-radius: 5px; background: var(--lf-brand-soft); outline: 1.5px solid var(--lf-brand); opacity: 1 }
+.pw-bar.is-done { background: var(--lf-success); opacity: .55 }
+.pw-bar.is-overdue { background: var(--lf-danger) }
+.pw-diamond { position: absolute; top: 50%; width: 11px; height: 11px; margin: -6px 0 0 -6px; border-radius: 2px; background: var(--lf-brand); transform: rotate(45deg) }
+.pw-diamond.is-milestone { width: 13px; height: 13px; margin: -7px 0 0 -7px; background: var(--lf-ink) }
+.pw-diamond.is-done { background: var(--lf-success) }
+.pw-diamond.is-overdue { background: var(--lf-danger) }
+.pw-chrono { display: grid; margin: 0; padding: 0 22px 12px; list-style: none }
+.pw-chrono li { display: grid; grid-template-columns: 100px auto minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 9px 0; border-top: 1px solid var(--lf-line); font-size: 13px }
+.pw-chrono li:first-child { border-top: 0 }
+.pw-chrono time { color: var(--lf-muted) }
+.pw-chrono-title { min-width: 0; overflow-wrap: anywhere }
+.pw-chrono-title small { display: block; color: var(--lf-muted); font-size: 12px }
+.pw-state { color: var(--lf-muted); font-size: 12px; white-space: nowrap }
+.pw-state.is-done { color: var(--lf-success) }
+.pw-state.is-overdue { color: var(--lf-danger) }
+.pw-note { margin: 4px 22px 18px; color: var(--lf-muted); font-size: 12.5px }
+
+/* Files */
+.pw-upload select { min-width: 0 }
+.pw-files td { vertical-align: middle }
+.pw-client-files { margin: 4px 22px 20px; padding-top: 14px; border-top: 1px solid var(--lf-line) }
+.pw-client-files h3 { margin: 0 0 4px; color: var(--lf-ink); font-size: 14px }
+.pw-client-files .pw-plain { margin-top: 10px }
+
+/* AI assistant (dialog#pw-assistant) */
+dialog#pw-assistant { width: min(860px, calc(100vw - 32px)) }
+.pw-assistant { display: grid; gap: 12px; font-size: 14px; line-height: 1.55 }
+.pw-ai-banner { display: flex; align-items: center; gap: 8px; margin: 0; padding: 9px 12px; border: 1px solid var(--lf-ai-line); border-radius: 10px; background: var(--lf-ai-soft); color: var(--lf-ai); font-size: 13px; font-weight: 600 }
+.pw-warnings, .pw-ai-notes { margin: 0; padding: 10px 12px 10px 28px; border: 1px solid var(--lf-warning-line); border-radius: 10px; background: var(--lf-warning-soft); color: var(--lf-text); font-size: 13px }
+.pw-ai-notes { border-color: var(--lf-line); background: var(--lf-subtle) }
+.pw-ai-summary p { margin: 0 0 10px }
+.pw-ai-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 20px }
+.pw-ai-columns h4 { margin: 0 0 4px; color: var(--lf-ink); font-size: 13px }
+.pw-ai-columns ul { margin: 0; padding-left: 18px; font-size: 13.5px }
+.pw-ai-risks { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none }
+.pw-ai-risks li { padding: 12px 14px; border: 1px solid var(--lf-line); border-left: 3px solid var(--lf-line-strong); border-radius: 10px }
+.pw-ai-risks li.is-high { border-left-color: var(--lf-danger) }
+.pw-ai-risks li.is-medium { border-left-color: var(--lf-warning) }
+.pw-ai-risks p { margin: 6px 0 0 }
+.pw-suggestion { color: var(--lf-text); font-weight: 550 }
+.pw-facts-used { padding: 10px 12px; border: 1px solid var(--lf-line); border-radius: 10px; background: var(--lf-subtle); font-size: 13px }
+.pw-facts-used summary { color: var(--lf-ink); font-weight: 600; cursor: pointer }
+.pw-facts-used dl { display: grid; gap: 4px; margin: 10px 0 }
+.pw-facts-used dl div { display: grid; grid-template-columns: minmax(120px, 200px) minmax(0, 1fr); gap: 10px }
+.pw-facts-used dt { color: var(--lf-muted) }
+.pw-facts-used dd { margin: 0; overflow-wrap: anywhere }
+.pw-plan-editor { display: grid; gap: 10px }
+.pw-plan { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none }
+.pw-plan > li { padding: 10px 12px; border: 1px solid var(--lf-line); border-radius: 10px }
+.pw-plan > li.is-off { opacity: .6 }
+.pw-plan ul { display: grid; gap: 6px; margin: 8px 0 0; padding: 0 0 0 26px; list-style: none }
+.pw-plan-milestone, .pw-plan-child { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px }
+.pw-plan input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--lf-brand) }
+.pw-plan input[type=date] { min-height: 32px; padding: 2px 8px; border: 1px solid var(--lf-line-strong); border-radius: 8px; background: var(--lf-surface); color: var(--lf-ink); font: inherit; font-size: 12.5px }
+.pw-plan-title { flex: 1 1 220px; min-width: 0; min-height: 32px; padding: 3px 9px; border: 1px solid var(--lf-line-strong); border-radius: 8px; background: var(--lf-surface); color: var(--lf-ink); font: inherit; font-size: 13.5px }
+.pw-plan-milestone .pw-plan-title { font-weight: 650 }
+.pw-plan-child small { flex-basis: 100%; padding-left: 24px }
+
+@media (max-width: 1100px) {
+  .pw-facts { grid-template-columns: repeat(3, minmax(0, 1fr)) }
+  .pw-fact-wide { grid-column: 1 / -1 }
+}
+@media (max-width: 760px) {
+  .pw-head { padding: 16px }
+  .pw-head-actions, .pw-ai-menu { width: 100% }
+  .pw-facts { grid-template-columns: repeat(2, minmax(0, 1fr)) }
+  .pw-overview, .pw-settings, .pw-brief, .pw-ai-columns { grid-template-columns: minmax(0, 1fr) }
+  .pw-milestones, .pw-deliverables, .pw-tasks, .pw-chrono, .pw-gantt { padding-inline: 16px }
+  .pw-milestones li { grid-template-columns: 30px minmax(0, 1fr) }
+  .pw-milestones .pw-row-actions { grid-column: 2; justify-content: flex-start }
+  .pw-deliverables li { grid-template-columns: minmax(0, 1fr) }
+  .pw-deliverables .pw-row-actions { justify-content: flex-start }
+  .pw-tasks li { grid-template-columns: 20px minmax(0, 1fr) auto }
+  .pw-tasks li > .text-button { grid-column: 2 }
+  .pw-board { grid-template-columns: repeat(5, minmax(220px, 82vw)); padding-inline: 12px; scroll-snap-type: x mandatory }
+  .pw-column { scroll-snap-align: start }
+  .pw-card { cursor: default }
+  .pw-gantt-label { flex-basis: 140px; width: 140px }
+  .pw-deadlines li { grid-template-columns: 84px minmax(0, 1fr) }
+  .pw-deadlines li .sp-chip { display: none }
+  .pw-chrono li { grid-template-columns: 84px minmax(0, 1fr) }
+  .pw-chrono li .sp-chip, .pw-chrono .pw-state { display: none }
+  .pw-status-groups section > h3, .pw-task-groups section > h3 { padding-inline: 16px }
+  .pw-client-files, .pw-note { margin-inline: 16px }
+  .pw-facts-used dl div { grid-template-columns: minmax(0, 1fr) }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pw-card { transition: none }
+}

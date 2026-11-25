@@ -188,17 +188,18 @@ test('converts a won deal into a client and runs onboarding to completion',async
  await expect(page.getByRole('heading',{name:'Onboarding completed'})).toBeVisible()
  await expect(page.locator('.sp-caution').first()).toContainText('Kickoff agreed on a call')
  await tab(page,'Projects')
- await expect(page.getByText('Project delivery is the next milestone (M11)')).toBeVisible()
+ // Since M11 this tab lists the client's projects above the onboarding handoff record.
+ await expect(page.getByRole('heading',{name:'Onboarding handoff'})).toBeVisible()
  await expect(page.locator('.cl-projects')).toContainText('Website redesign')
 
  // Archive (owners and admins): read-only, links revoked; unarchive restores the status it had.
  await page.getByRole('button',{name:'Archive…'}).click()
  await page.getByRole('dialog',{name:'Archive Harbor Dental?'}).getByRole('button',{name:'Archive client'}).click()
- await expect(page.locator('.sp-caution',{hasText:'This client is archived'})).toBeVisible()
+ await expect(page.locator('.cl-workspace > .sp-caution',{hasText:'This client is archived'})).toBeVisible()
  await tab(page,'Contacts');await expect(page.getByRole('button',{name:'Add contact'})).toHaveCount(0)
  await page.getByRole('button',{name:'Unarchive'}).click()
  await page.getByRole('dialog',{name:'Unarchive Harbor Dental?'}).getByRole('button',{name:'Unarchive client'}).click()
- await expect(page.locator('.sp-caution',{hasText:'This client is archived'})).toHaveCount(0)
+ await expect(page.locator('.cl-workspace > .sp-caution',{hasText:'This client is archived'})).toHaveCount(0)
 
  // The deal shows its client; converting again isn't offered.
  await page.locator('.cl-facts').getByRole('button',{name:'Website redesign'}).click()

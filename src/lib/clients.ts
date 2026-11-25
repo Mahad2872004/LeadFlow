@@ -78,6 +78,8 @@ export interface ClientDocument {
   id: string; clientId: string | null; requestId: string | null; itemId: string | null; fileName: string; extension: string; mimeType: string; size: number; category: DocumentCategory
   description: string; visibility: 'internal' | 'shared'; status: 'pending' | 'available' | 'rejected' | 'deleted'; rejectedReason: string | null; uploaderType: 'member' | 'client'
   uploadedBy: string | null; stageId: string | null; createdAt: string; verifiedAt: string | null; itemTitle: string | null
+  /** M11: the project a file belongs to. Project files are always internal. */
+  projectId?: string | null; projectName?: string | null
 }
 export interface TimelineEvent { id: string; group: ClientTimelineGroup; source: 'client' | 'onboarding' | 'task'; kind: string; summary: string | null; detail: Record<string, unknown>; at: string; actorType: 'member' | 'client' | 'system'; actorName: string | null; requestTitle: string | null; itemTitle: string | null }
 export interface CompletionItem { key: 'contact' | 'services' | 'requirements' | 'scope' | 'onboarding'; label: string; met: boolean; detail: string }

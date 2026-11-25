@@ -42,7 +42,7 @@ There is one client record per client, one task system, one onboarding engine an
 | **Documents** | Upload files (category, and whether the client can see them), download, edit category, description and visibility, delete. Files the client uploads through the checklist appear here too. |
 | **Tasks** | The client's follow-up tasks, which also appear on the Follow-ups page (filter **Clients**) and in the notification bell. Onboarding task types: send the welcome message, request information, review a submission, collect assets, review requirements, confirm the scope, verify access and integrations, prepare the project handoff, plus call, meeting, internal and custom. **Plan standard tasks** adds the usual five with due dates. |
 | **Activity & notes** | One history: client changes, contacts, services, requirements, scope, welcome message, files, onboarding events (submissions, reviews, steps, forms, readiness), tasks planned, completed and cancelled. Filters by kind and older pages. Internal notes are added here; they can't be edited and are never shown to the client. |
-| **Projects** | Project delivery is M11 and **not built**. After onboarding is completed this tab shows the handoff record M11 will start from. |
+| **Projects** | Since M11, the client's projects and **New project** (see [PROJECTS.md](PROJECTS.md)), above the onboarding handoff record that projects created from the completed onboarding start from. |
 | **Onboarding → Forms / Stages** (owners and admins edit; members view) | A library of reusable forms, which you add to a checklist (the fields are copied, so later edits never change a client's checklist), and the workspace's onboarding stages. |
 | **Client portal** | The client's private link now also takes the new field types, file uploads, shows files your team shared and the confirmed scope (when shared), which the client can acknowledge as read. |
 
@@ -248,7 +248,7 @@ Results on 25–26 November 2026: every `test:*` database suite passed; `npx pla
 
 ## Limitations and not built
 
-- **Projects and delivery (M11)** are not built; only the handoff snapshot exists.
+- **Projects and delivery** are M11: see [PROJECTS.md](PROJECTS.md).
 - **No AI** (client summaries, requirement extraction from answers, risk notes).
 - **No sending:** no email or chat sending, no read receipts or delivery tracking, and no client accounts or logins (the portal link is per checklist).
 - **No e-signatures, contracts or legal acceptance.**

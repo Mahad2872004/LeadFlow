@@ -1,0 +1,80 @@
+/*
+ * Interaction layer for the signed-in app.
+ *
+ * Small, consistent feedback: presses that give, cards that lift, panels and lists that
+ * arrive instead of appearing, bars that fill, and a toast that can be dismissed.
+ * Every movement sits inside `prefers-reduced-motion: no-preference`, and App.css also stops
+ * all animation under `reduce`. Entrances use `backwards` fill, never `both` or `forwards`:
+ * a finished entrance then lets go of `transform`, so hover lifts keep working.
+ */
+
+/* ---------- Toast (layout; works without motion) ---------- */
+.toast { position: relative; overflow: hidden; padding-right: 6px }
+.toast-check { display: inline-grid; flex-shrink: 0; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: rgba(255, 255, 255, .16); font-size: 12px; line-height: 1 }
+.toast-text { flex: 1; min-width: 0 }
+.toast-close { display: inline-grid; flex-shrink: 0; place-items: center; width: 32px; height: 32px; min-height: 32px; padding: 0; border: 0; border-radius: 8px; background: transparent; color: rgba(255, 255, 255, .72) }
+.toast-close:hover { background: rgba(255, 255, 255, .12); color: #fff }
+.toast-close:focus-visible { outline: 2px solid var(--lf-lime); outline-offset: 1px }
+.toast-timer { display: none }
+
+@media (prefers-reduced-motion: no-preference) {
+  /* ---------- Press feedback ---------- */
+  .secondary:active:not(:disabled),
+  .icon-button:active:not(:disabled),
+  .command-trigger:active,
+  .toast-close:active,
+  .focus-card button:active,
+  .sp-tabs button:active, .lead-tabs button:active, .dv-tabs button:active,
+  .ob-tabs button:active, .br-tabs button:active, .view-toggle button:active { transform: scale(.97) }
+  .primary:active:not(:disabled) { transform: translateY(1px) scale(.985) }
+  .nav-item:active { transform: scale(.985) }
+  .stat-card:active { transform: scale(.99) }
+  .task input[type=checkbox] { transition: transform .15s var(--lf-ease) }
+  .task input[type=checkbox]:active { transform: scale(.82) }
+
+  /* ---------- Hover ---------- */
+  .nav-item svg { transition: color .15s, transform .2s var(--lf-ease) }
+  .nav-item:hover svg { transform: scale(1.08) }
+  .nav-item.active::before { animation: lf-indicator .3s var(--lf-ease) backwards }
+  .stat-card .stat-icon { transition: transform .25s var(--lf-ease) }
+  .stat-card:hover .stat-icon { transform: rotate(-6deg) scale(1.06) }
+  .pw-card { transition: box-shadow .15s, transform .15s, border-color .15s }
+  .pw-card:hover { border-color: var(--lf-line-strong); box-shadow: var(--lf-shadow); transform: translateY(-1px) }
+  .text-button svg { transition: transform .2s var(--lf-ease) }
+  .text-button:hover:not(:disabled) svg { transform: translateX(2px) }
+
+  /* ---------- Arrivals ---------- */
+  .app-shell [role=tabpanel] { animation: lf-panel .26s var(--lf-ease) backwards }
+  dialog[open]::backdrop { animation: lf-fade .2s ease backwards }
+
+  .stat-card,
+  .task-list > .task,
+  .lead-table tbody tr,
+  .sp-table tbody tr,
+  .ob-list > li,
+  .board-card,
+  .sp-card,
+  .pw-card { animation: lf-rise .34s var(--lf-ease) backwards }
+  :is(.stat-card, .task-list > .task, .lead-table tbody tr, .sp-table tbody tr, .ob-list > li, .board-card, .sp-card, .pw-card):nth-child(2) { animation-delay: 30ms }
+  :is(.stat-card, .task-list > .task, .lead-table tbody tr, .sp-table tbody tr, .ob-list > li, .board-card, .sp-card, .pw-card):nth-child(3) { animation-delay: 60ms }
+  :is(.stat-card, .task-list > .task, .lead-table tbody tr, .sp-table tbody tr, .ob-list > li, .board-card, .sp-card, .pw-card):nth-child(4) { animation-delay: 90ms }
+  :is(.stat-card, .task-list > .task, .lead-table tbody tr, .sp-table tbody tr, .ob-list > li, .board-card, .sp-card, .pw-card):nth-child(5) { animation-delay: 120ms }
+  :is(.stat-card, .task-list > .task, .lead-table tbody tr, .sp-table tbody tr, .ob-list > li, .board-card, .sp-card, .pw-card):nth-child(6) { animation-delay: 150ms }
+  :is(.stat-card, .task-list > .task, .lead-table tbody tr, .sp-table tbody tr, .ob-list > li, .board-card, .sp-card, .pw-card):nth-child(7) { animation-delay: 180ms }
+  :is(.stat-card, .task-list > .task, .lead-table tbody tr, .sp-table tbody tr, .ob-list > li, .board-card, .sp-card, .pw-card):nth-child(n+8) { animation-delay: 210ms }
+
+  /* Bars fill from the left when they first appear; later changes use their own width transition. */
+  .pj-progress-track i, .ob-progress i, .stat-meter i, .funnel-fill { transform-origin: left center; animation: lf-grow .9s var(--lf-ease) .1s backwards }
+
+  /* ---------- Toast ---------- */
+  .toast-check { animation: lf-check .4s var(--lf-ease) .08s backwards }
+  .toast-timer { position: absolute; bottom: 0; left: 0; display: block; width: 100%; height: 2px; background: rgba(255, 255, 255, .35); transform-origin: left center; animation: lf-timer linear forwards }
+}
+
+@keyframes lf-rise { from { opacity: 0; transform: translateY(6px) } }
+@keyframes lf-panel { from { opacity: 0; transform: translateY(4px) } }
+@keyframes lf-fade { from { opacity: 0 } }
+@keyframes lf-grow { from { transform: scaleX(0) } }
+@keyframes lf-indicator { from { opacity: 0; transform: scaleY(.2) } }
+@keyframes lf-check { from { opacity: 0; transform: scale(.4) rotate(-20deg) } }
+@keyframes lf-timer { from { transform: scaleX(1) } to { transform: scaleX(0) } }

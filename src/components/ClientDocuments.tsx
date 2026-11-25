@@ -70,7 +70,7 @@ export function ClientDocuments({ workspace, detail, locked, manager, onChanged 
       : <div className="sp-table-wrap"><table className="sp-table cl-docs">
         <thead><tr><th>File</th><th>Category</th><th>Who can see it</th><th>Added</th><th><span className="sr-only">Actions</span></th></tr></thead>
         <tbody>{visible.map(item => <tr key={item.id}>
-          <td><strong className="cl-file-name">{item.fileName}</strong><small>{formatBytes(item.size)}{item.itemTitle ? ` · answer to “${item.itemTitle}”` : ''}{item.description ? ` · ${item.description}` : ''}</small></td>
+          <td><strong className="cl-file-name">{item.fileName}</strong><small>{formatBytes(item.size)}{item.projectName ? ` · project “${item.projectName}”` : ''}{item.itemTitle ? ` · answer to “${item.itemTitle}”` : ''}{item.description ? ` · ${item.description}` : ''}</small></td>
           <td>{documentCategoryLabels[item.category]}</td>
           <td>{item.visibility === 'shared' ? <span className="cl-pill is-confirmed">Shared with client</span> : <span className="cl-pill">Team only</span>}</td>
           <td>{shortDate(item.createdAt)}<small>{item.uploaderType === 'client' ? 'By the client' : item.uploadedBy ?? 'A team member'}</small></td>
@@ -96,7 +96,8 @@ function EditDocument({ document, busy, onClose, onSave }: { document: ClientDoc
   return <Modal title={`Edit ${document.fileName}`} onClose={onClose}>
     <form className="sp-form" onSubmit={event => { event.preventDefault(); void onSave({ category, description: description.trim(), visibility }) }}>
       <div className="sp-row"><label>Category<select value={category} onChange={event => setCategory(event.target.value as DocumentCategory)}>{documentCategories.map(item => <option key={item} value={item}>{documentCategoryLabels[item]}</option>)}</select></label>
-        <label>Who can see it<select value={visibility} onChange={event => setVisibility(event.target.value as 'internal' | 'shared')}><option value="internal">Your team only</option><option value="shared">Shared with the client</option></select></label></div>
+        <label>Who can see it<select value={visibility} disabled={!!document.projectId} onChange={event => setVisibility(event.target.value as 'internal' | 'shared')}><option value="internal">Your team only</option><option value="shared">Shared with the client</option></select></label></div>
+      {document.projectId && <p className="sp-muted">This file belongs to the project “{document.projectName}”. Project files stay internal.</p>}
       {document.uploaderType === 'client' && visibility === 'shared' && <p className="sp-muted">Files the client uploaded already appear with their answer; “shared” lists files from your team on their page.</p>}
       <label>Description<textarea rows={2} maxLength={1000} value={description} onChange={event => setDescription(event.target.value)} /></label>
       <div className="modal-actions"><button type="button" className="secondary" onClick={onClose}>Cancel</button><button className="primary" disabled={busy}>Save</button></div>

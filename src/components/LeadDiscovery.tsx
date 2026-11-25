@@ -59,7 +59,7 @@ export function LeadDiscovery({workspace,leads,blocked,onImported,onAddLead}:Dis
       <div className="dv-tabs" role="tablist" aria-label="Lead discovery views">{tabs.map(([id,label])=><button key={id} role="tab" id={`dv-tab-${id}`} aria-selected={tab===id} aria-controls={`dv-panel-${id}`} className={tab===id?'active':''} onClick={()=>setTab(id)}><Icon name={tabIcons[id]} size={15}/>{label}{!searchEnabled&&id==='find'&&<span className="dv-soon">Coming soon</span>}</button>)}</div>
       <button className="secondary" onClick={onAddLead}><Icon name="plus" size={15}/> Add a business manually</button>
     </div>
-    <div role="tabpanel" id={`dv-panel-${tab}`} aria-labelledby={`dv-tab-${tab}`}>
+    <div key={tab} role="tabpanel" id={`dv-panel-${tab}`} aria-labelledby={`dv-tab-${tab}`}>
       {tab==='find'&&!searchEnabled&&<ComingSoon onCsv={()=>setTab('csv')} onAddLead={onAddLead}/>}
       {tab==='find'&&searchEnabled&&(status.state==='loading'?<div className="content-skeleton" role="status"><span className="sr-only">Loading lead discovery…</span><i className="skeleton skeleton-panel"/></div>
         :status.state==='error'?<div className="error-banner load-error" role="alert"><p><strong>We couldn’t load lead discovery.</strong> {status.message}</p><button className="secondary" onClick={()=>{setStatus({state:'loading'});setAttempt(value=>value+1)}}>Try again</button></div>

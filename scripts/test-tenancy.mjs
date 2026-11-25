@@ -15,7 +15,7 @@ const snapshotWith=(...leads)=>({version:1,leads,tasks:leads.map(l=>({id:`task-$
 // Since 202610310001 every loaded lead also carries the optional business fields, empty unless set; its rollback removes them.
 const businessFields=['website','industry','address','city','region','postcode','country']
 // Since 202611230001 every loaded follow-up also carries the optional sales fields, defaulted; its rollback removes them.
-const taskDefaults={dealId:null,contactId:null,taskType:'follow_up',priority:'medium',cancelled:false,description:'',assigneeId:null,createdAt:null,completedAt:null,clientId:null,onboardingRequestId:null,onboardingItemId:null}
+const taskDefaults={dealId:null,contactId:null,taskType:'follow_up',priority:'medium',cancelled:false,description:'',assigneeId:null,createdAt:null,completedAt:null,clientId:null,onboardingRequestId:null,onboardingItemId:null,projectId:null,milestoneId:null,deliverableId:null,status:'todo',startDate:null,estimateHours:null,actualHours:null,labels:[],dependsOn:[]}
 const stored=snapshot=>({...snapshot,leads:snapshot.leads.map(l=>({...l,...Object.fromEntries(businessFields.map(key=>[key,'']))})),tasks:snapshot.tasks.map(t=>({...t,...taskDefaults}))})
 const withoutBusinessFields=workspace=>({...workspace,data:{...workspace.data,leads:workspace.data.leads.map(l=>Object.fromEntries(Object.entries(l).filter(([key])=>!businessFields.includes(key)))),
   tasks:workspace.data.tasks.map(t=>Object.fromEntries(Object.entries(t).filter(([key])=>!(key in taskDefaults))))}})
@@ -83,7 +83,13 @@ assert.deepEqual(await executable('authenticated'),['create_workspace(text,text,
  'client_completion_check(uuid,uuid)','complete_client_onboarding(uuid,uuid,text,text)','client_handoff_for(uuid,uuid)','onboarding_stages_for(uuid)','save_onboarding_stage(uuid,jsonb)',
  'reorder_onboarding_stages(uuid,jsonb)','set_onboarding_stage_archived(uuid,uuid,boolean)','onboarding_forms_for(uuid)','onboarding_form_for(uuid,uuid)','save_onboarding_form(uuid,jsonb,integer,uuid)',
  'duplicate_onboarding_form(uuid,uuid,uuid)','set_onboarding_form_archived(uuid,uuid,boolean)','assign_onboarding_form(uuid,uuid,uuid,text,integer)','begin_client_document(uuid,uuid,jsonb,bigint)',
- 'client_document_access(uuid,uuid)','client_documents_for(uuid,uuid)','update_client_document(uuid,uuid,jsonb)','delete_client_document(uuid,uuid)'].sort(),'Signed-in users get exactly the dashboard functions.')
+ 'client_document_access(uuid,uuid)','client_documents_for(uuid,uuid)','update_client_document(uuid,uuid,jsonb)','delete_client_document(uuid,uuid)',
+ 'project_setup_for(uuid,uuid)','create_project(uuid,jsonb,uuid)','apply_project_plan(uuid,uuid,jsonb,text,uuid)','update_project(uuid,uuid,integer,jsonb)','set_project_status(uuid,uuid,text,integer,text)',
+ 'add_project_note(uuid,uuid,text,uuid)','project_index_for(uuid)','projects_for(uuid,jsonb)','project_detail(uuid,uuid)','projects_dashboard_for(uuid)',
+ 'project_timeline(uuid,uuid,jsonb,timestamp with time zone,text,integer)','project_entity_history(uuid,uuid,text,uuid)','project_calendar_for(uuid,date,date,jsonb)',
+ 'save_project_milestone(uuid,uuid,jsonb,integer)','reorder_project_milestones(uuid,uuid,jsonb)','remove_project_milestone(uuid,uuid,uuid)','save_project_deliverable(uuid,uuid,jsonb,integer,uuid)',
+ 'remove_project_deliverable(uuid,uuid,uuid)','project_templates_for(uuid)','project_template_for(uuid,uuid)','save_project_template(uuid,jsonb,integer,uuid)','set_project_template_archived(uuid,uuid,boolean)',
+ 'save_project_as_template(uuid,uuid,text,uuid)','project_template_plan(uuid,uuid,date)','project_documents_for(uuid,uuid)','project_ai_context(uuid,uuid,uuid)'].sort(),'Signed-in users get exactly the dashboard functions.')
 for(const fn of ['portal_open(text)','portal_save_item(text,uuid,jsonb,boolean,integer)','claim_onboarding_reminder(text,text)','finish_onboarding_reminder(uuid,uuid,text,text,text)'])assert.ok((await executable('service_role')).includes(fn),fn)
 for(const fn of ['receive_workspace_inquiry(uuid,text,uuid,jsonb,text,jsonb)','receive_form_inquiry(uuid,uuid,jsonb,text,text)','receive_inquiry(uuid,text,uuid,jsonb,text,jsonb)','receive_webhook(text,uuid,jsonb,text)'])assert.ok((await executable('service_role')).includes(fn),fn)
 assert.deepEqual(await rows("select p.oid::regprocedure::text as fn from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname in ('public','leadflow_private') and p.prosecdef and not coalesce('search_path=\"\"'=any(p.proconfig),false)"),[],'Every security-definer function pins an empty search path.')

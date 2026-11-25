@@ -1,0 +1,25 @@
+/* M11: shared project chips, health and progress. Uses the design tokens, so light and dark themes both work. */
+.pj-status, .pj-priority { display: inline-flex; align-items: center; padding: 1px 9px; border: 1px solid var(--lf-line); border-radius: 999px; background: var(--lf-subtle); color: var(--lf-muted); font-size: 12px; font-weight: 600; line-height: 1.6; white-space: nowrap }
+.pj-status.is-in_progress, .pj-status.is-not_started { border-color: var(--lf-info-line); background: var(--lf-info-soft); color: var(--lf-info) }
+.pj-status.is-completed { border-color: var(--lf-success-line); background: var(--lf-success-soft); color: var(--lf-success) }
+.pj-status.is-on_hold, .pj-status.is-at_risk { border-color: var(--lf-warning-line); background: var(--lf-warning-soft); color: var(--lf-text) }
+.pj-status.is-cancelled { color: var(--lf-faint) }
+.pj-priority.is-high { border-color: var(--lf-warning-line); background: var(--lf-warning-soft); color: var(--lf-text) }
+.pj-priority.is-critical { border-color: var(--lf-danger-line); background: var(--lf-danger-soft); color: var(--lf-danger) }
+.pj-health-wrap { display: inline-grid; gap: 6px }
+.pj-health { display: inline-flex; align-items: center; gap: 6px; color: var(--lf-text); font-size: 12.5px; font-weight: 600; white-space: nowrap }
+.pj-health i { width: 8px; height: 8px; border-radius: 50%; background: var(--lf-muted) }
+.pj-health.is-on_track i, .pj-health.is-completed i { background: var(--lf-success) }
+.pj-health.is-at_risk i { background: var(--lf-warning) }
+.pj-health.is-delayed i { background: var(--lf-danger) }
+.pj-health.is-on_hold i, .pj-health.is-cancelled i { background: var(--lf-faint) }
+.pj-reasons { display: grid; gap: 2px; margin: 0; padding-left: 16px; color: var(--lf-muted); font-size: 12.5px }
+.pj-reasons .is-delayed { color: var(--lf-danger) }
+.pj-progress { display: grid; gap: 4px; min-width: 120px }
+.pj-progress-head { display: flex; align-items: baseline; gap: 8px }
+.pj-progress-head strong { color: var(--lf-ink); font-size: 13px; font-variant-numeric: tabular-nums }
+.pj-progress-head small { color: var(--lf-muted); font-size: 12px }
+.pj-progress-track { display: block; height: 6px; overflow: hidden; border-radius: 999px; background: var(--lf-track) }
+.pj-progress-track i { display: block; height: 100%; border-radius: inherit; background: var(--lf-brand); transition: width .3s var(--lf-ease) }
+.pj-progress.is-compact { min-width: 90px }
+@media (prefers-reduced-motion: reduce) { .pj-progress-track i { transition: none } }

@@ -1,5 +1,6 @@
 import { useId } from 'react'
 import { Icon, type IconName } from './Icon'
+import { useCountUp } from '../hooks/useMotion'
 
 interface MetricCardProps {
   label: string; value: number; hint: string; icon: IconName; accent?: boolean
@@ -23,10 +24,11 @@ function Sparkline({ values }: { values: number[] }) {
 }
 
 export function MetricCard({ label, value, hint, icon, accent = false, trend, meter, onClick }: MetricCardProps) {
+  const shown = useCountUp(value)
   return <button className={`stat-card${accent ? ' stat-4' : ''}`} onClick={onClick} aria-label={`${label}: ${value}. View ${label.toLowerCase()}`}>
     <span className="stat-head">{label}<span className="stat-icon"><Icon name={icon} size={18}/></span></span>
     <span className="stat-body">
-      <strong>{value}</strong>
+      <strong>{shown}</strong>
       {trend && trend.length > 1 && <Sparkline values={trend}/>}
       {meter !== undefined && <span className="stat-meter" aria-hidden="true"><i style={{ width: `${Math.round(Math.min(1, Math.max(0, meter)) * 100)}%` }}/></span>}
     </span>

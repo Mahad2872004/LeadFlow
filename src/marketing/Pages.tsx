@@ -2,10 +2,10 @@ import type { ReactNode } from 'react'
 import { Glyph, type GlyphName } from './Glyph'
 import { featureStatus, type StatusKind } from './content'
 import { CTA, EvidenceLabels, Eyebrow, Intro, Note, ProductPreview, ReportPreview, Status, TextLink } from './shared'
-import { CodeSample, FindVisual, FollowVisual, OnboardVisual, OutreachVisual, PitchVisual } from './visuals'
+import { CodeSample, FindVisual, FollowVisual, OnboardVisual, OutreachVisual, PipelineVisual, PitchVisual, ProjectVisual } from './visuals'
 import { signupOpen } from './access'
 
-function Stage({ eyebrow, title, text, points, visual, status, reverse = false, id }: { eyebrow: string; title: ReactNode; text: string; points: string[]; visual: ReactNode; status?: [StatusKind, string]; reverse?: boolean; id?: string }) {
+function Stage({ eyebrow, title, text, points, visual, status, reverse = false, id, children }: { eyebrow: string; title: ReactNode; text: string; points: string[]; visual: ReactNode; status?: [StatusKind, string]; reverse?: boolean; id?: string; children?: ReactNode }) {
   return (
     <section className={`mk-stage-row${reverse ? ' is-reverse' : ''}`} id={id}>
       <div data-reveal>
@@ -13,6 +13,7 @@ function Stage({ eyebrow, title, text, points, visual, status, reverse = false, 
         <h2>{title}</h2>
         <p className="mk-split-text">{text}</p>
         <ul className="mk-ticks mk-ticks-sm">{points.map(point => <li key={point}><Glyph name="check" size={18} />{point}</li>)}</ul>
+        {children}
       </div>
       <div className="mk-stage-visual" data-reveal>{visual}</div>
     </section>
@@ -21,8 +22,8 @@ function Stage({ eyebrow, title, text, points, visual, status, reverse = false, 
 
 export function Features() {
   return <>
-    <Intro eyebrow="Product" title={<>Everything between a first search <em>and a won client.</em></>}
-      text="Find prospects, understand their business, pitch what they need, and follow through. Every capability below is labelled with its current status." />
+    <Intro eyebrow="Product" title={<>Everything between a first search <em>and a delivered project.</em></>}
+      text="Find prospects, understand their business, reach out, win the deal, onboard the client and deliver the project. Every capability below is labelled with its current status." />
     <section className="mk-wrap mk-section mk-section-flush">
       <div data-reveal><ProductPreview /></div>
     </section>
@@ -76,25 +77,57 @@ export function Features() {
         ]}
         visual={<OutreachVisual />} />
       <Stage eyebrow="05 · Follow through" title="Keep every conversation moving." reverse status={['available', 'Available']}
-        text="A pipeline you can read at a glance, and a list of what needs doing today."
+        text="Lead statuses you can read at a glance, and a list of what needs doing today."
         points={[
-          'Five statuses: New, Contacted, Qualified, Converted and Lost, with search and combined filters',
-          'Follow-up tasks with due dates; complete them, or reopen them when the conversation needs another touch',
+          'Five lead statuses: New, Contacted, Qualified, Converted and Lost, with search and combined filters',
+          'Follow-up tasks with due dates, types, priorities and assignees; complete, cancel or reopen them',
           'Activity history alongside every lead, including where it came from',
           'Hosted inquiry form and website embeds, with email notifications through Resend when configured',
         ]}
         visual={<FollowVisual />} />
-      <Stage eyebrow="06 · Onboard" title="Start the work with everything you need." status={['beta', 'Beta']}
-        text="When a lead becomes a client, turn the handover into a checklist instead of an email thread."
+      <Stage eyebrow="06 · Win" id="sales-pipeline" title={<>Track every deal. <em>Close it with context.</em></>} status={['available', 'Available']}
+        text="A sales pipeline built on your leads, reports and outreach, not a separate CRM. Nothing moves a deal on its own: LeadFlow suggests the next stage and you decide."
         points={[
-          'Templates for paid advertising, SEO, social media management and email marketing',
-          'One private, expiring, revocable client link: no client account needed',
-          'Accept items, request changes, or mark them not required, then see readiness before kickoff',
+          'Create deals from a lead, a report opportunity or a sent outreach draft; the deal keeps its contact, opportunity and service',
+          'A board you can drag, or drive with the keyboard and on phones, plus a sortable list and filters',
+          'Log notes, calls, replies, proposals and meetings; mark deals won with the final value, or lost with a reason',
+          'Analytics per period: open and weighted pipeline, win rate, average deal and sales cycle, lost reasons and sources. Currencies are never converted or added together',
+          'Owners and admins rename, recolour and reorder stages and set lost reasons',
         ]}
-        visual={<OnboardVisual />} />
+        visual={<PipelineVisual />} />
+      <Stage eyebrow="07 · Onboard" id="onboarding" reverse title={<>Turn a won deal into a client. <em>Then get ready together.</em></>} status={['available', 'Available']}
+        text="Convert a won deal in one review, then run onboarding through a checklist and one private client link, instead of an email thread."
+        points={[
+          'Convert to client: choose which contacts carry over, confirm the agreed services with scope, deliverables and exclusions, and start onboarding, all in one step',
+          'A client workspace with overview, contacts, onboarding, services and scope, documents, tasks, activity and projects',
+          'Onboarding stages, reusable forms, file uploads and internal steps; the client uses one private, expiring, revocable link and needs no account',
+          'Confirm the scope as a dated record of what was agreed. It is a record, not a contract or signature',
+          'A welcome message drafted for you, which you copy or open in your own email and mark as sent',
+          'Readiness counts the client’s items and your own steps; completing onboarding saves what the project will start from',
+        ]}
+        visual={<OnboardVisual />}>
+        <p className="mk-fine">Optional reminder emails to clients need a configured email provider and scheduler.</p>
+      </Stage>
+      <Stage eyebrow="08 · Deliver" id="projects" title={<>Deliver what you agreed. <em>See what’s at risk early.</em></>} status={['available', 'New']}
+        text="Projects start from the confirmed scope of a completed onboarding, from a client, or from scratch, and keep the plan, the work and the history in one place."
+        points={[
+          'Setup from a completed onboarding uses only confirmed services and requirements; you review the brief and plan before anything is created',
+          'Three starter templates (website, digital marketing and SEO, AI automation and software) plus your own, and any project saved as a template',
+          'Milestones with dependencies, deliverables with owners, and tasks on a board with dependencies that can’t loop, effort and labels',
+          'A Gantt-style timeline, a deadline calendar and “My tasks”; project tasks also appear in your follow-ups',
+          'Progress counts deliverables, or tasks when there are none, never a mix. Health is On track, At risk, Delayed or On hold, with its reasons',
+          'Project files and internal notes stay internal: they never reach the client link',
+        ]}
+        visual={<ProjectVisual />}>
+        <div className="mk-stage-extra">
+          <div className="mk-stage-eyebrow"><strong>AI project assistant</strong><Status kind="setup">Needs setup</Status></div>
+          <p>Summaries, risks, a plan or a task breakdown, from what the project records. Suggestions are added only when a person approves them. It needs your deployment’s Gemini key, and monthly limits apply.</p>
+          <TextLink href="/#after-the-win">Try the interactive demos</TextLink>
+        </div>
+      </Stage>
     </div>
     <section className="mk-wrap mk-section">
-      <Note title="What is not included yet">Sending messages from LeadFlow (drafts are copied or opened in your own email or WhatsApp), scheduled follow-up sequences, LinkedIn automation, team invitations, advanced analytics, a general lead export, and two-way CRM sync are not current features. Activity history is a working record, not an immutable audit log.</Note>
+      <Note title="What is not included yet">Sending messages from LeadFlow (drafts and welcome messages are copied or opened in your own email or WhatsApp), scheduled follow-up sequences, LinkedIn automation, team invitations, a client project portal with approvals and comments, time tracking, invoicing, resource planning, external calendar sync, e-signatures, a general lead export, and two-way CRM sync are not current features. Activity history is a working record, not an immutable audit log.</Note>
     </section>
   </>
 }
@@ -126,7 +159,7 @@ const methodGroups: { title: string; text: string; items: [GlyphName, string, St
       ['mail', 'Email notifications', 'setup', 'Resend configuration', 'Notify a business inbox after a new inquiry is stored. Sender verification and server-side configuration are required.'],
       ['users', 'Apollo.io', 'setup', 'Your Apollo key', 'Search people and companies, reveal emails and phone numbers after seeing the credit cost, and look up decision-makers from a lead’s Contacts. Keys stay server-side.'],
       ['compass', 'Business directory', 'setup', 'Operator setup', 'Search OpenStreetMap business data through directory servers your deployment configures. CSV import works without it.'],
-      ['gauge', 'PageSpeed Insights & Gemini', 'setup', 'Optional keys', 'Speed measurements, the AI summary in business reports, and AI outreach drafts. Without keys, LeadFlow reads pages itself and says what isn’t set up.'],
+      ['gauge', 'PageSpeed Insights & Gemini', 'setup', 'Optional keys', 'Speed measurements, the AI summary in business reports, AI outreach drafts and the AI project assistant. Without keys, LeadFlow reads pages itself, projects work without AI, and it says what isn’t set up.'],
       ['database', 'CRM synchronization', 'planned', 'Planned', 'Native CRM connections and two-way data sync are not implemented.'],
     ],
   },
@@ -178,9 +211,9 @@ export function Integrations() {
 }
 
 const solutions: { name: string; title: string; text: string; flow: string[]; icon: GlyphName; status?: string }[] = [
-  { name: 'Independent agencies', title: 'Pitch with proof, not guesses.', text: 'Search for businesses in a niche, run a business report on each website, and open with the opportunity that matches your services, in a drafted message to the right contact that says only what the report found. Qualify the lead, then schedule the scope conversation.', flow: ['Directory search', 'Business report', 'Outreach draft', 'Qualified', 'Scope follow-up'], icon: 'sparkles' },
-  { name: 'Consultants', title: 'Make room for discovery.', text: 'Keep a contact’s goals and service interest together before the first call. Record the lead’s progress and set a reminder to reconnect.', flow: ['New inquiry', 'Contacted', 'Discovery follow-up'], icon: 'users' },
-  { name: 'Service businesses', title: 'Give every request a next step.', text: 'Review incoming requests, separate new opportunities from active conversations, and make a task for the ones that need attention.', flow: ['New request', 'Review', 'Follow-up task'], icon: 'calendar' },
+  { name: 'Independent agencies', title: 'Pitch with proof. Deliver with a plan.', text: 'Search for businesses in a niche, run a business report on each website, and open with the opportunity that matches your services, in a drafted message to the right contact that says only what the report found. Track the deal to won, onboard the client, and run the work as a project from the scope you confirmed.', flow: ['Directory search', 'Business report', 'Outreach draft', 'Deal won', 'Onboarding', 'Project'], icon: 'sparkles' },
+  { name: 'Consultants', title: 'Make room for discovery.', text: 'Keep a contact’s goals and service interest together before the first call. Track the engagement as a deal, then confirm the scope with the client before kickoff.', flow: ['New inquiry', 'Discovery call', 'Deal', 'Confirmed scope'], icon: 'users' },
+  { name: 'Service businesses', title: 'Give every request a next step.', text: 'Review incoming requests, separate new opportunities from active conversations, and make a task for the ones that need attention. When a request becomes work, give the new client a checklist instead of an email thread.', flow: ['New request', 'Follow-up task', 'Client', 'Onboarding checklist'], icon: 'calendar' },
   { name: 'Small teams', title: 'A focused starting point.', text: 'Workspaces have owner, admin, and member roles, and records stay with the workspace. Inviting teammates from the app and assigning leads are planned.', flow: ['Workspace roles today', 'Invitations planned'], icon: 'grid', status: 'Invitations planned' },
 ]
 
@@ -207,9 +240,9 @@ export function Solutions() {
 }
 
 const plans = [
-  { name: 'Individual', tag: 'For a focused personal pipeline.', status: ['available', 'Capabilities available'] as [StatusKind, string], items: ['Lead records, pipeline and follow-ups', 'Business reports and opportunity matching', 'Contacts and AI outreach drafts', 'CSV import with duplicate review', 'Hosted form and website embeds'], note: 'Current capabilities; packaging proposed', featured: true },
+  { name: 'Individual', tag: 'For a focused personal pipeline.', status: ['available', 'Capabilities available'] as [StatusKind, string], items: ['Lead records, follow-ups and history', 'Business reports and opportunity matching', 'Contacts and AI outreach drafts', 'Sales pipeline and deal analytics', 'Client onboarding with a private client link', 'Projects, milestones, task board and timeline', 'CSV import, hosted form and website embeds'], note: 'Current capabilities; packaging proposed', featured: true },
   { name: 'Studio', tag: 'For a growing practice.', status: ['planned', 'Planned'] as [StatusKind, string], items: ['Proposed shared workspace', 'Proposed team invitations', 'Proposed roles and assignment'], note: 'Team features are planned', featured: false },
-  { name: 'Connected', tag: 'For more connected operations.', status: ['planned', 'Planned'] as [StatusKind, string], items: ['Existing inbound API foundation', 'Proposed expanded workflows', 'Proposed advanced reporting'], note: 'Expanded capabilities are planned', featured: false },
+  { name: 'Connected', tag: 'For more connected operations.', status: ['planned', 'Planned'] as [StatusKind, string], items: ['Existing inbound API foundation', 'Proposed client project portal and approvals', 'Proposed expanded workflows'], note: 'Expanded capabilities are planned', featured: false },
 ]
 
 export function Pricing() {

@@ -10,13 +10,16 @@ export const businessFields = ['website', 'industry', 'address', 'city', 'region
 export type BusinessDetails = Record<typeof businessFields[number], string>
 export interface Lead extends Partial<BusinessDetails> { id: string; name: string; email: string; phone: string; company: string; service: string; source: string; message: string; status: Status; createdAt: string }
 export type LeadInput = Omit<Lead, 'id' | 'status' | 'createdAt'>
-/** Kinds of follow-up (M9), and of client onboarding task (M10). Tasks are reminders: none of them sends anything. */
+/** Kinds of follow-up (M9), of client onboarding task (M10) and project delivery task (M11). Tasks are reminders: none of them sends anything. */
 export const leadTaskTypes = ['follow_up', 'call', 'email', 'whatsapp', 'meeting', 'proposal', 'proposal_review', 'internal', 'custom'] as const
 export const clientTaskTypes = ['welcome', 'request_info', 'review_form', 'collect_assets', 'review_requirements', 'confirm_scope', 'verify_integrations', 'prepare_handoff', 'call', 'meeting', 'internal', 'custom'] as const
-export const taskTypes = [...leadTaskTypes, 'welcome', 'request_info', 'review_form', 'collect_assets', 'review_requirements', 'confirm_scope', 'verify_integrations', 'prepare_handoff'] as const
+export const taskTypes = [...leadTaskTypes, 'welcome', 'request_info', 'review_form', 'collect_assets', 'review_requirements', 'confirm_scope', 'verify_integrations', 'prepare_handoff', 'delivery'] as const
 export type TaskType = typeof taskTypes[number]
 export const priorities = ['low', 'medium', 'high'] as const
 export type Priority = typeof priorities[number]
+/** The work status of an open project task (M11). Completed and cancelled tasks keep using completed/cancelled. */
+export const workStatuses = ['todo', 'in_progress', 'in_review', 'blocked'] as const
+export type WorkStatus = typeof workStatuses[number]
 /**
  * A follow-up. Since M9 it can belong to a deal and a contact of its lead, have a type, priority, description and assignee,
  * and be cancelled. Since M10 it can instead belong to a client (leadId null), optionally to one of the client's onboarding
@@ -27,6 +30,9 @@ export interface Task {
   dealId?: string | null; contactId?: string | null; taskType?: TaskType; priority?: Priority; cancelled?: boolean; description?: string
   assigneeId?: string | null; createdAt?: string | null; completedAt?: string | null
   clientId?: string | null; onboardingRequestId?: string | null; onboardingItemId?: string | null
+  /** M11 project tasks: the project (and its client in clientId), milestone and deliverable, work status, start date, effort in hours, labels and the tasks it waits for. */
+  projectId?: string | null; milestoneId?: string | null; deliverableId?: string | null; status?: WorkStatus; startDate?: string | null
+  estimateHours?: number | null; actualHours?: number | null; labels?: string[]; dependsOn?: string[]
 }
 export type TaskOptions = Partial<Pick<Task, 'dealId' | 'contactId' | 'taskType' | 'priority' | 'description' | 'assigneeId'>>
 export type ClientTaskOptions = Partial<Pick<Task, 'taskType' | 'priority' | 'description' | 'assigneeId' | 'onboardingRequestId' | 'onboardingItemId'>>
@@ -113,6 +119,64 @@ export function createClientTask(data: Data, clientId: string, due: string, note
   const extra: ClientTaskOptions = Object.fromEntries(Object.entries({ ...options, description: options.description?.trim() || undefined }).filter(([, value]) => value !== undefined && value !== null && value !== ''))
   const task: Task = { id: uid(), leadId: null, clientId, due, notes: notes.trim(), completed: false, cancelled: false, taskType: 'custom', priority: 'medium', ...extra, createdAt: new Date().toISOString(), completedAt: null }
   return {...data,tasks:[task,...data.tasks]}
+}
+export interface ProjectTaskInput {
+  title: string; description?: string; due: string; startDate?: string | null; priority?: Priority; status?: WorkStatus; assigneeId?: string | null
+  milestoneId?: string | null; deliverableId?: string | null; estimateHours?: number | null; actualHours?: number | null; labels?: string[]; dependsOn?: string[]
+}
+const cleanLabels = (labels: string[] | undefined) => [...new Set((labels ?? []).map(label => label.trim()).filter(Boolean))]
+function checkProjectTask(input: ProjectTaskInput) {
+  if (!input.title.trim() || input.title.trim().length > 2000) throw new Error('Give the task a title.')
+  if (!isCalendarDate(input.due)) throw new Error('Choose a valid due date.')
+  if (input.startDate && (!isCalendarDate(input.startDate) || input.startDate > input.due)) throw new Error('The start date must be on or before the due date.')
+  if ((input.description ?? '').length > 2000) throw new Error('Keep the description under 2,000 characters.')
+  for (const hours of [input.estimateHours, input.actualHours]) if (hours !== undefined && hours !== null && (!Number.isFinite(hours) || hours < 0 || hours > 10000)) throw new Error('Effort is a number of hours from 0 to 10,000.')
+  const labels = cleanLabels(input.labels)
+  if (labels.length > 10 || labels.some(label => label.length > 30)) throw new Error('Use up to 10 labels of at most 30 characters.')
+  if ((input.dependsOn ?? []).length > 20) throw new Error('A task can wait for up to 20 others.')
+}
+/** The tasks a project task would end up waiting for through its dependencies; true when that includes itself. */
+export function createsDependencyCycle(tasks: Task[], taskId: string, dependsOn: string[]): boolean {
+  const byId = new Map(tasks.map(task => [task.id, task])), seen = new Set<string>(), queue = [...dependsOn]
+  while (queue.length) {
+    const next = queue.pop()!
+    if (next === taskId) return true
+    if (seen.has(next)) continue
+    seen.add(next); queue.push(...(byId.get(next)?.dependsOn ?? []))
+  }
+  return false
+}
+/** The open tasks this task is waiting for. */
+export const waitingFor = (task: Task, tasks: Task[]) => (task.dependsOn ?? []).map(id => tasks.find(other => other.id === id)).filter((other): other is Task => !!other && !other.completed && !other.cancelled)
+/**
+ * A project task (M11): the same follow-up task, belonging to the project and its client (no lead). The database checks
+ * that the project, milestone, deliverable and dependencies belong together and that dependencies never go in a circle.
+ */
+export function createProjectTask(data: Data, project: { id: string; clientId: string }, input: ProjectTaskInput): Data {
+  checkProjectTask(input)
+  const id = uid()
+  if (createsDependencyCycle(data.tasks, id, input.dependsOn ?? [])) throw new Error('Task dependencies can’t go in a circle.')
+  const task: Task = { id, leadId: null, clientId: project.clientId, projectId: project.id, due: input.due, notes: input.title.trim(), completed: false, cancelled: false, taskType: 'delivery',
+    priority: input.priority ?? 'medium', description: input.description?.trim() ?? '', assigneeId: input.assigneeId ?? null, createdAt: new Date().toISOString(), completedAt: null,
+    milestoneId: input.milestoneId ?? null, deliverableId: input.deliverableId ?? null, status: input.status ?? 'todo', startDate: input.startDate || null,
+    estimateHours: input.estimateHours ?? null, actualHours: input.actualHours ?? null, labels: cleanLabels(input.labels), dependsOn: [...new Set(input.dependsOn ?? [])] }
+  return {...data,tasks:[task,...data.tasks]}
+}
+/** Edits a project task's details. Completion stays with toggleTask, cancellation with cancelTask. */
+export function updateProjectTask(data: Data, id: string, input: ProjectTaskInput): Data {
+  const task = data.tasks.find(item => item.id === id); if (!task) return data
+  checkProjectTask(input)
+  if ((input.dependsOn ?? []).includes(id) || createsDependencyCycle(data.tasks, id, input.dependsOn ?? [])) throw new Error('Task dependencies can’t go in a circle.')
+  return {...data,tasks:data.tasks.map(item=>item.id===id?{...item, notes: input.title.trim(), description: input.description?.trim() ?? '', due: input.due, startDate: input.startDate || null,
+    priority: input.priority ?? item.priority, status: input.status ?? item.status ?? 'todo', assigneeId: input.assigneeId ?? null, milestoneId: input.milestoneId ?? null,
+    deliverableId: input.deliverableId ?? null, estimateHours: input.estimateHours ?? null, actualHours: input.actualHours ?? null, labels: cleanLabels(input.labels),
+    dependsOn: [...new Set(input.dependsOn ?? [])]}:item)}
+}
+/** Moves a project task on the board: an open work status, or completed (which records the completion time). */
+export function setTaskWorkStatus(data: Data, id: string, next: WorkStatus | 'completed'): Data {
+  const task = data.tasks.find(item => item.id === id); if (!task || task.cancelled) return data
+  if (next === 'completed') return task.completed ? data : {...data,tasks:data.tasks.map(item=>item.id===id?{...item, completed: true, completedAt: new Date().toISOString()}:item)}
+  return {...data,tasks:data.tasks.map(item=>item.id===id?{...item, status: next, completed: false, completedAt: item.completed ? null : item.completedAt ?? null}:item)}
 }
 /** Lead history entries for a task change; client tasks (no lead) are recorded in the client's timeline instead. */
 const taskActivity = (task: Task, text: string): Activity[] => task.leadId ? [activity(task.leadId, text)] : []

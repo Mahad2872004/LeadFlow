@@ -1,6 +1,6 @@
 # LeadFlow development roadmap
 
-Updated 19 October 2026 after M5 audit/research; M8 added 19 November 2026; M9 added 23 November 2026; M10 added 25 November 2026. This canonical file was absent before M5. Earlier completion claims are qualified below by actual repository and verification evidence; they are not blanket production-readiness claims.
+Updated 19 October 2026 after M5 audit/research; M8 added 19 November 2026; M9 added 23 November 2026; M10 added 25 November 2026; M11 added 26 November 2026. This canonical file was absent before M5. Earlier completion claims are qualified below by actual repository and verification evidence; they are not blanket production-readiness claims.
 
 ## M1 — Lead-management UI
 
@@ -255,7 +255,39 @@ Details: [docs/CLIENT-MANAGEMENT.md](docs/CLIENT-MANAGEMENT.md).
 1. ~~Apply `202611250001`; deploy `client-files`; re-deploy `client-portal`; check the allowed-origin secrets~~ (done 26 November 2026). Commit, then deploy the frontend.
 2. Run the manual Storage checks in the M10 doc on the hosted project.
 3. Convert two or three real won deals and onboard them by hand.
-4. M11 (projects and delivery) starts from `client_onboarding_completions.snapshot`. **Not started; awaiting approval.**
+4. M11 (projects and delivery) started from `client_onboarding_completions.snapshot`; see below.
+
+## M11 — Project and delivery management
+
+**Status: implemented and verified locally, 26 November 2026. The same day, migration `202611260001` was applied to the hosted project and checked (RLS, grants, columns), and `project-assistant` was deployed and `client-files` re-deployed, both smoke-tested.** Not done: the frontend isn't deployed and M11 isn't committed; the real AI model and Storage haven't been exercised on the hosted project.
+
+- **Projects:**
+  - created from a completed onboarding (setup from the M10 snapshot; confirmed items only), from a client or by hand;
+  - reviewed before creation, created in one transaction, idempotent;
+  - several per client, with brief, dates, priority, owner, tags, agreed value and recorded costs;
+  - fixed statuses with explicit completion and reasons;
+  - a dashboard, list, calendar and the client's Projects tab.
+- **Planning:**
+  - milestones with dependencies (no cycles), order, completion and history;
+  - deliverables with internal statuses, owners and services;
+  - three starter templates plus your own, editable by owners and admins;
+  - save a project as a template.
+- **Tasks:** the existing follow-up tasks, with work status, board, dependencies (same project, no cycles, checked by the database), start date, effort, labels, "My tasks" and a Projects filter on Follow-ups.
+- **Progress and health:**
+  - progress counts deliverables, otherwise tasks, never mixed;
+  - health is On track, At risk, Delayed or On hold, from documented, measurable rules with reasons.
+- **Timeline and calendar:** a Gantt-style timeline (no drag-to-reschedule), plus a month or week calendar with an upcoming list.
+- **Files and activity:** project files in M10's private storage (always internal, previews for images and PDFs), and a project history plus internal notes in the client's activity history.
+- **AI assistant:** summary, risks, plan and breakdown from recorded facts. Suggestions only, approval adds them, untrusted data is kept as data, there is a monthly limit, and it works without AI.
+
+**Not built:** client project portal, approvals and comments; time tracking; resource planning; invoicing; external calendar sync; customizable project statuses.
+
+Details: [docs/PROJECTS.md](docs/PROJECTS.md).
+
+**Next:**
+1. ~~Apply `202611260001`, deploy `project-assistant`, re-deploy `client-files`~~ (done 26 November 2026). Commit, then deploy the frontend.
+2. Run the manual checks in the M11 doc on the hosted project.
+3. M12 is not started and awaits approval.
 
 ## Production readiness and controlled beta (formerly listed as M7; not scheduled)
 
@@ -289,6 +321,23 @@ Use consented, bounded beta accounts with a named operator and support channel. 
 Next steps: apply `202610200002` and `202610200003`, deploy `submit-inquiry`, then the frontend; hosted two-account verification; a decision on opening public sign-up; then invitations and member management. See [docs/MULTI-TENANCY.md](docs/MULTI-TENANCY.md).
 
 ## Current verification ledger
+
+**M11 project and delivery management, 26 November 2026 (local).** All passed:
+- `npx oxlint` (no warnings), `npx tsc -b`, `npm run check:edge` and `npm run build`;
+- the new `npm run test:projects`;
+- all 11 earlier database suites (`test:db`, `test:m3`, `test:integrations`, `test:tenancy`, `test:onboarding`, `test:discovery`, `test:apollo`, `test:analysis`, `test:outreach`, `test:sales`, `test:clients`), with new task fields, the function allowlist and M11-first rollback order;
+- `npx playwright test`: 53/53, including 2 new project tests;
+- `npm run test:production`: 53/53.
+
+Storage and the AI model were simulated; no outside service was contacted and nothing was sent.
+
+**Found and fixed by these tests:**
+- a health rule flagged every new project as at risk (its first milestone was "due within 7 days with less than half done" on day one); it now applies only past a milestone's halfway point;
+- `save_project_as_template` had an unbalanced `coalesce`;
+- the projects page widened past a phone screen (an auto-sized grid column);
+- the client Projects tab duplicated the archived-client banner text that the M10 browser test looked for.
+
+Correction to the M10 entry below: M10 was verified with 11 database suites, not 13 as an earlier status message said; the M10 entry itself lists the suites correctly.
 
 **M10 client onboarding and client management, 25–26 November 2026 (local, then hosted).** All passed:
 - `npx oxlint` (no warnings), `npx tsc -b`, `npm run check:edge` and `npm run build`;

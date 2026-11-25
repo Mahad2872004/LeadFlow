@@ -1,7 +1,8 @@
-import { useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Glyph, type GlyphName } from './Glyph'
 import { evidenceLabels, faqs, type StatusKind } from './content'
 import { primaryLabel, signupOpen } from './access'
+import { reducedMotion } from './motion'
 
 export function Brand() {
   return (
@@ -82,7 +83,7 @@ export function FinalCTA() {
 export function FAQs({ short = false }: { short?: boolean }) {
   return (
     <div className="mk-faq">
-      {(short ? faqs.slice(0, 5) : faqs).map(([q, a]) => (
+      {(short ? faqs.slice(0, 6) : faqs).map(([q, a]) => (
         <details key={q}>
           <summary>{q}<span className="mk-faq-icon" aria-hidden="true"><Glyph name="plus" size={16} /></span></summary>
           <p>{a}</p>
@@ -90,6 +91,32 @@ export function FAQs({ short = false }: { short?: boolean }) {
       ))}
     </div>
   )
+}
+
+/** A number that counts up once when it scrolls into view. Screen readers and reduced-motion visitors get the final value. */
+export function CountUp({ value, suffix = '', duration = 1100 }: { value: number; suffix?: string; duration?: number }) {
+  const ref = useRef<HTMLSpanElement>(null)
+  const [shown, setShown] = useState(() => (reducedMotion() || typeof IntersectionObserver === 'undefined' ? value : 0))
+  useEffect(() => {
+    const node = ref.current
+    if (!node || reducedMotion() || typeof IntersectionObserver === 'undefined') return
+    let frame = 0
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting) return
+      observer.disconnect()
+      let start = 0
+      const tick = (now: number) => {
+        if (!start) start = now
+        const p = Math.min(1, (now - start) / duration)
+        setShown(Math.round(value * (1 - Math.pow(1 - p, 3))))
+        if (p < 1) frame = requestAnimationFrame(tick)
+      }
+      frame = requestAnimationFrame(tick)
+    }, { threshold: 0.4 })
+    observer.observe(node)
+    return () => { observer.disconnect(); cancelAnimationFrame(frame) }
+  }, [value, duration])
+  return <span ref={ref} className="mk-count"><span className="mk-sr">{value}{suffix}</span><span aria-hidden="true">{shown}{suffix}</span></span>
 }
 
 export function EvidenceLabels() {
@@ -175,51 +202,84 @@ const followUps = [
   ['Share the speed findings', 'Ava Mitchell · Sunday Goods', 'Tomorrow'],
 ] as const
 
+const projectRows = [
+  ['HD', 'Website rebuild', 'Harbor Dental', 64, 'on_track', 'On track', 'Launch · 12 Dec'],
+  ['SG', 'Paid ads kickoff', 'Sunday Goods', 30, 'at_risk', 'At risk', 'Campaign live · 3 Dec'],
+  ['LP', 'Local SEO programme', 'Lumen Physio', 85, 'on_track', 'On track', 'Monthly report · 1 Dec'],
+] as const
+
+type PreviewView = 'pipeline' | 'projects' | 'followups'
+const previewViews: { id: PreviewView; label: string; nav: string; title: string; eyebrow: string; action: string }[] = [
+  { id: 'pipeline', label: 'Pipeline', nav: 'Overview', eyebrow: 'Overview', title: 'This week’s pipeline', action: 'New lead' },
+  { id: 'projects', label: 'Projects', nav: 'Projects', eyebrow: 'Delivery', title: 'Projects in progress', action: 'New project' },
+  { id: 'followups', label: 'Follow-ups', nav: 'Follow-ups', eyebrow: 'Follow-ups', title: 'Due today and next', action: 'New task' },
+]
+const previewStats = [['Total leads', 24, '+6 this week'], ['Open deals', 7, '2 closing soon'], ['Active projects', 3, '1 at risk'], ['Follow-ups due', 3, 'Today']] as const
+const previewNav: [GlyphName, string][] = [['grid', 'Overview'], ['users', 'Leads'], ['compass', 'Discovery'], ['kanban', 'Sales'], ['clipboard', 'Clients'], ['briefcase', 'Projects'], ['calendar', 'Follow-ups'], ['sparkles', 'Integrations']]
+
+/** The workspace illustration. The view switch is real; the records are fictional and nothing is loaded. */
 export function ProductPreview() {
-  const [view, setView] = useState<'pipeline' | 'followups'>('pipeline')
-  const nav: [GlyphName, string][] = [['grid', 'Overview'], ['users', 'Leads'], ['compass', 'Discovery'], ['calendar', 'Follow-ups'], ['clipboard', 'Onboarding'], ['clock', 'Activity'], ['sparkles', 'Integrations']]
+  const [view, setView] = useState<PreviewView>('pipeline')
+  const current = previewViews.find(item => item.id === view) ?? previewViews[0]
   return (
     <figure className="mk-window mk-product" id="product-preview" aria-label="Illustration of the LeadFlow workspace with fictional records">
-      <Chrome path="LeadFlow / Studio workspace / Overview" />
+      <Chrome path={`LeadFlow / Studio workspace / ${current.nav}`} />
       <div className="mk-app">
         <div className="mk-app-side" aria-hidden="true">
           <span className="mk-app-brand"><span className="mk-logo mk-logo-sm"><Glyph name="arrowUpRight" size={14} /></span>LeadFlow</span>
-          {nav.map(([icon, label], i) => <span key={label} className={`mk-app-item${i === 0 ? ' is-active' : ''}`}><Glyph name={icon} size={16} /><span>{label}</span></span>)}
+          {previewNav.map(([icon, label]) => <span key={label} className={`mk-app-item${label === current.nav ? ' is-active' : ''}`}><Glyph name={icon} size={16} /><span>{label}</span></span>)}
           <span className="mk-app-ws"><b>S</b><span>Studio<small>Owner</small></span></span>
         </div>
         <div className="mk-app-main">
           <div className="mk-app-top">
-            <div><small>Overview</small><strong>This week’s pipeline</strong></div>
-            <span className="mk-fake-button"><Glyph name="plus" size={14} />New lead</span>
+            <div><small>{current.eyebrow}</small><strong>{current.title}</strong></div>
+            <span className="mk-fake-button"><Glyph name="plus" size={14} />{current.action}</span>
           </div>
           <div className="mk-stats">
-            {[['Total leads', '24', '+6 this week'], ['Reports ready', '9', '3 new'], ['Qualified', '5', '+2'], ['Follow-ups due', '3', 'Today']].map(([label, value, delta]) => (
-              <div className="mk-stat" key={label}><span>{label}</span><strong>{value}</strong><small>{delta}</small></div>
+            {previewStats.map(([label, value, delta]) => (
+              <div className="mk-stat" key={label}><span>{label}</span><strong><CountUp value={value} /></strong><small>{delta}</small></div>
             ))}
           </div>
           <div className="mk-switch" role="group" aria-label="Product preview view">
-            <button type="button" aria-pressed={view === 'pipeline'} onClick={() => setView('pipeline')}>Pipeline preview</button>
-            <button type="button" aria-pressed={view === 'followups'} onClick={() => setView('followups')}>Follow-ups preview</button>
+            {previewViews.map(item => (
+              <button key={item.id} type="button" aria-pressed={view === item.id} onClick={() => setView(item.id)}>{item.label}<span className="mk-sr"> preview</span></button>
+            ))}
           </div>
-          {view === 'pipeline' ? (
-            <div className="mk-table">
-              <div className="mk-tr mk-th"><span>Lead / company</span><span>Interest</span><span>Business report</span><span>Status</span></div>
-              {pipelineRows.map(([initials, name, company, service, report, status]) => (
-                <div className="mk-tr" key={name}>
-                  <div className="mk-person"><b className="mk-avatar">{initials}</b><span><strong>{name}</strong><small>{company}</small></span></div>
-                  <span>{service}</span>
-                  <span className={`mk-report-cell${report.startsWith('Analyzing') ? ' is-running' : ''}`}>{report.startsWith('Analyzing') ? <i className="mk-spin" /> : <Glyph name="sparkles" size={14} />}{report}</span>
-                  <span><i className={`mk-pill is-${status.toLowerCase()}`}>{status}</i></span>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <ul className="mk-tasks">
-              {followUps.map(([task, who, due]) => (
-                <li key={task}><span className="mk-checkbox" /><span><strong>{task}</strong><small>{who}</small></span><b className={due === 'Today' ? 'is-today' : ''}>{due}</b></li>
-              ))}
-            </ul>
-          )}
+          <div className="mk-view" key={view}>
+            {view === 'pipeline' && (
+              <div className="mk-table">
+                <div className="mk-tr mk-th"><span>Lead / company</span><span>Interest</span><span>Business report</span><span>Status</span></div>
+                {pipelineRows.map(([initials, name, company, service, report, status]) => (
+                  <div className="mk-tr" key={name}>
+                    <div className="mk-person"><b className="mk-avatar">{initials}</b><span><strong>{name}</strong><small>{company}</small></span></div>
+                    <span>{service}</span>
+                    <span className={`mk-report-cell${report.startsWith('Analyzing') ? ' is-running' : ''}`}>{report.startsWith('Analyzing') ? <i className="mk-spin" /> : <Glyph name="sparkles" size={14} />}{report}</span>
+                    <span><i className={`mk-pill is-${status.toLowerCase()}`}>{status}</i></span>
+                  </div>
+                ))}
+              </div>
+            )}
+            {view === 'projects' && (
+              <div className="mk-table">
+                <div className="mk-tr mk-th"><span>Project / client</span><span>Next milestone</span><span>Progress</span><span>Health</span></div>
+                {projectRows.map(([initials, name, client, progress, health, label, next]) => (
+                  <div className="mk-tr" key={name}>
+                    <div className="mk-person"><b className="mk-avatar">{initials}</b><span><strong>{name}</strong><small>{client}</small></span></div>
+                    <span>{next}</span>
+                    <span className="mk-progress-cell"><span className="mk-bar"><span style={{ width: `${progress}%` }} /></span><b>{progress}%</b></span>
+                    <span><i className={`mk-health is-${health}`}>{label}</i></span>
+                  </div>
+                ))}
+              </div>
+            )}
+            {view === 'followups' && (
+              <ul className="mk-tasks">
+                {followUps.map(([task, who, due]) => (
+                  <li key={task}><span className="mk-checkbox" /><span><strong>{task}</strong><small>{who}</small></span><b className={due === 'Today' ? 'is-today' : ''}>{due}</b></li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
       </div>
     </figure>

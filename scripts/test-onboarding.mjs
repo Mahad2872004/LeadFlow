@@ -401,7 +401,7 @@ db=await createDatabase([owner])
 await actAs(db,owner);await db.query('select public.install_starter_templates($1)',[owner])
 await db.query('select public.save_workspace_for($1,$2,0,$3)',[owner,JSON.stringify({version:1,leads:[lead],tasks:[],activities:[]}),crypto.randomUUID()])
 // M10 (clients) builds on these tables, so it is rolled back first.
-await actAs(db,null,'postgres');await db.exec(readFileSync('supabase/rollbacks/202611250001_client_management.down.sql','utf8'));await db.exec(readFileSync('supabase/rollbacks/202610250001_client_onboarding.down.sql','utf8'))
+await actAs(db,null,'postgres');await db.exec(readFileSync('supabase/rollbacks/202611260001_project_delivery.down.sql','utf8'));await db.exec(readFileSync('supabase/rollbacks/202611250001_client_management.down.sql','utf8'));await db.exec(readFileSync('supabase/rollbacks/202610250001_client_onboarding.down.sql','utf8'))
 assert.equal(await one("select count(*)::int from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='leadflow_private' and c.relname like 'onboarding%'"),0)
 assert.equal(await one("select count(*)::int from pg_proc where proname like '%onboarding%' or proname like 'portal\\_%'"),0)
 assert.equal(await one('select count(*)::int from public.leads'),1,'Leads are kept.')

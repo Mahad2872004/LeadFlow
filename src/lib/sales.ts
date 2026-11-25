@@ -151,7 +151,9 @@ export const meetingStatusLabels: Record<MeetingStatus, string> = { scheduled: '
 export const timelineGroupLabels: Record<TimelineGroup, string> = { activity: 'Notes & calls', stage: 'Stage changes', task: 'Follow-ups', meeting: 'Meetings', outreach: 'Outreach', lead: 'Lead history' }
 export const taskTypeLabels: Record<TaskType, string> = { follow_up: 'Follow-up', call: 'Follow-up call', email: 'Follow-up email', whatsapp: 'WhatsApp follow-up', meeting: 'Schedule a meeting', proposal: 'Prepare a proposal', proposal_review: 'Review the proposal', internal: 'Internal reminder', custom: 'Custom',
   // M10: client onboarding tasks.
-  welcome: 'Send the welcome message', request_info: 'Request information', review_form: 'Review a submission', collect_assets: 'Collect assets', review_requirements: 'Review requirements', confirm_scope: 'Confirm the scope', verify_integrations: 'Verify access & integrations', prepare_handoff: 'Prepare the project handoff' }
+  welcome: 'Send the welcome message', request_info: 'Request information', review_form: 'Review a submission', collect_assets: 'Collect assets', review_requirements: 'Review requirements', confirm_scope: 'Confirm the scope', verify_integrations: 'Verify access & integrations', prepare_handoff: 'Prepare the project handoff',
+  // M11: project work.
+  delivery: 'Delivery task' }
 export const stageColors = ['#64748b', '#0ea5e9', '#6366f1', '#8b5cf6', '#a855f7', '#ec4899', '#f59e0b', '#f97316', '#eab308', '#14b8a6', '#16a34a', '#dc2626']
 export const colorNames: Record<string, string> = { '#64748b': 'Slate', '#0ea5e9': 'Sky', '#6366f1': 'Indigo', '#8b5cf6': 'Violet', '#a855f7': 'Purple', '#ec4899': 'Pink', '#f59e0b': 'Amber', '#f97316': 'Orange', '#eab308': 'Yellow', '#14b8a6': 'Teal', '#16a34a': 'Green', '#dc2626': 'Red' }
 /** The stage an outreach event suggests, by the default stage it came from. Never applied without confirmation. */

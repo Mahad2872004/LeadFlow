@@ -1,5 +1,5 @@
 import { isCalendarDate } from './dates'
-import { businessFields, priorities, statuses, taskTypes, validateLead, type Data, type LeadInput } from './model'
+import { businessFields, priorities, statuses, taskTypes, validateLead, workStatuses, type Data, type LeadInput } from './model'
 import { sampleData } from './seed'
 export const STORAGE_KEY = 'leadflow.demo.v1'
 type StoragePort = Pick<Storage, 'getItem' | 'setItem'>
@@ -37,6 +37,11 @@ export function isData(value: unknown): value is Data {
     // M9 and M10 fields are optional; the database checks that deals, contacts, clients and assignees belong to the workspace.
     && optionalText(task.dealId) && optionalText(task.contactId) && optionalText(task.assigneeId) && optionalTime(task.createdAt) && optionalTime(task.completedAt)
     && optionalText(task.clientId) && optionalText(task.onboardingRequestId) && optionalText(task.onboardingItemId)
+    // M11 project task fields are optional too; the database checks the project, milestone, deliverable and dependencies.
+    && optionalText(task.projectId) && optionalText(task.milestoneId) && optionalText(task.deliverableId) && optionalText(task.startDate)
+    && (task.status === undefined || workStatuses.some(status => status === task.status))
+    && [task.estimateHours, task.actualHours].every(hours => hours === undefined || hours === null || typeof hours === 'number' || (typeof hours === 'string' && Number.isFinite(Number(hours))))
+    && [task.labels, task.dependsOn].every(list => list === undefined || (Array.isArray(list) && list.every(item => typeof item === 'string')))
     && (task.taskType === undefined || taskTypes.some(type => type === task.taskType)) && (task.priority === undefined || priorities.some(priority => priority === task.priority))
     && (task.cancelled === undefined || (typeof task.cancelled === 'boolean' && !(task.cancelled && task.completed))) && (task.description === undefined || (typeof task.description === 'string' && task.description.length <= 2000)))
     && activities.every(event => record(event) && strings(event, ['id', 'leadId', 'text', 'at']) && event.text.trim().length > 0 && timestamp(event.at) && leadIds.has(event.leadId))

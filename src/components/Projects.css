@@ -1,0 +1,177 @@
+/* M11: the projects portfolio (overview, list, my tasks, calendar, templates, new project, a client's projects). Builds
+   on the shared panel, table and sp- styles; colours come from the design tokens, so light and dark themes both work. */
+.pf-page { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; min-width: 0 }
+.pf-page > * { min-width: 0 }
+.pf-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px }
+.pf-toolbar .sp-tabs { margin: 0 }
+.pf-toolbar > .primary { min-height: 40px }
+.pf-panel, .pf-page .panel { margin: 0 }
+.pf-inset { margin: 0 22px 14px }
+.pf-quiet { margin: 0; padding: 0 22px 20px; color: var(--lf-muted); font-size: 13.5px }
+.pf-label { display: inline-block; margin-right: 6px; color: var(--lf-muted); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em }
+.pf-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 0 }
+.pf-empty-panel .empty { padding: 48px 24px }
+.pf-empty-panel .empty p { max-width: 560px; margin-inline: auto }
+
+/* Overview */
+.pf-glance { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px }
+.pf-attention, .pf-deadlines, .pf-recent, .pf-tasks, .pf-templates, .pf-client-list, .pf-template-outline, .pf-plan, .pf-plan-items, .pf-agenda { margin: 0; padding: 0; list-style: none }
+.pf-attention, .pf-deadlines, .pf-recent { display: grid; padding: 0 22px 14px }
+.pf-attention li, .pf-deadlines li, .pf-recent li { padding: 10px 0; border-top: 1px solid var(--lf-line) }
+.pf-attention li:first-child, .pf-deadlines li:first-child, .pf-recent li:first-child { border-top: 0 }
+.pf-attention li { display: grid; gap: 6px }
+.pf-deadlines li { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 12px; align-items: baseline }
+.pf-deadlines time { color: var(--lf-ink); font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums }
+.pf-deadlines small, .pf-recent small { display: block; margin-top: 2px; color: var(--lf-muted); font-size: 12.5px }
+.pf-recent p { margin: 0; color: var(--lf-text); font-size: 13.5px }
+
+/* All projects */
+.pf-table td { vertical-align: middle }
+.pf-table td small { display: block }
+.pf-table .is-late { color: var(--lf-danger) }
+.pf-name { font-size: 14px }
+.pf-client-link { padding: 0; border: 0; background: none; color: var(--lf-muted); font: inherit; text-decoration: underline; text-decoration-color: var(--lf-line-strong); text-underline-offset: 2px; cursor: pointer }
+.pf-client-link:hover { color: var(--lf-ink) }
+.pf-table .pj-priority { margin-left: 4px; font-size: 11px }
+
+/* My tasks */
+.pf-views { padding: 0 22px }
+.pf-tasks { display: grid; padding: 0 22px 14px }
+.pf-task { display: grid; grid-template-columns: 18px minmax(0, 1fr) auto auto; align-items: center; gap: 12px; padding: 12px 0; border-top: 1px solid var(--lf-line) }
+.pf-task:first-child { border-top: 0 }
+.pf-task > input { width: 18px; height: 18px; margin: 0; accent-color: var(--lf-brand) }
+.pf-task-main { display: grid; gap: 2px; min-width: 0 }
+.pf-task-main strong { color: var(--lf-ink); font-size: 14px; font-weight: 550; overflow-wrap: anywhere }
+.pf-task-main small { color: var(--lf-muted); font-size: 12.5px }
+.pf-task.is-done strong { color: var(--lf-faint); text-decoration: line-through }
+.pf-blocked { color: var(--lf-warning) !important }
+.pf-task select, .pf-suggestion select { min-height: 34px; padding: 4px 8px; border: 1px solid var(--lf-line-strong); border-radius: 8px; background: var(--lf-surface); color: var(--lf-ink); font: inherit; font-size: 13px }
+
+/* Calendar */
+.pf-calendar-layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; align-items: start }
+.pf-cal-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding: 18px 22px 8px }
+.pf-cal-nav { display: flex; flex-wrap: wrap; align-items: center; gap: 6px }
+.pf-cal-nav .secondary { min-height: 34px; padding: 0 12px }
+.pf-cal-nav h2 { margin: 0 0 0 8px; color: var(--lf-ink); font-size: 17px; font-weight: 650 }
+.pf-mode { margin: 0 }
+.pf-kinds { margin: 0 }
+.pf-cal-grid { display: grid; margin: 0 22px; border: 1px solid var(--lf-line); border-radius: 12px; overflow: hidden }
+.pf-cal-row { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)) }
+.pf-cal-row + .pf-cal-row { border-top: 1px solid var(--lf-line) }
+.pf-cal-weekday { padding: 8px 10px; background: var(--lf-subtle); color: var(--lf-muted); font-size: 12px; font-weight: 600 }
+.pf-cal-cell { display: grid; align-content: start; gap: 3px; min-width: 0; min-height: 104px; padding: 6px; border-left: 1px solid var(--lf-line); background: var(--lf-surface) }
+.pf-cal-cell:first-child { border-left: 0 }
+.pf-cal-grid.is-week .pf-cal-cell { min-height: 260px }
+.pf-cal-cell.is-outside { background: var(--lf-subtle) }
+.pf-cal-cell.is-outside .pf-cal-day { color: var(--lf-faint) }
+.pf-cal-day { color: var(--lf-muted); font-size: 12px; font-weight: 600 }
+.pf-cal-cell.is-today .pf-cal-day time { display: inline-grid; place-items: center; min-width: 22px; height: 22px; border-radius: 999px; background: var(--lf-accent-bg); color: #fff }
+.pf-cal-item { display: flex; align-items: center; gap: 5px; width: 100%; min-width: 0; padding: 2px 6px; border: 0; border-radius: 6px; background: var(--lf-subtle); color: var(--lf-text); font: inherit; font-size: 12px; text-align: left; cursor: pointer }
+.pf-cal-item span:first-of-type { overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.pf-cal-item:hover { background: var(--lf-hover) }
+.pf-cal-item i, .pf-legend i { flex-shrink: 0; width: 7px; height: 7px; border-radius: 50% }
+.is-project > i, .pf-legend .is-project i { background: var(--lf-brand) }
+.is-milestone > i, .pf-legend .is-milestone i { background: var(--lf-info) }
+.is-deliverable > i, .pf-legend .is-deliverable i { background: var(--lf-ai) }
+.is-task > i, .pf-legend .is-task i { background: var(--lf-muted) }
+.pf-cal-item.is-done span:first-of-type { color: var(--lf-faint); text-decoration: line-through }
+.pf-cal-item.is-overdue { background: var(--lf-danger-soft); color: var(--lf-danger) }
+.pf-cal-more { justify-self: start; padding: 0 4px; border: 0; background: none; color: var(--lf-muted); font: inherit; font-size: 12px; cursor: pointer }
+.pf-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 0; padding: 12px 22px 18px; color: var(--lf-muted); font-size: 12px }
+.pf-legend span { display: inline-flex; align-items: center; gap: 6px }
+.pf-agenda { display: grid; gap: 12px; padding: 0 16px 8px }
+.pf-agenda h3 { margin: 0 0 6px; color: var(--lf-ink); font-size: 13px }
+.pf-agenda h3.is-today { color: var(--lf-brand-strong) }
+.pf-agenda > li > div { display: grid; gap: 4px }
+.pf-agenda .pf-cal-item { padding: 6px 8px; font-size: 13px }
+.pf-upcoming .pf-deadlines li { grid-template-columns: 74px minmax(0, 1fr) }
+
+/* Templates */
+.pf-templates { display: grid; padding: 0 22px 14px }
+.pf-templates li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 16px; padding: 14px 0; border-top: 1px solid var(--lf-line) }
+.pf-templates li:first-child { border-top: 0 }
+.pf-templates li.is-archived { opacity: .7 }
+.pf-template-main strong { margin-right: 8px; color: var(--lf-ink) }
+.pf-template-main p { margin: 4px 0 0 }
+.pf-toggle { margin: 0 22px 18px }
+dialog#project-template, dialog#new-project { width: min(880px, calc(100vw - 32px)) }
+.pf-template-outline { display: grid; gap: 12px; counter-reset: milestone }
+.pf-template-outline li { padding-bottom: 12px; border-bottom: 1px solid var(--lf-line) }
+.pf-template-outline p { margin: 0 0 4px; font-size: 13.5px }
+.pf-template-form h3, .pf-new h3 { margin: 22px 0 10px; color: var(--lf-ink); font-size: 15px }
+.pf-template-edit { display: grid; gap: 12px; margin: 0 0 12px; padding: 0; list-style: none }
+.pf-template-edit fieldset { margin: 0; padding: 12px 14px 8px; border: 1px solid var(--lf-line); border-radius: 12px }
+.pf-template-edit legend { padding: 0 6px; color: var(--lf-muted); font-size: 12.5px; font-weight: 600 }
+.pf-template-row { display: grid; grid-template-columns: minmax(0, 1fr) 120px 100px; gap: 0 10px }
+.pf-template-lists { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 8px }
+.pf-inline-row { display: flex; align-items: center; gap: 6px; margin: 6px 0 }
+.pf-inline-row input:not([type=checkbox]), .pf-inline-row select { min-height: 34px !important; margin-top: 0 !important; padding: 5px 8px !important; font-size: 13px }
+.pf-inline-row .pf-days { width: 64px !important; flex-shrink: 0 }
+.pf-inline-row select { width: auto !important; flex-shrink: 0 }
+
+/* New project */
+.pf-source { margin: 0 0 12px; color: var(--lf-text); font-size: 13.5px; line-height: 1.55 }
+.pf-links { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 8px }
+.pf-links fieldset, .pf-suggestions { margin: 0; padding: 10px 14px 4px; border: 1px solid var(--lf-line); border-radius: 12px }
+.pf-links legend, .pf-suggestions legend { padding: 0 6px; color: var(--lf-muted); font-size: 12.5px; font-weight: 600 }
+.pf-links .cl-check-label { margin-bottom: 8px }
+.pf-links small, .pf-suggestion small { color: var(--lf-muted); font-weight: 400 }
+.pf-brief { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 14px }
+.pf-brief .is-wide { grid-column: 1 / -1 }
+.pf-reference { margin: 4px 0 8px; padding: 10px 14px; border: 1px solid var(--lf-line); border-radius: 12px; font-size: 13.5px }
+.pf-reference summary { color: var(--lf-ink); font-weight: 600; cursor: pointer }
+.pf-reference ul { margin: 4px 0 8px; padding-left: 18px }
+.pf-reference small { color: var(--lf-muted) }
+.pf-plan { display: grid; gap: 6px; margin-bottom: 12px }
+.pf-plan > li { padding: 8px 10px; border: 1px solid var(--lf-line); border-radius: 10px }
+.pf-plan > li.is-off { background: var(--lf-subtle) }
+.pf-plan-row { display: grid; grid-template-columns: 18px minmax(0, 1fr) 140px 140px auto; align-items: center; gap: 8px }
+.pf-plan input:not([type=checkbox]) { min-height: 34px !important; margin-top: 0 !important; padding: 5px 8px !important; font-size: 13px }
+.pf-plan-row .text-button { white-space: nowrap; font-size: 12.5px }
+.pf-plan-items { display: grid; gap: 6px; margin: 8px 0 2px 26px }
+.pf-plan-items li { display: grid; grid-template-columns: 18px 76px minmax(0, 1fr) 140px; align-items: center; gap: 8px }
+.pf-kind { color: var(--lf-muted); font-size: 11.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .03em }
+.pf-suggestions { margin-bottom: 12px }
+.pf-suggestion { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin-bottom: 8px }
+.pf-suggestion .cl-check-label { margin: 0 }
+.pf-summary-line { margin: 4px 0 0; color: var(--lf-muted); font-size: 13px }
+
+/* A client's projects */
+.pf-client-list { display: grid; gap: 10px; padding: 0 22px 20px }
+.pf-client-project { display: grid; gap: 6px; width: 100%; padding: 14px 16px; border: 1px solid var(--lf-line); border-radius: 12px; background: var(--lf-surface); color: inherit; font: inherit; text-align: left; cursor: pointer; transition: border-color .15s, box-shadow .15s }
+.pf-client-project:hover { border-color: var(--lf-line-strong); box-shadow: var(--lf-shadow-xs) }
+.pf-client-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px }
+.pf-client-head strong { margin-right: 4px; color: var(--lf-ink) }
+.pf-client-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px }
+
+@media (max-width: 1100px) {
+  .pf-calendar-layout { grid-template-columns: minmax(0, 1fr) }
+  .pf-stats { grid-template-columns: repeat(2, minmax(0, 1fr)) }
+}
+@media (max-width: 760px) {
+  .pf-glance, .pf-links, .pf-brief, .pf-template-lists { grid-template-columns: minmax(0, 1fr) }
+  .pf-template-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) }
+  .pf-template-row label:first-child { grid-column: 1 / -1 }
+  .pf-plan-row { grid-template-columns: 18px minmax(0, 1fr) minmax(0, 1fr) }
+  .pf-plan-row .pf-plan-name { grid-column: 2 / -1 }
+  .pf-plan-row input[type=date]:first-of-type { grid-column: 2 }
+  .pf-plan-row .text-button { grid-column: 2 / -1; justify-self: start }
+  .pf-plan-items { margin-left: 0 }
+  .pf-plan-items li { grid-template-columns: 18px minmax(0, 1fr) }
+  .pf-plan-items .pf-kind { display: none }
+  .pf-plan-items input[type=date] { grid-column: 2 }
+  .pf-task { grid-template-columns: 18px minmax(0, 1fr); row-gap: 6px }
+  .pf-task select, .pf-task .due-date { grid-column: 2 }
+  .pf-attention, .pf-deadlines, .pf-recent, .pf-tasks, .pf-templates, .pf-client-list, .pf-views, .pf-quiet { padding-inline: 16px }
+  .pf-cal-head { padding-inline: 16px }
+  .pf-cal-grid { margin: 0 16px }
+  .pf-legend { padding-inline: 16px }
+  .pf-inset, .pf-toggle { margin-inline: 16px }
+  .pf-templates li { grid-template-columns: minmax(0, 1fr) }
+  .pf-toolbar { align-items: stretch }
+  .pf-toolbar .sp-tabs { width: 100% }
+}
+@media (max-width: 480px) {
+  .pf-stats { grid-template-columns: minmax(0, 1fr) }
+}
+@media (prefers-reduced-motion: reduce) { .pf-client-project { transition: none } }

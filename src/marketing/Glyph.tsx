@@ -35,6 +35,13 @@ const paths = {
   link: <><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1" /><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" /></>,
   gauge: <><path d="M4.2 17.5a9 9 0 1 1 15.6 0" /><path d="m12 13 4-4.5" /><circle cx="12" cy="13.5" r="1.3" /></>,
   info: <><circle cx="12" cy="12" r="9" /><path d="M12 11v5.5M12 7.6v.4" /></>,
+  arrowLeft: <path d="M19 12H5M11 6l-6 6 6 6" />,
+  pause: <path d="M9 5.5v13M15 5.5v13" />,
+  play: <path d="M8 5.5v13l10-6.5Z" />,
+  kanban: <><rect x="4" y="4" width="4.5" height="16" rx="1.5" /><rect x="9.75" y="4" width="4.5" height="10" rx="1.5" /><rect x="15.5" y="4" width="4.5" height="13" rx="1.5" /></>,
+  briefcase: <><rect x="3" y="7" width="18" height="13" rx="2.5" /><path d="M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7M3 12.5h18" /></>,
+  flag: <path d="M5 21V4M5 4.5h11l-2 3.5 2 3.5H5" />,
+  trophy: <><path d="M8 4h8v5a4 4 0 0 1-8 0Z" /><path d="M8 6H5.5a2.5 2.5 0 0 0 2.8 4M16 6h2.5a2.5 2.5 0 0 1-2.8 4M12 13v4M8.5 20h7M10 17h4" /></>,
 } satisfies Record<string, ReactNode>
 
 export type GlyphName = keyof typeof paths

@@ -29,6 +29,8 @@ const paths = {
   history: <><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></>,
   chart: <path d="M4 20V10M10 20V4M16 20v-7M21 20H3"/>,
   deal: <><path d="M3 7h18v12H3zM8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M3 12h18"/></>,
+  project: <><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 13h5M8 16h8"/></>,
+  close: <path d="M6 6l12 12M18 6 6 18"/>,
   building: <><path d="M4 21V5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v16M15 9h3a2 2 0 0 1 2 2v10M3 21h18"/><path d="M8 7h3M8 11h3M8 15h3"/></>,
 } satisfies Record<string, ReactNode>
 export type IconName = keyof typeof paths
