@@ -120,7 +120,7 @@ M9 adds deals on top of leads, reports, contacts, outreach and follow-ups rather
 
 Details: [docs/SALES-PIPELINE.md](docs/SALES-PIPELINE.md).
 
-## Client onboarding and client management (M10; database and Edge Functions deployed, frontend not)
+## Client onboarding and client management (M10; deployed)
 
 M10 adds clients on top of deals, contacts, follow-ups and the M6A onboarding engine. It doesn't add a second client, task, form or file system.
 
@@ -141,7 +141,7 @@ M10 adds clients on top of deals, contacts, follow-ups and the M6A onboarding en
 
 Details: [docs/CLIENT-MANAGEMENT.md](docs/CLIENT-MANAGEMENT.md).
 
-## Project and delivery management (M11; database and Edge Functions deployed, frontend not)
+## Project and delivery management (M11; deployed)
 
 M11 adds projects on top of clients, the onboarding completion snapshot, follow-up tasks, the client activity history and M10 file storage.
 

@@ -54,7 +54,7 @@ Open a lead → **Contacts** to find its public business contacts (from its webs
 
 The M6A onboarding engine gains configurable stages, internal agency steps, eleven new field types, a forms library, submission history and file uploads in the client portal. Files are kept in private Supabase Storage and checked after upload. LeadFlow sends nothing.
 
-Implemented and verified locally. On 26 November 2026 the migration was applied to the hosted project, and the new `client-files` and updated `client-portal` Edge Functions were deployed. The frontend isn't deployed, and hosted file storage hasn't been tried yet. See [docs/CLIENT-MANAGEMENT.md](docs/CLIENT-MANAGEMENT.md).
+Implemented and verified locally. On 26 November 2026 the migration was applied to the hosted project, and the new `client-files` and updated `client-portal` Edge Functions were deployed. The frontend is live (Vercel builds `main` for production). Hosted file storage hasn't been tried yet. See [docs/CLIENT-MANAGEMENT.md](docs/CLIENT-MANAGEMENT.md).
 
 ## Project and delivery management (M11)
 
@@ -67,7 +67,7 @@ Implemented and verified locally. On 26 November 2026 the migration was applied 
 - an internal history with notes;
 - an optional AI assistant whose summaries, risks, plans and task breakdowns are suggestions until a person adds them.
 
-Implemented and verified locally. On 26 November 2026 the migration was applied to the hosted project, and `project-assistant` and the updated `client-files` were deployed. The frontend isn't deployed yet. See [docs/PROJECTS.md](docs/PROJECTS.md).
+Implemented and verified locally. On 26 November 2026 the migration was applied to the hosted project, and `project-assistant` and the updated `client-files` were deployed. The frontend went live the same day (commit `33e859a` on `main`). See [docs/PROJECTS.md](docs/PROJECTS.md).
 
 ## Set up a Supabase project
 

@@ -1,6 +1,6 @@
 # Project and delivery management (M11)
 
-Status: **implemented and verified locally, 26 November 2026; database and Edge Functions deployed the same day** (see [Hosted rollout](#hosted-rollout-26-november-2026)). **The frontend is not deployed** and M11 isn't committed. The real AI model and real Storage haven't been exercised on the hosted project yet.
+Status: **implemented and verified locally, 26 November 2026; database and Edge Functions deployed the same day** (see [Hosted rollout](#hosted-rollout-26-november-2026)). The frontend went live the same day: commit `33e859a` on `main`, which Vercel builds for production. The real AI model and real Storage haven't been exercised on the hosted project yet.
 
 M11 connects onboarded clients to delivery: **Client → confirmed scope → project setup → plan → execution → completion**. It builds on what exists rather than adding parallel systems:
 - clients, contacts, confirmed services, requirements, the scope confirmation and the onboarding completion snapshot (M10);
@@ -246,10 +246,11 @@ Done at the owner's request, on project `fzgxpwmqzmvgmijviaar`:
    - from the app's origin without a session it asks for sign-in (401), and the CORS preflight returns 204;
    - `client-files` asks for sign-in (401).
 5. **Secrets:** `GEMINI_API_KEY` is set, so the assistant is configured. `PROJECT_AI_MONTHLY_LIMIT` isn't set, so the limit is 200 requests per workspace per month.
+6. **Frontend:** `33e859a` was pushed to `main`. Vercel reported the production deployment complete, the live bundles contain the Projects workspace and the new home page demos, and `/`, `/features`, `/pricing`, `/app` and `/login` return 200.
 
-**Still to do:** commit and deploy the frontend, then the manual checks in step 6 below (they also exercise the real Gemini model and Storage).
+**Still to do:** the manual checks in step 6 below (they also exercise the real Gemini model and Storage).
 
-## Deploying (reference; steps 1–4 were done on 26 November 2026, see above)
+## Deploying (reference; steps 1–5 were done on 26 November 2026, see above)
 
 1. Apply `202611260001_project_delivery.sql` with `npx supabase db push --remote`.
 2. Deploy `project-assistant`: `npx supabase functions deploy project-assistant --use-api`. `config.toml` sets `verify_jwt = false`, because the function checks the caller through the database.

@@ -183,7 +183,7 @@ Details, configuration, security and limitations: [docs/BUSINESS-INTELLIGENCE.md
 Details, configuration, security and limitations: [docs/OUTREACH.md](docs/OUTREACH.md).
 
 **Next:**
-1. Deploy the frontend.
+1. ~~Deploy the frontend~~ (live: Vercel builds `main` for production; confirmed 26 November 2026).
 2. Fill in Settings → Outreach.
 3. Run contact searches and drafts on two or three real leads, and review each detail and draft by hand.
 
@@ -205,7 +205,7 @@ Details, configuration, security and limitations: [docs/OUTREACH.md](docs/OUTREA
 Details: [docs/SALES-PIPELINE.md](docs/SALES-PIPELINE.md).
 
 **Next:**
-1. ~~Apply `202611230001`~~ (done, see M10). Deploy the frontend.
+1. ~~Apply `202611230001`~~ (done, see M10). ~~Deploy the frontend~~ (live: Vercel builds `main` for production; confirmed 26 November 2026).
 2. Review stages, currencies and lost reasons in Pipeline settings.
 3. Move two or three real leads through the pipeline and check the analytics by hand.
 4. M10 (client management) started from `client_handoffs`; see below.
@@ -252,14 +252,14 @@ Details: [docs/SALES-PIPELINE.md](docs/SALES-PIPELINE.md).
 Details: [docs/CLIENT-MANAGEMENT.md](docs/CLIENT-MANAGEMENT.md).
 
 **Next:**
-1. ~~Apply `202611250001`; deploy `client-files`; re-deploy `client-portal`; check the allowed-origin secrets~~ (done 26 November 2026). Commit, then deploy the frontend.
+1. ~~Apply `202611250001`; deploy `client-files`; re-deploy `client-portal`; check the allowed-origin secrets~~ (done 26 November 2026). ~~Commit, then deploy the frontend~~ (done 26 November 2026).
 2. Run the manual Storage checks in the M10 doc on the hosted project.
 3. Convert two or three real won deals and onboard them by hand.
 4. M11 (projects and delivery) started from `client_onboarding_completions.snapshot`; see below.
 
 ## M11 — Project and delivery management
 
-**Status: implemented and verified locally, 26 November 2026. The same day, migration `202611260001` was applied to the hosted project and checked (RLS, grants, columns), and `project-assistant` was deployed and `client-files` re-deployed, both smoke-tested.** Not done: the frontend isn't deployed and M11 isn't committed; the real AI model and Storage haven't been exercised on the hosted project.
+**Status: implemented and verified locally, 26 November 2026. The same day, migration `202611260001` was applied to the hosted project and checked (RLS, grants, columns), and `project-assistant` was deployed and `client-files` re-deployed, both smoke-tested. The frontend went live the same day (commit `33e859a` on `main`).** Not done: the real AI model and Storage haven't been exercised on the hosted project.
 
 - **Projects:**
   - created from a completed onboarding (setup from the M10 snapshot; confirmed items only), from a client or by hand;
@@ -285,7 +285,7 @@ Details: [docs/CLIENT-MANAGEMENT.md](docs/CLIENT-MANAGEMENT.md).
 Details: [docs/PROJECTS.md](docs/PROJECTS.md).
 
 **Next:**
-1. ~~Apply `202611260001`, deploy `project-assistant`, re-deploy `client-files`~~ (done 26 November 2026). Commit, then deploy the frontend.
+1. ~~Apply `202611260001`, deploy `project-assistant`, re-deploy `client-files`~~ (done 26 November 2026). ~~Commit, then deploy the frontend~~ (done 26 November 2026).
 2. Run the manual checks in the M11 doc on the hosted project.
 3. M12 is not started and awaits approval.
 
@@ -321,6 +321,14 @@ Use consented, bounded beta accounts with a named operator and support channel. 
 Next steps: apply `202610200002` and `202610200003`, deploy `submit-inquiry`, then the frontend; hosted two-account verification; a decision on opening public sign-up; then invitations and member management. See [docs/MULTI-TENANCY.md](docs/MULTI-TENANCY.md).
 
 ## Current verification ledger
+
+**Interactive app and landing page, with the M11 frontend release, 26 November 2026 (local, then production).** All passed:
+- `npx oxlint` (no warnings), `npx tsc -b`, `npm run check:edge` and `npm run build`;
+- all 12 database suites;
+- `npx playwright test`: 58/58, including 2 new interaction tests (toast hold, dismissal and auto-close; page motion; count-up values; reduced motion) and 3 new marketing tests (the walkthrough, the demos, reduced motion);
+- `npm run test:production`: 58/58.
+
+Released as commit `33e859a`, fast-forwarded to `main`. Vercel reported the production deployment complete, the live bundles contain the Projects workspace and the new home page demos, and `/`, `/features`, `/pricing`, `/app` and `/login` return 200. Checked by eye only: the marketing counters' animation and the pointer spotlight.
 
 **M11 project and delivery management, 26 November 2026 (local).** All passed:
 - `npx oxlint` (no warnings), `npx tsc -b`, `npm run check:edge` and `npm run build`;

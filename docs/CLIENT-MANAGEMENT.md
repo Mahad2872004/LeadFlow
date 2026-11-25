@@ -4,7 +4,7 @@ Status: **implemented and verified locally on 25 November 2026. On 26 November 2
 - migration `202611250001_client_management.sql` was applied;
 - the new `client-files` Edge Function and the updated `client-portal` were deployed.
 
-**The frontend is not deployed.** Real Supabase Storage hasn't been exercised yet: the tests use an in-memory stand-in for its REST API, and nobody has uploaded a file on the hosted project. See [Hosted rollout](#hosted-rollout-26-november-2026).
+**The frontend is live:** it shipped when M10 reached `main` on 26 November 2026 (Vercel builds `main` for production). Real Supabase Storage hasn't been exercised yet: the tests use an in-memory stand-in for its REST API, and nobody has uploaded a file on the hosted project. See [Hosted rollout](#hosted-rollout-26-november-2026).
 
 M10 turns won deals into clients and runs their onboarding. It builds on what exists, not beside it:
 - leads and the workspace snapshot (M2);
@@ -184,10 +184,9 @@ Done at the owner's request, on project `fzgxpwmqzmvgmijviaar`:
 4. **Secrets:** `DISCOVERY_ALLOWED_ORIGINS`, `PORTAL_ALLOWED_ORIGINS` and the Supabase keys are set. `DOCUMENT_MAX_MB` isn't set, so the limit is 25 MB.
 
 **Still to do:**
-- deploy the frontend; M10 isn't committed yet;
 - the manual Storage checks in step 7 below, which also create the `client-documents` bucket on the first upload.
 
-## Deploying (reference; steps 1–4 were done on 26 November 2026, see above)
+## Deploying (reference; steps 1–4 and 6 were done on 26 November 2026, see above)
 
 1. Apply `supabase/migrations/202611250001_client_management.sql`, after `202611230001`. It redefines several M6A functions, `save_workspace_for` and the M9 task trigger; the previous definitions are in the rollback. Use `npx supabase db push` or the SQL editor.
 2. Deploy the new Edge Function: `npx supabase functions deploy client-files`. `supabase/config.toml` sets `verify_jwt = false` because the function checks each caller's token through the database, like `outreach`.
