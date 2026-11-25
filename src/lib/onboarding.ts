@@ -3,9 +3,10 @@ import { failure, RequestError } from './backend'
 import type { ItemDefinition, ItemKind, ItemState, ReadinessState, RequestStatus, ResponseValue, ServiceType } from './onboardingOptions'
 export * from './onboardingOptions'
 
-export interface Blocker { itemId: string; title: string; state: ItemState; kind: ItemKind; waitingOn: 'client' | 'agency'; reason: string }
+/** An unresolved required item, or (since M10) an internal step (stepId set, kind 'internal'). */
+export interface Blocker { itemId?: string; stepId?: string; title: string; state: ItemState | 'pending'; kind: ItemKind | 'internal'; stageId?: string | null; waitingOn: 'client' | 'agency'; reason: string }
 /** Computed by the database from item states; nothing here is a score or an estimate. */
-export interface Readiness { state: ReadinessState; requirementsMet: boolean; requiredTotal: number; requiredAccepted: number; requiredWaived: number; optionalTotal: number; optionalOutstanding: number; percent: number; blockers: Blocker[] }
+export interface Readiness { state: ReadinessState; requirementsMet: boolean; clientItemsMet?: boolean; requiredTotal: number; requiredAccepted: number; requiredWaived: number; optionalTotal: number; optionalOutstanding: number; percent: number; blockers: Blocker[] }
 export interface RequestSummary {
   id: string; title: string; clientName: string; serviceType: ServiceType; ownerId: string | null; status: RequestStatus; version: number
   startDate: string | null; targetKickoffDate: string | null; dueDate: string | null; createdAt: string; updatedAt: string; readySince: string | null; nextReminderAt: string | null
@@ -14,11 +15,23 @@ export interface RequestSummary {
 export interface TemplateSummary { id: string; name: string; serviceType: ServiceType; description: string; starterKey: ServiceType | null; archived: boolean; version: number; updatedAt: string; itemCount: number; requiredCount: number }
 export interface Member { id: string; name: string }
 export interface Overview { today: string; members: Member[]; templates: TemplateSummary[]; requests: RequestSummary[] }
-export interface Template { id: string; name: string; serviceType: ServiceType; description: string; starterKey: ServiceType | null; archived: boolean; version: number; items: ItemDefinition[] }
+export type AutoStepKey = 'welcome_sent' | 'scope_confirmed' | 'requirements_decided'
+export const autoStepLabels: Record<AutoStepKey, string> = { welcome_sent: 'Done when the welcome message is marked sent', scope_confirmed: 'Done when the scope is confirmed', requirements_decided: 'Done when every requirement is decided' }
+/** An internal agency step on a template. The client never sees these. */
+export interface StepDefinition { id?: string; title: string; description: string; required: boolean; autoKey: AutoStepKey | null; stageId: string | null }
+export interface Template { id: string; name: string; serviceType: ServiceType; description: string; starterKey: string | null; archived: boolean; version: number; items: ItemDefinition[]; steps: StepDefinition[] }
+export interface ItemFile { id: string; name: string; size: number; mimeType: string; status: 'available' | 'pending' }
 export interface RequestItem extends ItemDefinition {
   id: string; position: number; dueDate: string | null; state: ItemState; response: ResponseValue | null; hasDraft: boolean; revision: number
   submittedAt: string | null; reviewedAt: string | null; clientFeedback: string; waiveReason: string; internalNote: string; overdue: boolean
+  /** M10. */
+  assignmentId?: string | null; submissions?: number; files?: ItemFile[]
 }
+export interface RequestStep { id: string; position: number; title: string; description: string; required: boolean; autoKey: AutoStepKey | null; stageId: string | null; dueDate: string | null
+  assigneeId: string | null; status: 'pending' | 'done' | 'not_required'; note: string; revision: number; doneAt: string | null; doneBy: string | null; overdue: boolean }
+export interface StageProgress { stageId: string | null; name: string; key: string | null; total: number; required: number; resolved: number; waitingOnClient: number; awaitingReview: number; agencySteps: number; overdue: number; state: 'empty' | 'complete' | 'open' }
+export interface FormAssignment { id: string; formId: string | null; formName: string; formVersion: number; assignedAt: string; fields: number; submitted: number; accepted: number }
+export interface Submission { id: number; revision: number; response: ResponseValue; submittedAt: string; reviewState: string; reviewedAt: string | null; reviewNote: string | null; reviewedBy: string | null }
 export interface LinkInfo { id: string; purpose: 'shared' | 'reminder'; createdAt: string; expiresAt: string; revokedAt: string | null; lastUsedAt: string | null; active: boolean }
 export type ReminderBlock = 'not_active' | 'disabled' | 'no_email' | 'max_reached' | 'nothing_outstanding' | 'no_link' | null
 export interface ReminderRecord { id: string; sequence: number; status: 'pending' | 'sending' | 'accepted' | 'failed' | 'uncertain' | 'cancelled'; recipient: string; itemCount: number; attempts: number; createdAt: string; updatedAt: string; lastError: string | null }
@@ -28,7 +41,12 @@ export interface RequestDetail extends Omit<RequestSummary, 'counts' | 'hasActiv
   clientInstructions: string; internalNote: string; cancelReason: string | null; activatedAt: string | null; completedAt: string | null; cancelledAt: string | null
   reminders: { intervalDays: number | null; max: number; scheduled: number; nextAt: string | null; blockedBy: ReminderBlock; history: ReminderRecord[] }
   items: RequestItem[]; links: LinkInfo[]; events: EventRecord[]; handoff: { id: string; handedOffAt: string; note: string; requestVersion: number; handedOffBy: string } | null
+  /** M10: the client this onboarding belongs to, per-stage progress, internal steps and assigned forms. */
+  clientId?: string | null; client?: { id: string; name: string; status: string } | null; stages?: StageProgress[]; steps?: RequestStep[]; assignments?: FormAssignment[]
 }
+export interface Stage { id: string; key: string | null; name: string; description: string; position: number; archived: boolean; inUse: number }
+export interface FormSummary { id: string; name: string; description: string; archived: boolean; version: number; updatedAt: string; fieldCount: number; requiredCount: number; assignments: number }
+export interface FormDefinition { id: string; name: string; description: string; archived: boolean; version: number; fields: ItemDefinition[] }
 export type RequestChanges = Partial<{ title: string; clientName: string; contactName: string; contactEmail: string; serviceType: ServiceType; ownerId: string | null; startDate: string | null; targetKickoffDate: string | null; dueDate: string | null; leadId: string | null; clientInstructions: string; internalNote: string; reminderIntervalDays: number | null; reminderMax: number }>
 
 const isObject = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value)
@@ -64,6 +82,29 @@ export const issueLink = (workspace: string, request: string, days: number, repl
   call<{ linkId: string; token: string; expiresAt: string }>('issue_onboarding_link', { target_workspace: workspace, target_request: request, expires_in_days: days, replace_existing: replaceExisting }, value => isObject(value) && typeof value.token === 'string')
 export const revokeLinks = (workspace: string, request: string, link: string | null = null) => call<number>('revoke_onboarding_links', { target_workspace: workspace, target_request: request, target_link: link })
 export const handOff = (workspace: string, request: string, note: string) => call<{ id: string; handedOffAt: string; repeated: boolean }>('hand_off_onboarding', { target_workspace: workspace, target_request: request, note })
+// M10: submission history, internal steps, stages and forms.
+export const itemHistory = (workspace: string, request: string, item: string) => call<Submission[]>('onboarding_item_history', { target_workspace: workspace, target_request: request, target_item: item }, Array.isArray)
+export const saveStep = (workspace: string, request: string, step: { id?: string; title: string; description: string; required: boolean; autoKey: AutoStepKey | null; stageId: string | null; dueDate: string | null; assigneeId: string | null }, version: number) =>
+  call<string>('save_onboarding_step', { target_workspace: workspace, target_request: request, step, expected_version: version })
+export const removeStep = (workspace: string, request: string, step: string, version: number) => call<void>('remove_onboarding_step', { target_workspace: workspace, target_request: request, target_step: step, expected_version: version })
+/** done, pending (reopen) or not_required (with a reason). Automatic steps on a client's request complete themselves. */
+export const setStepStatus = (workspace: string, request: string, step: string, status: RequestStep['status'], note: string, revision: number) =>
+  call<{ status: RequestStep['status']; revision: number }>('set_onboarding_step_status', { target_workspace: workspace, target_request: request, target_step: step, next_status: status, note, expected_revision: revision })
+export const loadStages = (workspace: string) => call<{ canConfigure: boolean; stages: Stage[] }>('onboarding_stages_for', { target_workspace: workspace }, value => isObject(value) && Array.isArray(value.stages))
+export const saveStage = (workspace: string, stage: { id?: string; name: string; description: string }) => call<string>('save_onboarding_stage', { target_workspace: workspace, stage })
+export const reorderStages = (workspace: string, ids: string[]) => call<void>('reorder_onboarding_stages', { target_workspace: workspace, stage_ids: ids })
+export const setStageArchived = (workspace: string, stage: string, archive: boolean) => call<void>('set_onboarding_stage_archived', { target_workspace: workspace, target_stage: stage, archive })
+export const loadForms = (workspace: string) => call<{ canEdit: boolean; forms: FormSummary[] }>('onboarding_forms_for', { target_workspace: workspace }, value => isObject(value) && Array.isArray(value.forms))
+export const loadForm = (workspace: string, form: string) => call<FormDefinition>('onboarding_form_for', { target_workspace: workspace, target_form: form }, value => isObject(value) && Array.isArray(value.fields))
+/** Without an ID, creates a form; retrying with the same request ID returns the same one. Assigned copies are never changed. */
+export const saveForm = (workspace: string, definition: { id?: string; name: string; description: string; fields: ItemDefinition[] }, expectedVersion: number | null, requestId: string | null) =>
+  call<{ id: string; version: number }>('save_onboarding_form', { target_workspace: workspace, definition, expected_version: expectedVersion, request_id: requestId })
+export const duplicateForm = (workspace: string, form: string, requestId: string) => call<{ id: string; version: number }>('duplicate_onboarding_form', { target_workspace: workspace, target_form: form, request_id: requestId })
+export const setFormArchived = (workspace: string, form: string, archive: boolean) => call<void>('set_onboarding_form_archived', { target_workspace: workspace, target_form: form, archive })
+/** Copies the form's fields into the request, grouped under the form, in the chosen stage. */
+export const assignForm = (workspace: string, request: string, form: string, stage: string | null, version: number) =>
+  call<{ assignmentId: string; fields: number; version: number }>('assign_onboarding_form', { target_workspace: workspace, target_request: request, target_form: form, stage, expected_version: version })
+
 /** The token travels in the URL fragment, which browsers never send to servers or in Referer headers. */
 export const portalLink = (token: string) => `${window.location.origin}/client-portal#${token}`
 
@@ -109,6 +150,14 @@ export function describeEvent(event: EventRecord): string {
     case 'reminder_failed': return `Reminder ${d.sequence} was refused by the email provider${text('error') ? ` (${text('error')})` : ''}`
     case 'reminder_stopped': return `Reminder ${d.sequence} stopped before sending: ${text('reason').replace(/^Stopped: /, '')}`
     case 'reminder_skipped': return `Reminder not sent: ${text('reason')}`
+    case 'step_added': return `Added the internal step “${text('title')}”`
+    case 'step_updated': return `Edited the internal step “${text('title')}”`
+    case 'step_removed': return `Removed the internal step “${text('title')}”`
+    case 'step_done': return d.automatic ? `“${text('title')}” completed automatically${text('reason') ? `: ${text('reason')}` : ''}` : `Marked “${text('title')}” done${text('note') ? `: ${text('note')}` : ''}`
+    case 'step_reopened': return d.automatic ? `“${text('title')}” reopened automatically${text('reason') ? `: ${text('reason')}` : ''}` : `Reopened “${text('title')}”`
+    case 'step_skipped': return `Marked “${text('title')}” not required: ${text('note')}`
+    case 'form_assigned': return `Added the form “${text('form')}” (${d.fields} item${d.fields === 1 ? '' : 's'}, including headings and instructions)`
+    case 'scope_acknowledged': return 'The client acknowledged the agreed scope (an acknowledgement, not a signature)'
     case 'reminder_uncertain': return `Reminder ${d.sequence}: outcome unknown after 23 hours. Check the email provider before resending.`
     default: return event.kind.replaceAll('_', ' ')
   }
@@ -117,3 +166,5 @@ export const reminderBlockText: Record<Exclude<ReminderBlock, null>, string> = {
   not_active: 'Reminders run only while the request is open.', disabled: 'Reminders are off.', no_email: 'Add a contact email to send reminders.',
   max_reached: 'The reminder limit has been reached.', nothing_outstanding: 'Nothing is waiting on the client.', no_link: 'Create a client link to send reminders; they include a private link.',
 }
+/** M10: overview rows name the client record the request belongs to, if any (interface merging keeps the shape above). */
+export interface RequestSummary { clientId?: string | null }

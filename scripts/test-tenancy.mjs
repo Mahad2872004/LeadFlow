@@ -15,7 +15,7 @@ const snapshotWith=(...leads)=>({version:1,leads,tasks:leads.map(l=>({id:`task-$
 // Since 202610310001 every loaded lead also carries the optional business fields, empty unless set; its rollback removes them.
 const businessFields=['website','industry','address','city','region','postcode','country']
 // Since 202611230001 every loaded follow-up also carries the optional sales fields, defaulted; its rollback removes them.
-const taskDefaults={dealId:null,contactId:null,taskType:'follow_up',priority:'medium',cancelled:false,description:'',assigneeId:null,createdAt:null,completedAt:null}
+const taskDefaults={dealId:null,contactId:null,taskType:'follow_up',priority:'medium',cancelled:false,description:'',assigneeId:null,createdAt:null,completedAt:null,clientId:null,onboardingRequestId:null,onboardingItemId:null}
 const stored=snapshot=>({...snapshot,leads:snapshot.leads.map(l=>({...l,...Object.fromEntries(businessFields.map(key=>[key,'']))})),tasks:snapshot.tasks.map(t=>({...t,...taskDefaults}))})
 const withoutBusinessFields=workspace=>({...workspace,data:{...workspace.data,leads:workspace.data.leads.map(l=>Object.fromEntries(Object.entries(l).filter(([key])=>!businessFields.includes(key)))),
   tasks:workspace.data.tasks.map(t=>Object.fromEntries(Object.entries(t).filter(([key])=>!(key in taskDefaults))))}})
@@ -74,7 +74,16 @@ assert.deepEqual(await executable('authenticated'),['create_workspace(text,text,
  'sales_pipeline_for(uuid)','save_sales_stage(uuid,jsonb)','reorder_sales_stages(uuid,jsonb)','archive_sales_stage(uuid,uuid,uuid)','restore_sales_stage(uuid,uuid)','save_sales_settings(uuid,jsonb)',
  'create_deal(uuid,jsonb,uuid,boolean)','update_deal(uuid,uuid,integer,jsonb)','move_deal(uuid,uuid,uuid,integer,uuid)','close_deal(uuid,uuid,text,jsonb,integer,uuid)','reopen_deal(uuid,uuid,uuid,integer,uuid)',
  'set_deal_archived(uuid,uuid,boolean)','deals_for(uuid,jsonb)','pipeline_board_for(uuid,jsonb)','deal_detail(uuid,uuid)','deal_timeline(uuid,uuid,jsonb,timestamp with time zone,integer)',
- 'record_deal_activity(uuid,uuid,jsonb,uuid)','save_deal_meeting(uuid,uuid,jsonb,uuid)','confirm_client_handoff(uuid,uuid,text)','sales_analytics(uuid,date,date,date)','sales_reminders_for(uuid,date)'].sort(),'Signed-in users get exactly the dashboard functions.')
+ 'record_deal_activity(uuid,uuid,jsonb,uuid)','save_deal_meeting(uuid,uuid,jsonb,uuid)','confirm_client_handoff(uuid,uuid,text)','sales_analytics(uuid,date,date,date)','sales_reminders_for(uuid,date)',
+ 'onboarding_item_history(uuid,uuid,uuid)','save_onboarding_step(uuid,uuid,jsonb,integer)','remove_onboarding_step(uuid,uuid,uuid,integer)','set_onboarding_step_status(uuid,uuid,uuid,text,text,integer)',
+ 'clients_for(uuid,jsonb)','client_index_for(uuid)','client_dashboard_for(uuid,jsonb,date)','client_detail(uuid,uuid)','create_client(uuid,jsonb,uuid)','convert_deal_to_client(uuid,uuid,jsonb,uuid)',
+ 'start_client_onboarding(uuid,uuid,jsonb,uuid)','update_client(uuid,uuid,integer,jsonb)','set_client_status(uuid,uuid,text,integer,text)','save_client_contact(uuid,uuid,jsonb)','delete_client_contact(uuid,uuid,uuid)',
+ 'save_client_service(uuid,uuid,jsonb)','save_client_requirement(uuid,uuid,jsonb,integer,uuid)','client_requirement_history(uuid,uuid)','confirm_client_scope(uuid,uuid,jsonb)','client_scope_history(uuid,uuid)',
+ 'save_client_welcome(uuid,uuid,text,text)','mark_client_welcome_sent(uuid,uuid,text)','add_client_note(uuid,uuid,text,uuid)','client_timeline(uuid,uuid,jsonb,timestamp with time zone,integer,text)',
+ 'client_completion_check(uuid,uuid)','complete_client_onboarding(uuid,uuid,text,text)','client_handoff_for(uuid,uuid)','onboarding_stages_for(uuid)','save_onboarding_stage(uuid,jsonb)',
+ 'reorder_onboarding_stages(uuid,jsonb)','set_onboarding_stage_archived(uuid,uuid,boolean)','onboarding_forms_for(uuid)','onboarding_form_for(uuid,uuid)','save_onboarding_form(uuid,jsonb,integer,uuid)',
+ 'duplicate_onboarding_form(uuid,uuid,uuid)','set_onboarding_form_archived(uuid,uuid,boolean)','assign_onboarding_form(uuid,uuid,uuid,text,integer)','begin_client_document(uuid,uuid,jsonb,bigint)',
+ 'client_document_access(uuid,uuid)','client_documents_for(uuid,uuid)','update_client_document(uuid,uuid,jsonb)','delete_client_document(uuid,uuid)'].sort(),'Signed-in users get exactly the dashboard functions.')
 for(const fn of ['portal_open(text)','portal_save_item(text,uuid,jsonb,boolean,integer)','claim_onboarding_reminder(text,text)','finish_onboarding_reminder(uuid,uuid,text,text,text)'])assert.ok((await executable('service_role')).includes(fn),fn)
 for(const fn of ['receive_workspace_inquiry(uuid,text,uuid,jsonb,text,jsonb)','receive_form_inquiry(uuid,uuid,jsonb,text,text)','receive_inquiry(uuid,text,uuid,jsonb,text,jsonb)','receive_webhook(text,uuid,jsonb,text)'])assert.ok((await executable('service_role')).includes(fn),fn)
 assert.deepEqual(await rows("select p.oid::regprocedure::text as fn from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname in ('public','leadflow_private') and p.prosecdef and not coalesce('search_path=\"\"'=any(p.proconfig),false)"),[],'Every security-definer function pins an empty search path.')

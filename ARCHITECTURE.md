@@ -104,6 +104,27 @@ M9 adds deals on top of leads, reports, contacts, outreach and follow-ups rather
 
 Details: [docs/SALES-PIPELINE.md](docs/SALES-PIPELINE.md).
 
+## Client onboarding and client management (M10; database and Edge Functions deployed, frontend not)
+
+M10 adds clients on top of deals, contacts, follow-ups and the M6A onboarding engine. It doesn't add a second client, task, form or file system.
+
+- **Clients:** private tables for clients, contacts, services, requirements and their revisions, scope confirmations, activities and completions, behind role-checked functions. A client points to its lead, its deal (one client per deal) and its M9 `client_handoffs` row. `convert_deal_to_client` creates the client, contacts, services, the handoff if missing, both histories and optionally the onboarding request, in one transaction, idempotent per request ID.
+- **Onboarding engine extended, not copied:**
+  - `onboarding_requests` gain `client_id`; items gain a stage, field settings and a form name.
+  - New tables: stages, internal steps (template and request), forms with fields and assignments, and every submission.
+  - `onboarding_readiness` counts required internal steps and adds `agency_steps` and `clientItemsMet`.
+  - Automatic steps complete from client events (welcome marked sent, scope confirmed, requirements decided) inside the same transaction.
+- **Status is computed:** a client's onboarding status comes from its requests and completion (`client_onboarding_state`); the client status is set by people. Completion stores an immutable snapshot for M11.
+- **Tasks stay in the snapshot:** `follow_up_tasks` gains `clientId`, `onboardingRequestId` and `onboardingItemId`, and `leadId` becomes optional. `save_workspace_for` deletes and reinserts tasks explicitly, because client tasks aren't removed by the lead cascade. The task trigger checks that a task's request belongs to its client.
+- **Files:**
+  - Supabase Storage, private bucket `client-documents`, path `<workspace>/<document>`.
+  - The database decides every access: `begin_document`, `client_document_access` and the portal equivalents. The `client-files` (members) and `client-portal` (clients) functions only sign one URL for the path the database returns.
+  - The browser uploads straight to Storage. `finish` reads the first 4 KB with a Range request and checks size and content signature before the file becomes available. Downloads use 60-second signed links.
+- **Timeline without copies:** `client_timeline` merges client activities, the client's onboarding events and its tasks, paged by `(time, id)`.
+- **Portal boundary:** `portal_view` adds field settings, stage names, the client's own uploads, files shared by the team and the shared scope. It still excludes internal steps, notes, deal values, members and anything about other clients.
+
+Details: [docs/CLIENT-MANAGEMENT.md](docs/CLIENT-MANAGEMENT.md).
+
 ## Current ingress and delivery
 
 Public intake validates origin, normalized fields, payload size, request UUID, honeypot, Turnstile success/action/hostname and durable quotas. The destination is deployment-secret configuration, not a client-selected owner. Inbound automation rejects browser-Origin requests and validates its bearer credential; the database derives the owner from the credential. Origin rejection alone is not authentication.

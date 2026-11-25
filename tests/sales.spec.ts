@@ -150,7 +150,7 @@ test('runs deals through the pipeline: create, move, record, schedule, close, ha
  await detail.locator('.sp-suggest').getByRole('button',{name:'Move to Meeting scheduled'}).click()
  await expect(detail.locator('.sp-detail-head .sp-stage').first()).toHaveText('Meeting scheduled')
 
- // Won: the final value is confirmed; the handoff is a separate, single, explicit step.
+ // Won: the final value is confirmed; converting to a client (M10) is a separate, single, explicit step.
  await detail.getByRole('tab',{name:'Overview'}).click()
  await detail.getByRole('button',{name:'Mark as won'}).click()
  const won=page.getByRole('dialog',{name:/^Mark “.*” as won$/})
@@ -160,17 +160,20 @@ test('runs deals through the pipeline: create, move, record, schedule, close, ha
  await expect(detail.locator('.sp-detail-head .sp-stage').first()).toHaveText('Won')
  await expect(detail.locator('.sp-facts')).toContainText('$4,800')
  expect(await one('select count(*)::int from leadflow_private.client_handoffs')).toBe(0)
- await detail.getByRole('button',{name:'Hand off to client work…'}).click()
- await detail.getByLabel('Note for the delivery team').fill('Kick-off in January')
- await detail.getByRole('button',{name:'Confirm handoff'}).click()
- await expect(detail.locator('.sp-handoff')).toContainText('Handed off to client work')
+ // Converting reviews what carries over, then creates the client and records the M9 handoff in one step.
+ await detail.getByRole('button',{name:'Convert to client…'}).click()
+ const convert=page.getByRole('dialog',{name:'Convert to client'})
+ await expect(convert.getByLabel('Client name *')).toHaveValue('Harbor Dental')
+ await convert.getByLabel('Start onboarding with').selectOption('')
+ await convert.getByRole('button',{name:'Convert to client'}).click()
+ await expect(page.getByRole('heading',{level:1,name:'Clients'})).toBeVisible()
+ await expect(page.locator('.cl-head').getByRole('heading',{level:2,name:'Harbor Dental'})).toBeVisible()
  expect(await one('select count(*)::int from leadflow_private.client_handoffs')).toBe(1)
+ expect(await one('select count(*)::int from leadflow_private.clients')).toBe(1)
+ await page.locator('.cl-facts').getByRole('button',{name:opportunityTitle}).click()
+ await expect(detail.locator('.sp-handoff')).toContainText('Converted to the client Harbor Dental')
  await expect(detail.getByRole('button',{name:'Reopen deal'})).toHaveCount(0)
- await detail.getByRole('button',{name:'Start client onboarding'}).click()
- await expect(page.getByRole('heading',{level:1,name:'Client onboarding'})).toBeVisible()
- const onboarding=page.getByRole('dialog',{name:'New client onboarding'})
- await expect(onboarding.getByLabel('Client name *')).toHaveValue('Harbor Dental')
- await onboarding.getByRole('button',{name:'Close dialog'}).click()
+ await detail.getByRole('button',{name:'Close dialog'}).click()
 
  // Lost from the board: a reason from the list is required.
  await page.getByRole('button',{name:'Sales pipeline',exact:true}).click()

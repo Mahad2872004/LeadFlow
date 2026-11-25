@@ -31,9 +31,12 @@ export function isData(value: unknown): value is Data {
   const leadIds = new Set(leads.map(lead => lead.id))
   const optionalText = (value: unknown) => value === undefined || value === null || typeof value === 'string'
   const optionalTime = (value: unknown) => value === undefined || value === null || (typeof value === 'string' && Number.isFinite(new Date(value).getTime()))
-  return tasks.every(task => record(task) && strings(task, ['id', 'leadId', 'due', 'notes']) && isCalendarDate(task.due) && task.notes.trim().length > 0 && task.notes.length <= 2000 && typeof task.completed === 'boolean' && leadIds.has(task.leadId)
-    // M9 fields are optional; the database checks that deals, contacts and assignees belong to the workspace and lead.
+  // A task belongs to a lead of this workspace, or (M10) to a client: then it has no lead. The database checks the client.
+  const owner = (task: Record<string, unknown>) => typeof task.leadId === 'string' ? leadIds.has(task.leadId) : (task.leadId === null || task.leadId === undefined) && typeof task.clientId === 'string' && task.clientId.length > 0
+  return tasks.every(task => record(task) && strings(task, ['id', 'due', 'notes']) && isCalendarDate(task.due) && task.notes.trim().length > 0 && task.notes.length <= 2000 && typeof task.completed === 'boolean' && owner(task)
+    // M9 and M10 fields are optional; the database checks that deals, contacts, clients and assignees belong to the workspace.
     && optionalText(task.dealId) && optionalText(task.contactId) && optionalText(task.assigneeId) && optionalTime(task.createdAt) && optionalTime(task.completedAt)
+    && optionalText(task.clientId) && optionalText(task.onboardingRequestId) && optionalText(task.onboardingItemId)
     && (task.taskType === undefined || taskTypes.some(type => type === task.taskType)) && (task.priority === undefined || priorities.some(priority => priority === task.priority))
     && (task.cancelled === undefined || (typeof task.cancelled === 'boolean' && !(task.cancelled && task.completed))) && (task.description === undefined || (typeof task.description === 'string' && task.description.length <= 2000)))
     && activities.every(event => record(event) && strings(event, ['id', 'leadId', 'text', 'at']) && event.text.trim().length > 0 && timestamp(event.at) && leadIds.has(event.leadId))

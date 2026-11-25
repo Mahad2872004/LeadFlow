@@ -10,21 +10,26 @@ export const businessFields = ['website', 'industry', 'address', 'city', 'region
 export type BusinessDetails = Record<typeof businessFields[number], string>
 export interface Lead extends Partial<BusinessDetails> { id: string; name: string; email: string; phone: string; company: string; service: string; source: string; message: string; status: Status; createdAt: string }
 export type LeadInput = Omit<Lead, 'id' | 'status' | 'createdAt'>
-/** Kinds of follow-up (M9). Tasks are reminders: none of them sends anything. */
-export const taskTypes = ['follow_up', 'call', 'email', 'whatsapp', 'meeting', 'proposal', 'proposal_review', 'internal', 'custom'] as const
+/** Kinds of follow-up (M9), and of client onboarding task (M10). Tasks are reminders: none of them sends anything. */
+export const leadTaskTypes = ['follow_up', 'call', 'email', 'whatsapp', 'meeting', 'proposal', 'proposal_review', 'internal', 'custom'] as const
+export const clientTaskTypes = ['welcome', 'request_info', 'review_form', 'collect_assets', 'review_requirements', 'confirm_scope', 'verify_integrations', 'prepare_handoff', 'call', 'meeting', 'internal', 'custom'] as const
+export const taskTypes = [...leadTaskTypes, 'welcome', 'request_info', 'review_form', 'collect_assets', 'review_requirements', 'confirm_scope', 'verify_integrations', 'prepare_handoff'] as const
 export type TaskType = typeof taskTypes[number]
 export const priorities = ['low', 'medium', 'high'] as const
 export type Priority = typeof priorities[number]
 /**
  * A follow-up. Since M9 it can belong to a deal and a contact of its lead, have a type, priority, description and assignee,
- * and be cancelled. Those fields are optional so follow-ups saved before M9 (and M1 browser data) keep their shape.
+ * and be cancelled. Since M10 it can instead belong to a client (leadId null), optionally to one of the client's onboarding
+ * requests and items. Those fields are optional so follow-ups saved before (and M1 browser data) keep their shape.
  */
 export interface Task {
-  id: string; leadId: string; due: string; notes: string; completed: boolean
+  id: string; leadId: string | null; due: string; notes: string; completed: boolean
   dealId?: string | null; contactId?: string | null; taskType?: TaskType; priority?: Priority; cancelled?: boolean; description?: string
   assigneeId?: string | null; createdAt?: string | null; completedAt?: string | null
+  clientId?: string | null; onboardingRequestId?: string | null; onboardingItemId?: string | null
 }
 export type TaskOptions = Partial<Pick<Task, 'dealId' | 'contactId' | 'taskType' | 'priority' | 'description' | 'assigneeId'>>
+export type ClientTaskOptions = Partial<Pick<Task, 'taskType' | 'priority' | 'description' | 'assigneeId' | 'onboardingRequestId' | 'onboardingItemId'>>
 export interface Activity { id: string; leadId: string; text: string; at: string }
 export interface Data { version: 1; leads: Lead[]; tasks: Task[]; activities: Activity[] }
 export const today = localDate
@@ -96,16 +101,31 @@ export function createTask(data: Data, leadId: string, due: string, notes: strin
   const task: Task = { id: uid(), leadId, due, notes: notes.trim(), completed: false, ...extra, createdAt: new Date().toISOString() }
   return {...data,tasks:[task,...data.tasks],activities:[activity(leadId,`Follow-up scheduled for ${due}: ${notes.trim()}`),...data.activities]}
 }
+/**
+ * A task for a client (M10). It has no lead, so it adds nothing to the lead activity history; the client's timeline shows
+ * it. The database checks that the client and request belong to this workspace and that the assignee is a member.
+ */
+export function createClientTask(data: Data, clientId: string, due: string, notes: string, options: ClientTaskOptions = {}): Data {
+  if (!clientId || !isCalendarDate(due) || !notes.trim() || notes.trim().length>2000) throw new Error('Choose a valid due date and describe the task.')
+  if ((options.description ?? '').length > 2000) throw new Error('Keep the description under 2,000 characters.')
+  if (options.taskType && !taskTypes.includes(options.taskType)) throw new Error('Choose a task type.')
+  if (options.priority && !priorities.includes(options.priority)) throw new Error('Choose a priority.')
+  const extra: ClientTaskOptions = Object.fromEntries(Object.entries({ ...options, description: options.description?.trim() || undefined }).filter(([, value]) => value !== undefined && value !== null && value !== ''))
+  const task: Task = { id: uid(), leadId: null, clientId, due, notes: notes.trim(), completed: false, cancelled: false, taskType: 'custom', priority: 'medium', ...extra, createdAt: new Date().toISOString(), completedAt: null }
+  return {...data,tasks:[task,...data.tasks]}
+}
+/** Lead history entries for a task change; client tasks (no lead) are recorded in the client's timeline instead. */
+const taskActivity = (task: Task, text: string): Activity[] => task.leadId ? [activity(task.leadId, text)] : []
 export function toggleTask(data: Data, id: string): Data {
   const task=data.tasks.find(t=>t.id===id); if(!task) return data
   const completing = !task.completed
   // Completion time is recorded for follow-ups that track it (M9); older ones keep their shape.
   const stamp = task.createdAt !== undefined || task.cancelled !== undefined ? { cancelled: false, completedAt: completing ? new Date().toISOString() : null } : {}
-  return {...data,tasks:data.tasks.map(t=>t.id===id?{...t,...stamp,completed:completing}:t),activities:[activity(task.leadId,`Follow-up ${completing?'completed':'reopened'}: ${task.notes}`),...data.activities]}
+  return {...data,tasks:data.tasks.map(t=>t.id===id?{...t,...stamp,completed:completing}:t),activities:[...taskActivity(task,`Follow-up ${completing?'completed':'reopened'}: ${task.notes}`),...data.activities]}
 }
 /** Cancels an open follow-up, or reopens a cancelled one. Cancelled follow-ups stay in the history. */
 export function cancelTask(data: Data, id: string): Data {
   const task=data.tasks.find(t=>t.id===id); if(!task || task.completed) return data
   const cancelling = !task.cancelled
-  return {...data,tasks:data.tasks.map(t=>t.id===id?{...t,cancelled:cancelling,completedAt:cancelling?new Date().toISOString():null}:t),activities:[activity(task.leadId,`Follow-up ${cancelling?'cancelled':'reopened'}: ${task.notes}`),...data.activities]}
+  return {...data,tasks:data.tasks.map(t=>t.id===id?{...t,cancelled:cancelling,completedAt:cancelling?new Date().toISOString():null}:t),activities:[...taskActivity(task,`Follow-up ${cancelling?'cancelled':'reopened'}: ${task.notes}`),...data.activities]}
 }

@@ -1,0 +1,178 @@
+/* M10: clients, the client workspace and deal conversion. Builds on the shared panel, table and sp- styles (Sales.css). */
+.cl-stats { margin-bottom: 16px }
+.cl-glance { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-bottom: 16px }
+.cl-glance .panel { margin: 0 }
+.cl-attention { display: grid; gap: 0; margin: 0; padding: 0 22px 14px; list-style: none }
+.cl-attention li { display: grid; grid-template-columns: minmax(0, 1fr) minmax(140px, 220px); align-items: center; gap: 4px 14px; padding: 10px 0; border-top: 1px solid var(--lf-line) }
+.cl-attention li:first-child { border-top: 0 }
+.cl-attention li > small { grid-column: 1 / -1; color: var(--lf-muted); font-size: 12.5px }
+
+/* Status chip, onboarding meter, client mark */
+.cl-status, .cl-pill { display: inline-flex; align-items: center; padding: 1px 9px; border: 1px solid var(--lf-line); border-radius: 999px; background: var(--lf-subtle); color: var(--lf-muted); font-size: 12px; font-weight: 600; line-height: 1.6; white-space: nowrap }
+.cl-status.is-onboarding, .cl-pill.is-under_review, .cl-pill.is-proposed { border-color: var(--lf-info-line); background: var(--lf-info-soft); color: var(--lf-info) }
+.cl-status.is-active, .cl-pill.is-confirmed { border-color: var(--lf-success-line); background: var(--lf-success-soft); color: var(--lf-success) }
+.cl-status.is-paused, .cl-pill.is-deferred, .cl-pill.is-draft { border-color: var(--lf-warning-line); background: var(--lf-warning-soft); color: var(--lf-text) }
+.cl-status.is-archived, .cl-pill.is-removed, .cl-pill.is-rejected { color: var(--lf-faint) }
+.cl-meter { display: grid; gap: 4px; min-width: 120px }
+.cl-meter-label { color: var(--lf-text); font-size: 12.5px; font-weight: 600; white-space: nowrap }
+.cl-meter-track, .cl-progress { display: block; height: 6px; overflow: hidden; border-radius: 999px; background: var(--lf-track) }
+.cl-meter-track i, .cl-progress i { display: block; height: 100%; border-radius: inherit; background: var(--lf-brand); transition: width .3s var(--lf-ease) }
+.cl-meter.is-completed .cl-meter-track i { background: var(--lf-success) }
+.cl-meter.is-paused .cl-meter-track i { background: var(--lf-warning) }
+.cl-meter.is-not_started .cl-meter-label { color: var(--lf-muted) }
+.cl-mark { display: inline-grid; flex-shrink: 0; place-items: center; border-radius: 10px; background: #e6f1ec; color: #2b5a45; font-size: 12px; font-weight: 700; object-fit: contain }
+img.cl-mark { border: 1px solid var(--lf-line); background: var(--lf-surface) }
+:root[data-theme="dark"] .cl-mark:not(img) { background: #26272c; color: #c5c6cb }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .cl-mark:not(img) { background: #26272c; color: #c5c6cb } }
+
+/* Directory */
+.cl-table td { vertical-align: middle }
+.cl-who { display: flex; align-items: center; gap: 10px; padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer }
+.cl-who strong { display: block; color: var(--lf-ink) }
+.cl-who:hover strong { text-decoration: underline }
+.cl-who small { display: block; margin-top: 1px; color: var(--lf-muted); font-size: 12px }
+
+/* Workspace */
+.cl-workspace { display: grid; gap: 14px }
+.cl-back { justify-self: start }
+.cl-head { margin: 0; padding: 20px 22px }
+.cl-head-who { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin-bottom: 16px }
+.cl-head-who h2 { margin: 0 0 6px; color: var(--lf-ink); font-size: 22px; font-weight: 650; letter-spacing: -.02em; overflow-wrap: anywhere }
+.cl-head-who > div:nth-child(2) { flex: 1 1 260px; min-width: 0 }
+.cl-head-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 0; font-size: 13px }
+.cl-head-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px }
+.cl-head-actions select { min-height: 36px; padding: 6px 10px; border: 1px solid var(--lf-line-strong); border-radius: 9px; background: var(--lf-surface); color: var(--lf-ink); font: inherit; font-size: 13.5px }
+.cl-facts dd small { display: block; font-size: 12px; font-weight: 400 }
+.cl-tabs { margin: 0 }
+.cl-tab-body { min-width: 0 }
+.cl-section { margin: 0 }
+.cl-section > .empty { margin: 0 22px 22px }
+.cl-overview .sp-card-block { font-size: 14px; line-height: 1.55 }
+.cl-overview h3, .cl-scope h4 { margin: 0; color: var(--lf-ink); font-size: 15px; font-weight: 650 }
+.cl-field { display: grid; gap: 6px; margin: 0 0 12px; color: var(--lf-text); font-size: 13px; font-weight: 600 }
+.cl-field input, .cl-textarea { width: 100%; padding: 9px 12px; border: 1px solid var(--lf-line-strong); border-radius: 10px; background: var(--lf-surface); color: var(--lf-ink); font: inherit; font-size: 14px; font-weight: 400; line-height: 1.5 }
+.cl-textarea { display: block; margin: 8px 0 12px; resize: vertical }
+.cl-field input:focus, .cl-textarea:focus { border-color: var(--lf-brand); outline: none; box-shadow: 0 0 0 3px var(--lf-brand-ring) }
+.cl-link-button { display: inline-flex; align-items: center; gap: 6px; text-decoration: none }
+.cl-inline-confirm { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px }
+.cl-inline-confirm select { min-height: 36px; padding: 6px 10px; border: 1px solid var(--lf-line-strong); border-radius: 9px; background: var(--lf-surface); color: var(--lf-ink); font: inherit }
+.cl-checklist { display: grid; gap: 0; margin: 0 0 14px; padding: 0; list-style: none }
+.cl-checklist li { display: grid; grid-template-columns: 24px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 9px 0; border-top: 1px solid var(--lf-line) }
+.cl-checklist li:first-child { border-top: 0 }
+.cl-checklist small { display: block; color: var(--lf-muted); font-size: 12.5px }
+.cl-check-mark { display: grid; place-items: center; width: 22px; height: 22px; border: 1.5px solid var(--lf-line-strong); border-radius: 50%; color: #fff; font-size: 12px; font-weight: 700 }
+.cl-checklist .is-met .cl-check-mark { border-color: var(--lf-success); background: var(--lf-success) }
+.cl-checklist .is-met strong { color: var(--lf-muted); font-weight: 550 }
+.cl-dates { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none }
+.cl-dates li { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; border-top: 1px solid var(--lf-line) }
+.cl-dates li:first-child { border-top: 0 }
+.cl-dates time { color: var(--lf-muted); white-space: nowrap }
+.cl-date-row { display: grid; grid-template-columns: minmax(0, 1fr) 150px auto; align-items: center; gap: 8px; margin-bottom: 8px }
+.cl-check-label { display: flex !important; align-items: center; gap: 8px; font-weight: 500 }
+.cl-check-label input { width: auto; min-height: 0 }
+.cl-fieldset { margin: 4px 0 14px; padding: 12px 14px 2px; border: 1px solid var(--lf-line); border-radius: 12px }
+.cl-fieldset legend { padding: 0 6px; color: var(--lf-muted); font-size: 12.5px; font-weight: 600 }
+
+/* Contacts, onboarding, services, requirements */
+.cl-contacts, .cl-requests, .cl-services, .cl-requirements, .cl-versions, .cl-uploads, .cl-pick-list { margin: 0; padding: 0; list-style: none }
+.cl-contacts, .cl-services, .cl-requirements { display: grid; gap: 0; padding: 0 22px 18px }
+.cl-contacts li, .cl-services li, .cl-requirements li { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 6px 16px; padding: 14px 0; border-top: 1px solid var(--lf-line) }
+.cl-services li, .cl-requirements li { grid-template-columns: minmax(0, 1fr) }
+.cl-contacts li:first-child, .cl-services li:first-child, .cl-requirements li:first-child { border-top: 0 }
+.cl-contacts p, .cl-services p, .cl-requirements p { margin: 4px 0 0 }
+.cl-contacts strong { margin-right: 8px; color: var(--lf-ink) }
+.cl-contacts .sp-chip { margin-right: 4px }
+.cl-contact-links { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13.5px }
+.cl-service-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px }
+.cl-service-head strong { color: var(--lf-ink); font-size: 14.5px }
+.cl-services .sp-dl { margin-top: 8px }
+.cl-services .is-removed { opacity: .65 }
+.cl-toggle { margin: 0 22px 18px }
+.cl-requests { display: grid; gap: 10px; padding: 0 22px 20px }
+.cl-request { display: grid; gap: 6px; width: 100%; padding: 14px 16px; border: 1px solid var(--lf-line); border-radius: 12px; background: var(--lf-surface); color: inherit; font: inherit; text-align: left; cursor: pointer; transition: border-color .15s, box-shadow .15s }
+.cl-request:hover { border-color: var(--lf-line-strong); box-shadow: var(--lf-shadow-xs) }
+.cl-request-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px }
+.cl-request-head strong { color: var(--lf-ink) }
+.cl-stage-strip { display: flex; flex-wrap: wrap; gap: 4px }
+.cl-stage { padding: 1px 8px; border: 1px solid var(--lf-line); border-radius: 999px; color: var(--lf-muted); font-size: 11.5px; font-weight: 600 }
+.cl-stage.is-complete { border-color: var(--lf-success-line); background: var(--lf-success-soft); color: var(--lf-success) }
+
+/* Scope */
+.cl-scope { display: grid; gap: 14px }
+.cl-scope-card.is-confirmed { border-color: var(--lf-success-line) }
+.cl-scope-empty, .cl-scope-body { margin: 0; padding: 0 22px 20px; color: var(--lf-muted); font-size: 14px }
+.cl-scope-body { color: var(--lf-text) }
+.cl-scope-summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 20px; margin-top: 10px }
+.cl-scope-summary ul { display: grid; gap: 6px; margin: 6px 0 0; padding-left: 18px }
+.cl-scope-summary li span, .cl-scope-summary li small { display: block; color: var(--lf-muted); font-size: 12.5px }
+.cl-scope-summary > p { grid-column: 1 / -1 }
+.cl-versions { display: grid; gap: 14px }
+.cl-versions > li { padding-bottom: 14px; border-bottom: 1px solid var(--lf-line) }
+.cl-versions p { margin: 0 0 4px }
+
+/* Documents */
+.cl-upload { margin: 0 22px 14px; padding: 14px 16px; border: 1px dashed var(--lf-line-strong); border-radius: 12px; background: var(--lf-subtle) }
+.cl-upload label { display: grid; gap: 6px; color: var(--lf-text); font-size: 13px; font-weight: 600 }
+.cl-upload select, .cl-upload input[type=file] { min-height: 38px; padding: 6px 10px; border: 1px solid var(--lf-line-strong); border-radius: 9px; background: var(--lf-surface); color: var(--lf-ink); font: inherit; font-size: 13.5px }
+.cl-upload p { margin: 10px 0 0; font-size: 12.5px }
+.cl-uploads { display: grid; gap: 8px; margin-top: 10px }
+.cl-uploads li { display: grid; grid-template-columns: minmax(0, 1fr) minmax(120px, 2fr) auto; align-items: center; gap: 10px; font-size: 13px }
+.cl-uploads li.is-error { color: var(--lf-danger) }
+.cl-docs td { vertical-align: middle }
+.cl-file-name { display: block; overflow-wrap: anywhere }
+.cl-doc-actions { white-space: nowrap }
+.cl-doc-actions .text-button { margin-right: 8px }
+
+/* Activity */
+.cl-note { margin: 0 22px 14px }
+.cl-note label { display: block; margin-bottom: 6px; color: var(--lf-ink); font-size: 13.5px; font-weight: 600 }
+.cl-note textarea { width: 100%; margin-bottom: 10px; padding: 9px 12px; border: 1px solid var(--lf-line-strong); border-radius: 10px; background: var(--lf-surface); color: var(--lf-ink); font: inherit; resize: vertical }
+.cl-chips { padding: 0 22px 12px }
+.cl-events { margin: 0 22px 16px }
+.cl-events p { margin: 0 }
+.cl-events small { color: var(--lf-muted); font-size: 12px }
+.cl-events .is-note .sp-event-icon { background: var(--lf-warning-soft); color: var(--lf-text) }
+.cl-section > .sp-more { display: block; margin: 0 auto 18px }
+.cl-projects { padding: 0 22px 22px }
+
+/* The deal view's archive row also offers conversion by exception. */
+.sp-archive:has(> .text-button) { display: flex; flex-wrap: wrap; gap: 6px 18px }
+
+/* Convert dialog (dialog#convert-deal) */
+dialog#convert-deal { width: min(820px, calc(100vw - 32px)) }
+.cl-convert h3 { margin: 22px 0 10px; color: var(--lf-ink); font-size: 15px }
+.cl-review { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; margin: 0 0 6px; overflow: hidden; border: 1px solid var(--lf-line); border-radius: 14px; background: var(--lf-line) }
+.cl-review > div { display: grid; align-content: start; gap: 3px; min-width: 0; padding: 12px 14px; background: var(--lf-surface) }
+.cl-review span { color: var(--lf-muted); font-size: 12px; font-weight: 600 }
+.cl-review strong { color: var(--lf-ink); font-size: 14px; overflow-wrap: anywhere }
+.cl-review small { color: var(--lf-muted); font-size: 12.5px; line-height: 1.5 }
+.cl-review .cl-review-wide { grid-column: 1 / -1 }
+.cl-pick-list { display: grid; gap: 8px; margin-bottom: 8px }
+.cl-pick-list li { display: grid; grid-template-columns: 24px minmax(0, 1fr); align-items: center; gap: 4px 10px; padding: 10px 12px; border: 1px solid var(--lf-line); border-radius: 12px }
+.cl-pick-list li.is-off { opacity: .6 }
+.cl-pick-list li > small { grid-column: 2; color: var(--lf-muted); font-size: 12px }
+.cl-pick-fields { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.3fr) minmax(0, 1fr) auto; align-items: center; gap: 8px }
+.cl-pick-fields input, .cl-pick-fields select { width: 100%; min-height: 36px; margin: 0 }
+.cl-check, .cl-radio { display: inline-flex !important; align-items: center; gap: 6px; margin: 0 !important; font-size: 13px; font-weight: 500; white-space: nowrap }
+.cl-check input, .cl-radio input { width: auto; min-height: 0; margin: 0 }
+.cl-service-row { margin: 0 0 10px; padding: 12px 14px 2px; border: 1px solid var(--lf-line); border-radius: 12px }
+.cl-row-end { display: flex; align-items: center; justify-content: flex-end }
+
+@media (max-width: 1100px) {
+  .cl-glance { grid-template-columns: minmax(0, 1fr) }
+  .cl-pick-fields { grid-template-columns: repeat(2, minmax(0, 1fr)) }
+}
+@media (max-width: 760px) {
+  .cl-head { padding: 16px }
+  .cl-head-actions { width: 100% }
+  .cl-review { grid-template-columns: minmax(0, 1fr) }
+  .cl-scope-summary, .cl-pick-fields, .cl-date-row { grid-template-columns: minmax(0, 1fr) }
+  .cl-contacts li { grid-template-columns: minmax(0, 1fr) }
+  .cl-contacts, .cl-services, .cl-requirements, .cl-requests, .cl-attention, .cl-chips, .cl-projects { padding-inline: 16px }
+  .cl-upload, .cl-note, .cl-events, .cl-toggle { margin-inline: 16px }
+  .cl-uploads li { grid-template-columns: minmax(0, 1fr) }
+  .cl-attention li { grid-template-columns: minmax(0, 1fr) }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cl-meter-track i, .cl-progress i, .cl-request { transition: none }
+}

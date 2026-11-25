@@ -63,6 +63,8 @@
 .ob-service-seo { background: var(--lf-info-soft); color: var(--lf-info) }
 .ob-service-social { background: var(--lf-ai-soft); color: var(--lf-ai) }
 .ob-service-email { background: var(--lf-success-soft); color: var(--lf-success) }
+.ob-service-website { background: var(--lf-brand-soft); color: var(--lf-brand) }
+.ob-service-automation { background: var(--lf-accent-bg); color: var(--lf-lime) }
 .ob-service-other { background: var(--lf-subtle); color: var(--lf-muted) }
 
 /* ---------- State pills & chips ---------- */
@@ -85,6 +87,7 @@
 .ob-not_open { border-color: var(--lf-line); background: var(--lf-subtle); color: var(--lf-muted) }
 .ob-waiting_on_client { border-color: var(--lf-warning-line); background: var(--lf-warning-soft); color: var(--lf-warning) }
 .ob-awaiting_review { border-color: var(--lf-info-line); background: var(--lf-info-soft); color: var(--lf-info) }
+.ob-agency_steps { border-color: var(--lf-ai-line); background: var(--lf-ai-soft); color: var(--lf-ai) }
 .ob-ready { border-color: var(--lf-success-line); background: var(--lf-success-soft); color: var(--lf-success) }
 .ob-ready::before { box-shadow: 0 0 0 3px rgba(34, 168, 115, .2) }
 .ob-paused { border-color: var(--lf-line-strong); border-style: dashed; background: var(--lf-surface); color: var(--lf-muted) }
@@ -683,6 +686,98 @@ dialog:has(.ob-template-form) { width: 760px }
 .ob-item-fields .ob-check input { flex-shrink: 0; width: 18px; height: 18px; margin: 0; accent-color: var(--lf-brand) }
 .ob-item-fields .ob-check:has(input:checked) { border-color: var(--lf-success-line); background: var(--lf-success-soft); color: var(--lf-success) }
 
+
+/* ---------- M10: field settings, display items, stages, internal steps, files, forms, history ---------- */
+.ob-item-fields .ob-display-hint { align-self: end; margin: 0 0 14px }
+.ob-settings { margin-top: 2px }
+.ob-secret-warning { margin: -6px 0 14px; padding: 10px 12px; border: 1px solid var(--lf-danger-line); border-radius: 10px; background: var(--lf-danger-soft); color: var(--lf-danger); font-size: 13px; font-weight: 550; line-height: 1.55 }
+.ob-editor-hint { margin: -4px 0 12px }
+.ob-template-actions .text-button + .text-button { margin-left: 0 }
+.ob-form-icon { background: var(--lf-info-soft); color: var(--lf-info) }
+.ob-row-client { color: var(--lf-brand); font-weight: 600 }
+
+/* Headings and instructions inside the agency checklist: shown to the client, never reviewed */
+.ob-display { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 8px 16px; padding: 12px 16px; border: 1px dashed var(--lf-line-strong); border-radius: 14px; background: var(--lf-surface-2); scroll-margin-top: 90px }
+.ob-display-body { flex: 1 1 260px; min-width: 0 }
+.ob-display h4 { margin: 0; color: var(--lf-ink); font-size: 15px; font-weight: 650; letter-spacing: -.01em }
+.ob-display strong { color: var(--lf-ink); font-size: 14px }
+.ob-display p { margin: 6px 0 8px; color: var(--lf-muted); font-size: 13.5px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere }
+.ob-display .ob-tag { margin: 6px 6px 0 0 }
+.ob-display-info { border-style: solid; border-color: var(--lf-info-line); background: var(--lf-info-soft) }
+.ob-display-actions { display: flex; gap: 12px }
+.ob-display-actions .text-button { min-height: 32px; color: var(--lf-muted) }
+.ob-display-actions .text-button.ob-danger { color: var(--lf-danger) }
+
+/* Answers of the M10 field types */
+.ob-answer-list { padding-left: 30px; font-weight: 550; line-height: 1.75 }
+.ob-files { display: grid; gap: 6px; margin: 12px 0 0; padding: 0; list-style: none }
+.ob-files li { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 8px 12px; border: 1px solid var(--lf-line); border-radius: 10px; background: var(--lf-subtle); font-size: 13px }
+.ob-file-icon { display: grid; flex-shrink: 0; place-items: center; width: 28px; height: 28px; border-radius: 8px; background: var(--lf-surface); color: var(--lf-brand); box-shadow: inset 0 0 0 1px var(--lf-line) }
+.ob-file-name { display: grid; flex: 1; min-width: 0; color: var(--lf-ink); font-weight: 600; overflow-wrap: anywhere }
+.ob-file-name small { color: var(--lf-muted); font-size: 12px; font-weight: 500 }
+.ob-file-status { flex-shrink: 0; color: var(--lf-muted); font-size: 12px; font-weight: 600 }
+.ob-files .text-button { flex-shrink: 0; min-height: 32px }
+.ob-files-caption { margin: 10px 0 0; color: var(--lf-muted); font-size: 12.5px; font-weight: 600 }
+
+/* Per-stage progress of one request */
+.ob-stage-strip { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr)); gap: 10px; margin: 0; padding: 0; list-style: none }
+.ob-stage { display: flex; align-items: flex-start; gap: 10px; min-width: 0; padding: 12px; border: 1px solid var(--lf-line); border-radius: var(--lf-radius); background: var(--lf-surface) }
+.ob-stage > div { display: grid; gap: 4px; min-width: 0 }
+.ob-stage strong { color: var(--lf-ink); font-size: 13.5px; font-weight: 650; line-height: 1.35; overflow-wrap: anywhere }
+.ob-stage small { color: var(--lf-muted); font-size: 12px }
+.ob-stage-index { display: grid; flex-shrink: 0; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--lf-subtle); color: var(--lf-muted); font-size: 12px; font-weight: 700; box-shadow: inset 0 0 0 1px var(--lf-line-strong) }
+.ob-stage-complete { border-color: var(--lf-success-line); background: linear-gradient(180deg, var(--lf-success-soft), var(--lf-surface)) }
+.ob-stage-complete .ob-stage-index { background: var(--lf-accent-bg); color: var(--lf-lime); box-shadow: none }
+.ob-stage-waits { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px }
+.ob-stage-waits .ob-waiting, .ob-stage-waits .ob-tag { min-height: 22px; padding: 0 8px; font-size: 11.5px }
+
+/* Internal agency steps */
+.ob-steps { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none }
+.ob-step { position: relative; padding: 14px 18px 14px 24px; border: 1px solid var(--lf-line); border-radius: 14px; background: var(--lf-surface); scroll-margin-top: 90px }
+.ob-step:target { border-color: var(--lf-brand); box-shadow: 0 0 0 3px var(--lf-brand-ring) }
+.ob-step::before { content: ''; position: absolute; top: 14px; bottom: 14px; left: 9px; width: 4px; border-radius: 4px; background: #9a86d8 }
+.ob-step-done::before { background: linear-gradient(180deg, #22a873, #8fdc6f) }
+.ob-step-not_required { background: var(--lf-surface-2) }
+.ob-step-not_required::before { background: repeating-linear-gradient(180deg, var(--lf-line-strong) 0 4px, transparent 4px 8px) }
+.ob-step-state-pending { border-color: var(--lf-ai-line); background: var(--lf-ai-soft); color: var(--lf-ai) }
+.ob-step-state-done { border-color: var(--lf-success-line); background: var(--lf-success-soft); color: var(--lf-success) }
+.ob-step-state-not_required { border-color: var(--lf-line); border-style: dashed; background: var(--lf-surface); color: var(--lf-faint) }
+.ob-tag.ob-tag-auto { border-color: var(--lf-ai-line); color: var(--lf-ai) }
+.ob-step-rule, .ob-step-done { margin: 10px 0 0; color: var(--lf-muted); font-size: 12.5px; line-height: 1.55 }
+.ob-step-done { color: var(--lf-text); font-weight: 550 }
+.ob-step-auto-note { display: inline-flex; align-items: center; min-height: 36px; padding: 0 12px; border: 1px dashed var(--lf-ai-line); border-radius: 10px; color: var(--lf-ai); font-size: 13px; font-weight: 600 }
+
+/* Forms added to a request */
+.ob-form-list { display: grid; gap: 8px; margin: 0 0 14px; padding: 0; list-style: none }
+.ob-form-list li { display: grid; gap: 2px; padding: 10px 12px; border: 1px solid var(--lf-line); border-radius: 10px; background: var(--lf-surface-2) }
+.ob-form-list strong { color: var(--lf-ink); font-size: 13.5px; overflow-wrap: anywhere }
+.ob-form-list small { color: var(--lf-muted); font-size: 12px }
+
+/* Submission history */
+.ob-history { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none }
+.ob-history > li { padding: 12px 14px; border: 1px solid var(--lf-line); border-radius: 12px; background: var(--lf-surface-2) }
+.ob-history > li > small { display: block; margin-top: 4px; color: var(--lf-muted); font-size: 12px }
+.ob-history-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px }
+.ob-history-head strong { color: var(--lf-ink); font-size: 14px }
+.ob-history-state { display: inline-flex; align-items: center; min-height: 24px; padding: 0 10px; border: 1px solid var(--lf-line); border-radius: 999px; background: var(--lf-surface); color: var(--lf-muted); font-size: 12px; font-weight: 600 }
+.ob-history-accepted { border-color: var(--lf-success-line); background: var(--lf-success-soft); color: var(--lf-success) }
+.ob-history-changes_requested { border-color: var(--lf-warning-line); background: var(--lf-warning-soft); color: var(--lf-warning) }
+.ob-history-pending { border-color: var(--lf-info-line); background: var(--lf-info-soft); color: var(--lf-info) }
+.ob-history-superseded, .ob-history-not_required { border-style: dashed; color: var(--lf-faint) }
+
+/* Stages settings */
+.ob-stage-list { display: grid; gap: 8px; margin: 0 0 12px; padding: 0; list-style: none }
+.ob-stage-row { display: flex; align-items: center; gap: 12px; min-width: 0; padding: 12px 14px; border: 1px solid var(--lf-line); border-radius: var(--lf-radius); background: var(--lf-surface) }
+.ob-stage-row.archived { border-style: dashed; background: var(--lf-surface-2) }
+.ob-stage-row-main { flex: 1; min-width: 0 }
+.ob-stage-row-main strong { color: var(--lf-ink); font-size: 14px; overflow-wrap: anywhere }
+.ob-stage-row-main p { margin: 2px 0 0; color: var(--lf-muted); font-size: 13px; line-height: 1.5; overflow-wrap: anywhere }
+.ob-stage-row-main small { display: block; margin-top: 4px; color: var(--lf-faint); font-size: 12px }
+.ob-stage-row-actions { display: flex; flex-shrink: 0; align-items: center; gap: 4px }
+.ob-stage-row-actions .icon-button { min-width: 34px; min-height: 34px; border-color: var(--lf-line); background: var(--lf-surface); color: var(--lf-text); font-size: 14px }
+.ob-stage-row-actions .text-button { min-height: 34px; padding: 0 6px }
+.ob-stage-hint { margin: 4px 0 0 }
+
 /* ---------- Motion ---------- */
 @media (prefers-reduced-motion: reduce) {
   .ob .ob-row, .ob-row-go, .ob-progress i, .ob-ring-value, .ob-item, .ob-template, .ob-how summary::before, .ob-blockers li { transition: none }
@@ -704,8 +799,9 @@ dialog:has(.ob-template-form) { width: 760px }
 }
 @media (max-width: 640px) {
   .ob-toolbar { flex-direction: column; align-items: stretch }
-  .ob-tabs { width: 100% }
-  .ob-tabs button { flex: 1; justify-content: center; padding: 0 10px }
+  /* Four views: two rows of two on a phone */
+  .ob-tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100% }
+  .ob-tabs button { min-width: 0; justify-content: center; padding: 0 10px }
   .ob-toolbar-actions { justify-content: space-between }
   .ob .filters .search { flex-basis: 100% }
   .ob .filters select { flex: 1 1 140px; max-width: none }
@@ -729,6 +825,11 @@ dialog:has(.ob-template-form) { width: 760px }
   .ob-link-controls select, .ob-detail .ob-reminder-form select, .ob-new-link input { font-size: 16px }
   .ob-template { padding: 16px }
   .ob-template-actions .primary, .ob-template-actions .secondary { flex: 1 }
+  .ob-step { padding: 12px 14px 12px 22px }
+  .ob-step::before { left: 8px }
+  .ob-stage-row { flex-wrap: wrap }
+  .ob-stage-row-actions { flex-basis: 100%; justify-content: flex-end }
+  .ob-files li { flex-wrap: wrap }
 }
 
 /* ---------- Dark theme: text colours written for light surfaces, mapped to semantic tokens (generated) ---------- */

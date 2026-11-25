@@ -48,10 +48,11 @@ assert.equal(await op("select count(*)::int from pg_class c join pg_namespace n 
 
 // 2. Templates: owners and admins install and edit; installing twice adds nothing; members only read.
 await fails(member,'select public.install_starter_templates($1)',[W],roleDenied)
-assert.equal(await as(admin,'select public.install_starter_templates($1)',[W]),4)
+// Seven since M10: the M6A four plus website, digital marketing & SEO, and automation.
+assert.equal(await as(admin,'select public.install_starter_templates($1)',[W]),7)
 assert.equal(await as(owner,'select public.install_starter_templates($1)',[W]),0,'Starter templates install once.')
 let overview=await as(member,'select public.onboarding_overview_for($1)',[W])
-assert.deepEqual(overview.templates.map(t=>t.serviceType).sort(),['email','paid_ads','seo','social'])
+assert.deepEqual(overview.templates.map(t=>t.serviceType).sort(),['automation','email','paid_ads','seo','seo','social','website'])
 const paidTemplate=overview.templates.find(t=>t.serviceType==='paid_ads')
 assert.equal(paidTemplate.itemCount,12);assert.equal(paidTemplate.requiredCount,11)
 const paid=await as(member,'select public.onboarding_template_for($1,$2)',[W,paidTemplate.id])
@@ -195,6 +196,7 @@ assert.equal((await itemNamed(acme,'Pixel installed on checkout')).state,'not_st
 restored=await itemNamed(acme,'Pixel installed on checkout');await review(acme,pixel.id,'not_required','Covered by conversion tracking item',restored.revision)
 
 // 9. Readiness: only required items count; optional items never block; the event is recorded once.
+const readyEventsSoFar=async()=>op("select count(*)::int from leadflow_private.onboarding_events where request_id=$1 and kind='became_ready'",[acme])
 for(const item of (await portal({action:'open',token})).body.onboarding.items.filter(i=>i.required&&i.state==='not_started')){
   const value=item.kind==='text'?{text:'Answer'}:item.kind==='links'?{links:['https://example.com/asset']}:item.kind==='access'?{granted:true}:{choice:item.options[0]}
   assert.equal((await submit(token,item.id,value,item.revision)).status,200,item.title)
@@ -203,6 +205,12 @@ readiness=(await detail(acme)).readiness
 assert.equal(readiness.state,'awaiting_review');assert.ok(readiness.blockers.every(b=>b.waitingOn==='agency'))
 await fails(member,'select public.hand_off_onboarding($1,$2,null)',[W,acme],/Not ready: \d+ required item/)
 for(const item of (await detail(acme)).items.filter(i=>i.required&&i.state==='submitted'))await review(acme,item.id,'accept','',item.revision)
+// Since M10, starter templates also have internal agency steps; they block readiness until done.
+acmeDetail=await detail(acme)
+assert.equal(acmeDetail.readiness.state,'agency_steps');assert.ok(acmeDetail.readiness.blockers.length>0&&acmeDetail.readiness.blockers.every(b=>b.kind==='internal'))
+assert.equal(await readyEventsSoFar(),0)
+for(const step of acmeDetail.steps.filter(s=>s.required&&s.status==='pending'))
+  await as(member,'select public.set_onboarding_step_status($1,$2,$3,$4,$5,$6)',[W,acme,step.id,'done','',step.revision])
 acmeDetail=await detail(acme)
 assert.equal(acmeDetail.readiness.state,'ready');assert.equal(acmeDetail.readiness.percent,100);assert.equal(acmeDetail.readiness.requiredWaived,1)
 assert.equal(acmeDetail.items.find(i=>i.title===existing.title).state,'not_started','The optional item is still outstanding, and does not block.')
@@ -392,7 +400,8 @@ await db.close()
 db=await createDatabase([owner])
 await actAs(db,owner);await db.query('select public.install_starter_templates($1)',[owner])
 await db.query('select public.save_workspace_for($1,$2,0,$3)',[owner,JSON.stringify({version:1,leads:[lead],tasks:[],activities:[]}),crypto.randomUUID()])
-await actAs(db,null,'postgres');await db.exec(readFileSync('supabase/rollbacks/202610250001_client_onboarding.down.sql','utf8'))
+// M10 (clients) builds on these tables, so it is rolled back first.
+await actAs(db,null,'postgres');await db.exec(readFileSync('supabase/rollbacks/202611250001_client_management.down.sql','utf8'));await db.exec(readFileSync('supabase/rollbacks/202610250001_client_onboarding.down.sql','utf8'))
 assert.equal(await one("select count(*)::int from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='leadflow_private' and c.relname like 'onboarding%'"),0)
 assert.equal(await one("select count(*)::int from pg_proc where proname like '%onboarding%' or proname like 'portal\\_%'"),0)
 assert.equal(await one('select count(*)::int from public.leads'),1,'Leads are kept.')

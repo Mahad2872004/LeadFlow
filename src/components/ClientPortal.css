@@ -263,7 +263,7 @@
 /* ---------- Form controls ---------- */
 .portal-page fieldset { min-width: 0; margin: 0; padding: 0; border: 0 }
 .portal-page label { display: flex; flex-direction: column; gap: 8px; margin: 0 0 16px; color: var(--lf-ink); font-size: 14px; font-weight: 600 }
-.portal-page input[type=url], .portal-page textarea {
+.portal-page input[type=url], .portal-page textarea, .portal-page .portal-input {
   display: block;
   width: 100%;
   min-height: 48px;
@@ -285,9 +285,9 @@
 }
 .portal-page textarea { resize: vertical; line-height: 1.6 }
 .portal-page input::placeholder, .portal-page textarea::placeholder { color: var(--lf-faint) }
-.portal-page input[type=url]:hover, .portal-page textarea:hover { border-color: #9fb0a8 }
-.portal-page input[type=url]:focus, .portal-page textarea:focus { border-color: var(--lf-brand); outline: none; box-shadow: 0 0 0 4px var(--lf-brand-ring) }
-.portal-page fieldset:disabled input[type=url], .portal-page fieldset:disabled textarea { border-color: var(--lf-line); background-color: var(--lf-subtle); color: var(--lf-text); cursor: not-allowed }
+.portal-page input[type=url]:hover, .portal-page textarea:hover, .portal-page .portal-input:hover { border-color: #9fb0a8 }
+.portal-page input[type=url]:focus, .portal-page textarea:focus, .portal-page .portal-input:focus { border-color: var(--lf-brand); outline: none; box-shadow: 0 0 0 4px var(--lf-brand-ring) }
+.portal-page fieldset:disabled input[type=url], .portal-page fieldset:disabled textarea, .portal-page fieldset:disabled .portal-input { border-color: var(--lf-line); background-color: var(--lf-subtle); color: var(--lf-text); cursor: not-allowed }
 .portal-choices { display: grid; gap: 8px; margin-bottom: 16px }
 .portal-page .portal-choice {
   flex-direction: row;
@@ -410,6 +410,44 @@
 .portal-powered { color: var(--lf-muted); font-weight: 600 }
 .portal-lf-mark { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 6px; background: linear-gradient(145deg, #17a572, #0a5a3e); color: #fff; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .25) }
 
+/* ---------- M10: headings, instructions, files, shared files, scope ---------- */
+/* App.css doesn't load on this page, so visually hidden labels are defined here too. */
+.portal-page .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); clip-path: inset(50%); white-space: nowrap }
+.portal-page .portal-input[type=url] { padding-left: 42px }
+.portal-hint { color: var(--lf-muted); font-size: 13px; font-weight: 500; line-height: 1.5 }
+.portal-heading { margin: 22px 0 10px }
+.portal-heading h3 { margin: 0; color: var(--lf-ink); font-size: 18px; font-weight: 650; letter-spacing: -.02em }
+.portal-heading .portal-text { margin: 6px 0 0; color: var(--lf-muted) }
+.portal-instructions { margin: 0 0 12px; padding: 16px 18px; border: 1px solid var(--lf-info-line); border-radius: 18px; background: var(--lf-info-soft); color: var(--lf-text) }
+.portal-instructions strong { display: block; color: var(--lf-ink); font-weight: 650 }
+.portal-instructions .portal-text { margin: 6px 0 0 }
+.portal-files { margin-bottom: 16px }
+.portal-file-list, .portal-upload-list { display: grid; gap: 8px; margin: 0 0 12px; padding: 0; list-style: none }
+.portal-file-list li { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; min-width: 0; padding: 10px 14px; border: 1px solid var(--lf-line); border-radius: 12px; background: var(--lf-surface-2) }
+.portal-file-icon { display: grid; flex-shrink: 0; place-items: center; width: 34px; height: 34px; border-radius: 10px; background: var(--lf-brand-soft); color: var(--lf-brand) }
+.portal-file-name { display: grid; flex: 1 1 160px; min-width: 0; color: var(--lf-ink); font-size: 14.5px; font-weight: 600; overflow-wrap: anywhere }
+.portal-file-name small { color: var(--lf-muted); font-size: 12.5px; font-weight: 500 }
+.portal-file-list .portal-text-button { gap: 6px; min-height: 40px }
+.portal-upload-list li { display: grid; gap: 6px; padding: 10px 14px; border: 1px dashed var(--lf-line-strong); border-radius: 12px; color: var(--lf-text); font-size: 14px; overflow-wrap: anywhere }
+.portal-upload-list progress { width: 100%; height: 8px; accent-color: var(--lf-brand) }
+.portal-page .portal-file-picker { padding: 16px; border: 1px dashed var(--lf-line-strong); border-radius: 14px; background: var(--lf-surface-2) }
+.portal-page .portal-file-picker input[type=file] { width: 100%; min-height: 48px; color: var(--lf-text); font: inherit; font-size: 14px }
+.portal-page .portal-file-picker input[type=file]::file-selector-button { min-height: 44px; margin-right: 12px; padding: 0 16px; border: 1px solid var(--lf-line-strong); border-radius: 10px; background: var(--lf-surface); color: var(--lf-ink); font: inherit; font-weight: 600; cursor: pointer }
+.portal-card.portal-shared, .portal-card.portal-scope { margin-top: 30px }
+.portal-shared .portal-small { margin: 0 0 14px }
+.portal-scope-head { display: flex; align-items: center; gap: 14px; margin-bottom: 8px }
+.portal-scope-head h2 { margin: 0 }
+.portal-scope-head .portal-small { margin: 2px 0 0 }
+.portal-scope h3 { margin: 20px 0 6px; color: var(--lf-ink); font-size: 16px; font-weight: 650 }
+.portal-scope h4 { margin: 12px 0 4px; color: var(--lf-muted); font-size: 12.5px; font-weight: 650; letter-spacing: .06em; text-transform: uppercase }
+.portal-scope .portal-text { margin: 0 }
+.portal-scope-service { margin-top: 14px; padding: 14px 16px; border: 1px solid var(--lf-line); border-radius: 14px; background: var(--lf-surface-2) }
+.portal-scope-service h3 { margin: 0 }
+.portal-scope-list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none }
+.portal-scope-list li { padding: 10px 14px; border: 1px solid var(--lf-line); border-radius: 12px }
+.portal-scope-list strong { color: var(--lf-ink) }
+.portal-scope-ack { display: grid; justify-items: start; gap: 4px; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--lf-line) }
+
 /* ---------- Motion ---------- */
 @media (prefers-reduced-motion: reduce) {
   .portal-spinner { animation: none }
@@ -442,6 +480,8 @@
   .portal-state { grid-column: 2; justify-self: start }
   .portal-meta { margin-left: 52px }
   .portal-actions button { flex: 1 1 100% }
+  .portal-scope-ack .portal-primary { width: 100% }
+  .portal-file-list li { padding: 10px 12px }
   .portal-card.portal-center { margin: 24px auto; padding: 32px 20px 28px }
   .portal-footer { flex-direction: column; align-items: flex-start; margin-top: 28px }
 }

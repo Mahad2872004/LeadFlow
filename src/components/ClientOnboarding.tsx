@@ -9,7 +9,9 @@ import { Icon } from './Icon'
 import { MetricCard } from './MetricCard'
 import { Modal } from './Modal'
 import { Glyph, ReadinessBadge, ReadinessProgress } from './OnboardingReadiness'
+import { OnboardingForms } from './OnboardingForms'
 import { OnboardingRequest } from './OnboardingRequest'
+import { OnboardingStages } from './OnboardingStages'
 import { OnboardingTemplates } from './OnboardingTemplates'
 import './Onboarding.css'
 type LoadState={status:'loading'}|{status:'error';message:string;denied:boolean}|{status:'ready';overview:Overview}
@@ -17,13 +19,17 @@ type DueFilter='all'|'overdue'|'week'|'none'
 interface Filters { search: string; state: ReadinessState | 'all'; service: ServiceType | 'all'; owner: string; due: DueFilter }
 const noFilters:Filters={search:'',state:'all',service:'all',owner:'all',due:'all'}
 const addDays=(day:string,days:number)=>{const date=new Date(`${day}T12:00:00`);date.setDate(date.getDate()+days);return localDate(date)}
-/** `startLead` opens the new-onboarding form prefilled from that lead when this section mounts. */
-interface OnboardingProps { workspace: WorkspaceSummary; leads: Lead[]; startLead: Lead | null }
-/** Client onboarding for one workspace: readiness dashboard, requests, templates and request details. */
-export function ClientOnboarding({workspace,leads,startLead}:OnboardingProps){
+/**
+ * `startLead` opens the new-onboarding form prefilled from that lead when this section mounts. `onOpenClient` (M10)
+ * opens the client record a request belongs to.
+ */
+interface OnboardingProps { workspace: WorkspaceSummary; leads: Lead[]; startLead: Lead | null; onOpenClient?: (clientId: string) => void }
+type Tab='requests'|'templates'|'forms'|'stages'
+/** Client onboarding for one workspace: readiness dashboard, requests, templates, forms, stages and request details. */
+export function ClientOnboarding({workspace,leads,startLead,onOpenClient}:OnboardingProps){
   const {refresh}=useWorkspaces()
   const [state,setState]=useState<LoadState>({status:'loading'}),[attempt,setAttempt]=useState(0)
-  const [tab,setTab]=useState<'requests'|'templates'>('requests'),[openId,setOpenId]=useState<string|null>(null)
+  const [tab,setTab]=useState<Tab>('requests'),[openId,setOpenId]=useState<string|null>(null)
   const [creating,setCreating]=useState<{lead?:Lead;templateId?:string}|null>(()=>startLead?{lead:startLead}:null),[notice,setNotice]=useState('')
   const [filters,setFilters]=useState<Filters>(noFilters)
   useEffect(()=>{
@@ -36,7 +42,7 @@ export function ClientOnboarding({workspace,leads,startLead}:OnboardingProps){
   if(state.status==='error')return <div className="error-banner load-error" role="alert"><p><strong>{state.denied?'You don’t have access to this workspace’s onboarding.':'We couldn’t load client onboarding.'}</strong> {state.message}</p>
     <button className="secondary" onClick={()=>{setState({status:'loading'});setAttempt(value=>value+1)}}>Try again</button>{state.denied&&<button className="secondary" onClick={()=>void refresh()}>Refresh workspace list</button>}</div>
   const {overview}=state
-  if(openId)return <OnboardingRequest key={openId} workspace={workspace} requestId={openId} members={overview.members} leads={leads} onBack={message=>{setOpenId(null);reload(message)}}/>
+  if(openId)return <OnboardingRequest key={openId} workspace={workspace} requestId={openId} members={overview.members} leads={leads} onBack={message=>{setOpenId(null);reload(message)}} onOpenClient={onOpenClient}/>
   const {requests,today}=overview
   const ownerName=(id:string|null)=>id?overview.members.find(member=>member.id===id)?.name??'Former member':'Unassigned'
   const current=requests.filter(request=>['draft','active','paused'].includes(request.status))
@@ -53,10 +59,15 @@ export function ClientOnboarding({workspace,leads,startLead}:OnboardingProps){
       <div className="ob-tabs" role="tablist" aria-label="Client onboarding views">
         <button role="tab" aria-selected={tab==='requests'} className={tab==='requests'?'active':''} onClick={()=>setTab('requests')}><Icon name="clipboard" size={16}/>Requests <span className="number-tag">{requests.length}</span></button>
         <button role="tab" aria-selected={tab==='templates'} className={tab==='templates'?'active':''} onClick={()=>setTab('templates')}><Icon name="grid" size={16}/>Templates <span className="number-tag">{overview.templates.filter(template=>!template.archived).length}</span></button>
+        <button role="tab" aria-selected={tab==='forms'} className={tab==='forms'?'active':''} onClick={()=>setTab('forms')}><Icon name="list" size={16}/>Forms</button>
+        <button role="tab" aria-selected={tab==='stages'} className={tab==='stages'?'active':''} onClick={()=>setTab('stages')}><Icon name="columns" size={16}/>Stages</button>
       </div>
       <div className="ob-toolbar-actions"><button className="text-button" onClick={()=>reload('Showing the latest responses.')}>Check for updates</button><button className="primary" onClick={()=>setCreating({})}><Icon name="plus" size={17}/> New onboarding</button></div>
     </div>
-    {tab==='templates'?<OnboardingTemplates workspace={workspace} templates={overview.templates} onChanged={reload} onUse={templateId=>{setTab('requests');setCreating({templateId})}}/>:<>
+    {tab==='forms'&&<OnboardingForms workspace={workspace}/>}
+    {tab==='stages'&&<OnboardingStages workspace={workspace}/>}
+    {tab==='templates'&&<OnboardingTemplates workspace={workspace} templates={overview.templates} onChanged={reload} onUse={templateId=>{setTab('requests');setCreating({templateId})}}/>}
+    {tab==='requests'&&<>
       <div className="stats ob-stats">
         <MetricCard label="In progress" value={current.length} hint="Drafts, open and paused" icon="clipboard" onClick={()=>show({})}/>
         <MetricCard label="Waiting on client" value={requests.filter(request=>request.readiness.state==='waiting_on_client').length} hint="Required items not yet provided" icon="users" meter={requests.filter(request=>request.readiness.state==='waiting_on_client').length/Math.max(1,current.length)} onClick={()=>show({state:'waiting_on_client'})}/>
@@ -81,7 +92,7 @@ export function ClientOnboarding({workspace,leads,startLead}:OnboardingProps){
         :visible.length===0?<div className="ob-empty ob-empty-compact"><span className="ob-empty-icon" aria-hidden="true"><Icon name="search" size={22}/></span><p>No onboarding requests match these filters.</p><button className="secondary" onClick={()=>setFilters(noFilters)}>Clear filters</button></div>
         :<ul className="ob-list">{visible.map(request=><li key={request.id}><button className="ob-row" onClick={()=>setOpenId(request.id)} aria-label={`Open ${request.title} for ${request.clientName}`}>
           <span className={`ob-row-icon ob-service-${request.serviceType}`} aria-hidden="true"><Glyph name={request.serviceType} size={20}/></span>
-          <span className="ob-row-main"><strong>{request.title}</strong><small>{request.clientName} · {serviceLabels[request.serviceType]}</small></span>
+          <span className="ob-row-main"><strong>{request.title}</strong><small>{request.clientName} · {serviceLabels[request.serviceType]}{request.clientId&&<span className="ob-row-client"> · Client record</span>}</small></span>
           <span className="ob-row-status"><ReadinessBadge state={request.readiness.state}/><ReadinessProgress readiness={request.readiness}/></span>
           <span className="ob-row-counts"><span>{request.counts.requiredOutstanding} required outstanding</span><span>{request.counts.awaitingReview} to review</span>{request.counts.overdue>0&&<span className="ob-overdue">{request.counts.overdue} overdue</span>}
             {request.dueDate&&<span className={request.dueDate<today&&['draft','active','paused'].includes(request.status)?'ob-row-due is-late':'ob-row-due'}><Icon name="calendar" size={14}/>Inputs due {dateLabel(request.dueDate)}</span>}</span>

@@ -1,5 +1,14 @@
 # Client onboarding and campaign readiness (M6A)
 
+> **Extended in M10 (25 November 2026, local).** Checklists now belong to clients and have:
+> - configurable stages;
+> - internal agency steps, with a new readiness state, "Agency steps left";
+> - eleven new field types, including file uploads;
+> - a forms library, and every submission kept with its review;
+> - seven starter templates.
+>
+> The portal also shows files the team shared and the agreed scope. See [CLIENT-MANAGEMENT.md](CLIENT-MANAGEMENT.md). This page describes M6A as built; the M10 page lists what changed.
+
 Added 25 October 2026 at the owner's request. **Status: implemented and verified locally only.** Nothing has been applied to the hosted Supabase project or deployed. The verification gates in [the agency onboarding research](AGENCY-ONBOARDING-RESEARCH.md#12-validation-plan-and-go-no-go-gates-no-interviews-required-to-start) are still open. This milestone is a build, not evidence of demand.
 
 - Migration: [`supabase/migrations/202610250001_client_onboarding.sql`](../supabase/migrations/202610250001_client_onboarding.sql)

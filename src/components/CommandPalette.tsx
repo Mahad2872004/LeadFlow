@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react'
 import { Icon, type IconName } from './Icon'
 
-export interface Command { id: string; group: 'Go to' | 'Actions' | 'Leads'; label: string; hint?: string; icon: IconName; run: () => void }
+export interface Command { id: string; group: 'Go to' | 'Actions' | 'Leads' | 'Clients'; label: string; hint?: string; icon: IconName; run: () => void }
 
 /** ⌘K / Ctrl+K menu: jump to a page, run an action, or open a lead. Mounted only while open. */
 export function CommandPalette({ commands, onClose }: { commands: Command[]; onClose: () => void }) {
@@ -24,7 +24,9 @@ export function CommandPalette({ commands, onClose }: { commands: Command[]; onC
     ? commands.filter(command => `${command.label} ${command.hint ?? ''}`.toLowerCase().includes(text))
     : commands
   const leads = matches.filter(command => command.group === 'Leads').slice(0, text ? 8 : 5)
-  const results = [...matches.filter(command => command.group !== 'Leads'), ...leads]
+  // Clients (M10) appear only when searching, so the empty menu stays short.
+  const clients = text ? matches.filter(command => command.group === 'Clients').slice(0, 5) : []
+  const results = [...matches.filter(command => command.group !== 'Leads' && command.group !== 'Clients'), ...leads, ...clients]
   const current = Math.min(active, Math.max(0, results.length - 1))
   const run = (command?: Command) => { if (!command) return; onClose(); command.run() }
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
@@ -53,7 +55,7 @@ export function CommandPalette({ commands, onClose }: { commands: Command[]; onC
     </div>
     <div className="command-list" id={`${id}-list`} role="listbox" aria-label="Results">
       {results.length === 0 && <p className="command-empty">No matches for “{query.trim()}”.</p>}
-      {(['Go to', 'Actions', 'Leads'] as const).map(group => {
+      {(['Go to', 'Actions', 'Leads', 'Clients'] as const).map(group => {
         const items = results.filter(command => command.group === group)
         if (!items.length) return null
         return <div key={group} role="group" aria-label={group} className="command-group">

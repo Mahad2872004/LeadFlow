@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { today, taskTypes, priorities, type Lead, type Priority, type TaskOptions, type TaskType } from '../lib/model'
+import { today, leadTaskTypes, priorities, type Lead, type Priority, type TaskOptions, type TaskType } from '../lib/model'
 import { dealsFor, priorityLabels, taskTypeLabels, type Deal, type SalesMember } from '../lib/sales'
 
 /**
@@ -35,7 +35,7 @@ export function TaskForm({ workspaceId, leads, initialLeadId, fixedDeal, members
       : <label>Lead *<select value={leadId} required onChange={event => { setLeadId(event.target.value); setDealId('') }}>{leads.map(lead => <option key={lead.id} value={lead.id}>{lead.name} · {lead.company || lead.email}</option>)}</select></label>}
     {!fixedDeal && deals.length > 0 && <label>Deal<select value={dealId} onChange={event => setDealId(event.target.value)}><option value="">Not linked to a deal</option>{deals.map(deal => <option key={deal.id} value={deal.id}>{deal.title}</option>)}</select></label>}
     <div className="task-form-row">
-      <label>Type<select value={taskType} onChange={event => setTaskType(event.target.value as TaskType)}>{taskTypes.map(type => <option key={type} value={type}>{taskTypeLabels[type]}</option>)}</select></label>
+      <label>Type<select value={taskType} onChange={event => setTaskType(event.target.value as TaskType)}>{leadTaskTypes.map(type => <option key={type} value={type}>{taskTypeLabels[type]}</option>)}</select></label>
       <label>Priority<select value={priority} onChange={event => setPriority(event.target.value as Priority)}>{priorities.map(item => <option key={item} value={item}>{priorityLabels[item]}</option>)}</select></label>
     </div>
     <label>Due date *<input type="date" required min="0001-01-01" max="9999-12-31" aria-describedby="due-date-help" value={due} onChange={event => setDue(event.target.value)} /></label>

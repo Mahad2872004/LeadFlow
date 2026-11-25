@@ -1,6 +1,6 @@
 # LeadFlow development roadmap
 
-Updated 19 October 2026 after M5 audit/research; M8 added 19 November 2026; M9 added 23 November 2026. This canonical file was absent before M5. Earlier completion claims are qualified below by actual repository and verification evidence; they are not blanket production-readiness claims.
+Updated 19 October 2026 after M5 audit/research; M8 added 19 November 2026; M9 added 23 November 2026; M10 added 25 November 2026. This canonical file was absent before M5. Earlier completion claims are qualified below by actual repository and verification evidence; they are not blanket production-readiness claims.
 
 ## M1 — Lead-management UI
 
@@ -189,7 +189,7 @@ Details, configuration, security and limitations: [docs/OUTREACH.md](docs/OUTREA
 
 ## M9 — Sales pipeline and deal management
 
-**Status: implemented and verified locally, 23 November 2026. Migration `202611230001` is not applied to the hosted project and the frontend isn't deployed. No Edge Function changes.**
+**Status: implemented and verified locally, 23 November 2026. Migration `202611230001` is in the hosted database. It was applied outside the migration history; on 26 November 2026 it was verified identical and recorded. The frontend isn't deployed. No Edge Function changes.**
 
 - **Pipeline:** configurable stages (ten defaults; rename, colour, default probability, add, reorder, archive with same-kind reassignment, restore), board with drag and drop and a Move menu for keyboards and phones, sortable paged list, summary per currency.
 - **Deals:** several per lead; created from the pipeline, a lead, a report opportunity or outreach, keeping those links; duplicate warning; value, currency, probability, weighted value, expected close, owner, priority, notes; versioned edits with history.
@@ -205,10 +205,57 @@ Details, configuration, security and limitations: [docs/OUTREACH.md](docs/OUTREA
 Details: [docs/SALES-PIPELINE.md](docs/SALES-PIPELINE.md).
 
 **Next:**
-1. Apply `202611230001` to the hosted project and deploy the frontend.
+1. ~~Apply `202611230001`~~ (done, see M10). Deploy the frontend.
 2. Review stages, currencies and lost reasons in Pipeline settings.
 3. Move two or three real leads through the pipeline and check the analytics by hand.
-4. M10 (client management) starts from `client_handoffs`; not started, awaiting approval.
+4. M10 (client management) started from `client_handoffs`; see below.
+
+## M10 — Client onboarding and client management
+
+**Status: implemented and verified locally, 25 November 2026. On 26 November 2026:**
+- migration `202611250001` was applied to the hosted project and checked (RLS, grants, columns);
+- `client-files` was deployed and `client-portal` re-deployed, and both were smoke-tested.
+
+**Not done:**
+- the frontend isn't deployed, and M10 isn't committed;
+- real Supabase Storage is untested; the tests use a simulation of its API, and no file has been uploaded on the hosted project.
+
+- **Conversion:**
+  - **Convert to client…** on a won deal opens a review: the deal, the lead, the report opportunity and summary, contacts with roles and a primary, services with scope, and a recommended onboarding template.
+  - One transaction, idempotent, once per deal. It reuses or records the M9 handoff and resumes deals handed off before M10.
+  - Owners and admins can convert deals that aren't won, with a reason.
+- **Clients:** dashboard and directory (search, filters, sort, paging). Each client has a workspace with eight tabs: overview, contacts, onboarding, services and scope, documents, tasks, activity and notes, projects (an M11 placeholder).
+  - Client status is separate from the computed onboarding status.
+  - Archiving is read-only and revokes client links.
+- **Onboarding engine (M6A, extended):**
+  - configurable stages with per-stage progress;
+  - internal agency steps, including automatic ones, and a new "Agency steps left" readiness state;
+  - fifteen field types, including file uploads;
+  - a forms library copied into checklists;
+  - every submission kept with its review;
+  - seven starter templates, adding website, SEO & digital marketing and automation.
+- **Requirements and scope:** versioned requirements, and superseding scope confirmations with change detection. The client can acknowledge the scope in the portal. This is a record, not a contract or signature.
+- **Documents:** private Storage, signed one-time uploads, size and content-signature checks before use, 60-second download links, sharing with the client, and role-checked deletion.
+- **Tasks:** the existing follow-up tasks, now also for clients and their checklists, with onboarding task types.
+- **Welcome message:** written, copied or opened in the user's email app, then marked sent. LeadFlow sends nothing.
+- **Timeline and notes:** one paged history across client, onboarding, scope, files and tasks, plus append-only internal notes.
+- **Completion:** a checklist. Completing with items outstanding takes an owner or admin and a reason. It hands off ready checklists and stores the snapshot M11 will start from.
+
+**Not built:**
+- AI (optional in the brief);
+- any sending or delivery tracking;
+- client accounts;
+- e-signatures;
+- antivirus scanning, previews and file versions;
+- projects (M11).
+
+Details: [docs/CLIENT-MANAGEMENT.md](docs/CLIENT-MANAGEMENT.md).
+
+**Next:**
+1. ~~Apply `202611250001`; deploy `client-files`; re-deploy `client-portal`; check the allowed-origin secrets~~ (done 26 November 2026). Commit, then deploy the frontend.
+2. Run the manual Storage checks in the M10 doc on the hosted project.
+3. Convert two or three real won deals and onboard them by hand.
+4. M11 (projects and delivery) starts from `client_onboarding_completions.snapshot`. **Not started; awaiting approval.**
 
 ## Production readiness and controlled beta (formerly listed as M7; not scheduled)
 

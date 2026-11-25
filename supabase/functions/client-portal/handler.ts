@@ -1,5 +1,6 @@
 import { boundedJson } from '../_shared/request.ts'
 import { rpc, RpcError, type Runtime } from '../_shared/runtime.ts'
+import { documentType, ensureBucket, inspectUpload, maxDocumentBytes, removeObject, signedDownloadUrl, signedUploadUrl, StorageError } from '../_shared/files.ts'
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 // Tokens are issued by issue_onboarding_link and claim_onboarding_reminder: "lf_" and 64 hex characters.
 const tokenFormat = /^lf_[0-9a-f]{64}$/
@@ -39,11 +40,42 @@ export function createPortalHandler(runtime: Runtime) {
         const result = await rpc(runtime,'portal_save_item',{key_hash:keyHash,target_item:body.itemId,response_value:body.value,submit:body.submit,expected_revision:body.revision})
         return respond(200,{ok:true,item:result})
       }
+      // Files: the database decides what this link may upload, check, download or remove; this function only signs
+      // one URL for the path it returns. Uploads are checked (size and content signature) before they count.
+      if (body.action === 'upload') {
+        if (typeof body.itemId !== 'string' || !uuid.test(body.itemId) || typeof body.fileName !== 'string' || typeof body.size !== 'number') return respond(400,{error:'Reload the page and try again.'})
+        const type = documentType(body.fileName)
+        if (!type) return respond(422,{error:'This type of file can’t be uploaded. Use PDF, images, Office documents, text, CSV, ZIP, MP4, MOV, WebM, MP3 or PSD.'})
+        const document = await rpc<{id:string;path:string}>(runtime,'portal_begin_upload',{key_hash:keyHash,target_item:body.itemId,details:{fileName:body.fileName,mimeType:type.mime,size:body.size},max_bytes:maxDocumentBytes(runtime)})
+        await ensureBucket(runtime)
+        return respond(200,{ok:true,file:{id:document.id,mimeType:type.mime},uploadUrl:await signedUploadUrl(runtime,document.path)})
+      }
+      if (body.action === 'finish' || body.action === 'download') {
+        if (typeof body.fileId !== 'string' || !uuid.test(body.fileId)) return respond(400,{error:'Reload the page and try again.'})
+        const document = await rpc<{id:string;path:string;fileName:string;status:string}>(runtime,'portal_document_access',{key_hash:keyHash,target_document:body.fileId,purpose:body.action})
+        if (body.action === 'download') return respond(200,{ok:true,url:await signedDownloadUrl(runtime,document.path,document.fileName)})
+        const type = documentType(document.fileName)
+        const checked = type ? await inspectUpload(runtime,document.path,type.extension) : {ok:false as const,reason:'This type of file isn’t allowed.'}
+        await rpc(runtime,'finish_client_document',{target_document:document.id,ok:checked.ok,actual_size:checked.ok?checked.size:null,reason:checked.ok?null:checked.reason})
+        return checked.ok ? respond(200,{ok:true,file:{id:document.id,name:document.fileName,size:checked.size,status:'available'}}) : respond(422,{error:checked.reason})
+      }
+      if (body.action === 'remove') {
+        if (typeof body.fileId !== 'string' || !uuid.test(body.fileId)) return respond(400,{error:'Reload the page and try again.'})
+        const removed = await rpc<{path:string}>(runtime,'portal_remove_upload',{key_hash:keyHash,target_document:body.fileId})
+        await removeObject(runtime,removed.path).catch(()=>false)
+        return respond(200,{ok:true})
+      }
+      if (body.action === 'acknowledge') {
+        if (typeof body.scopeId !== 'string' || !uuid.test(body.scopeId)) return respond(400,{error:'Reload the page and try again.'})
+        return respond(200,{ok:true,scope:await rpc(runtime,'portal_acknowledge_scope',{key_hash:keyHash,target_confirmation:body.scopeId})})
+      }
       return respond(400,{error:'Unknown action.'})
     } catch (error) {
+      if (error instanceof StorageError) return respond(503,{error:'We couldn’t reach the file store. Try again in a minute; nothing you saved has been lost.'})
+      if (error instanceof RpcError && error.code === 'P0002' && ['finish','download','remove'].includes(String(body.action))) return respond(404,{error:'That file isn’t available. Reload the page.'})
       if (error instanceof RpcError && error.code === 'P0002') return respond(404,{error:invalidLink})
       // These messages are written in the database for the client, e.g. "This item has already been accepted".
-      if (error instanceof RpcError && ['22023','55000','40001'].includes(error.code)) return respond(error.code === '22023' ? 422 : 409,{error:error.detail || 'Reload the page and try again.',code:error.code})
+      if (error instanceof RpcError && ['22023','55000','40001','54000'].includes(error.code)) return respond(error.code === '22023' || error.code === '54000' ? 422 : 409,{error:error.detail || 'Reload the page and try again.',code:error.code})
       return respond(503,{error:'We couldn’t reach your onboarding checklist. Check your connection and try again; nothing you saved has been lost.'})
     }
   }

@@ -42,7 +42,19 @@ Open a lead → **Contacts** to find its public business contacts (from its webs
 
 ## Sales pipeline and deals (M9)
 
-**Sales pipeline** tracks deals from first contact to won or lost: a board you can drag cards across (or use each card's Move menu), a sortable list, deals created from leads, business report opportunities and outreach, a timeline of notes, calls, replies, meetings, follow-ups and outreach, won and lost workflows with reasons, an explicit handoff to client work, and **Sales analytics** with win rate and pipeline value per currency. Follow-ups gain types, priorities, assignees, deals and cancellation. Stages only change when a person chooses; LeadFlow suggests the next stage after something is recorded. Implemented and verified locally; the migration isn't applied to the hosted project yet. See [docs/SALES-PIPELINE.md](docs/SALES-PIPELINE.md).
+**Sales pipeline** tracks deals from first contact to won or lost: a board you can drag cards across (or use each card's Move menu), a sortable list, deals created from leads, business report opportunities and outreach, a timeline of notes, calls, replies, meetings, follow-ups and outreach, won and lost workflows with reasons, an explicit handoff to client work, and **Sales analytics** with win rate and pipeline value per currency. Follow-ups gain types, priorities, assignees, deals and cancellation. Stages only change when a person chooses; LeadFlow suggests the next stage after something is recorded. Implemented and verified locally; the migration is in the hosted database (recorded in its history on 26 November 2026). See [docs/SALES-PIPELINE.md](docs/SALES-PIPELINE.md).
+
+## Client onboarding and client management (M10)
+
+**Clients** turns won deals into clients and runs their onboarding:
+- a review screen to convert a won deal, carrying over its lead, contacts and services and recommending an onboarding template;
+- a dashboard and a searchable directory;
+- a workspace per client: profile, contacts, onboarding, agreed services, versioned requirements and a dated scope confirmation, documents, tasks, history and internal notes;
+- a welcome message you send yourself, and a completion checklist that saves the handoff record for project delivery (M11, not built).
+
+The M6A onboarding engine gains configurable stages, internal agency steps, eleven new field types, a forms library, submission history and file uploads in the client portal. Files are kept in private Supabase Storage and checked after upload. LeadFlow sends nothing.
+
+Implemented and verified locally. On 26 November 2026 the migration was applied to the hosted project, and the new `client-files` and updated `client-portal` Edge Functions were deployed. The frontend isn't deployed, and hosted file storage hasn't been tried yet. See [docs/CLIENT-MANAGEMENT.md](docs/CLIENT-MANAGEMENT.md).
 
 ## Set up a Supabase project
 
@@ -94,6 +106,7 @@ npm run test:apollo
 npm run test:analysis
 npm run test:outreach
 npm run test:sales
+npm run test:clients
 npm run check:edge
 npm test
 npm run test:production

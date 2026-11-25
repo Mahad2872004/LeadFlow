@@ -8,7 +8,7 @@ import { cancelTask, createTask, toggleTask, type Data, type Lead } from '../lib
 import type { WorkspaceSummary } from '../lib/backend'
 import { channelLabels, draftStatusLabels, type DraftStatus, type OutreachChannel } from '../lib/outreach'
 import {
-  callOutcomeLabels, categoryLabels, confirmHandoff, dealDetail, dealTimeline, isConflict, meetingStatusLabels, money, moveDeal, priorityLabels, recordDealActivity, reopenDeal, salesPipeline,
+  callOutcomeLabels, categoryLabels, dealDetail, dealTimeline, isConflict, meetingStatusLabels, money, moveDeal, priorityLabels, recordDealActivity, reopenDeal, salesPipeline,
   saveMeeting, setDealArchived, sourceLabels, taskTypeLabels, timelineGroupLabels, updateDeal, weighted,
   type ActivityInput, type CallOutcome, type DealChanges, type DealDetail as Detail, type Meeting, type MeetingStatus, type Pipeline, type Priority, type Stage, type TimelineGroup, type TimelineItem, dateTime, errorText, relativeDays, shortDate, suggestStage } from '../lib/sales'
 
@@ -23,10 +23,12 @@ interface Suggestion { stage: Stage; reason: string }
  * made by a person; after something is recorded (a reply, a meeting, a proposal), the next stage may be suggested, and
  * it's applied only if they confirm it.
  */
-export function DealDetail({ workspace, dealId, data, onCommit, onOpenLead, onOpenOutreach, onStartOnboarding, onOpenDeal, onChanged, onClose }: {
+export function DealDetail({ workspace, dealId, data, client, onCommit, onOpenLead, onOpenOutreach, onConvert, onOpenClient, onOpenDeal, onChanged, onClose }: {
   workspace: WorkspaceSummary; dealId: string; data: Data
+  /** M10: the client this deal was converted into, if any. */
+  client: { id: string; name: string } | null
   onCommit: (next: Data, message: string) => Promise<boolean>; onOpenLead: (leadId: string) => void; onOpenOutreach: (leadId: string) => void
-  onStartOnboarding: (lead: Lead) => void; onOpenDeal: (dealId: string) => void; onChanged: (message?: string) => void; onClose: () => void
+  onConvert: () => void; onOpenClient: (clientId: string) => void; onOpenDeal: (dealId: string) => void; onChanged: (message?: string) => void; onClose: () => void
 }) {
   const [detail, setDetail] = useState<Detail | null>(null), [pipeline, setPipeline] = useState<Pipeline | null>(null)
   const [tab, setTab] = useState<Tab>('overview'), [error, setError] = useState(''), [notice, setNotice] = useState(''), [busy, setBusy] = useState(false)
@@ -82,7 +84,7 @@ export function DealDetail({ workspace, dealId, data, onCommit, onOpenLead, onOp
       {error && <p className="sp-error" role="alert">{error}</p>}
       <div className="sp-tabs" role="tablist" aria-label="Deal sections">{tabs.map(([key, label]) => <button key={key} role="tab" aria-selected={tab === key} className={tab === key ? 'active' : ''} onClick={() => setTab(key)}>
         {label}{key === 'work' && openTasks > 0 && <span className="number-tag">{openTasks}</span>}</button>)}</div>
-      {tab === 'overview' && <Overview workspace={workspace} detail={detail} pipeline={pipeline} lead={lead} busy={busy} act={act} onCloseDeal={setClosing} onStartOnboarding={onStartOnboarding} onOpenDeal={onOpenDeal} />}
+      {tab === 'overview' && <Overview workspace={workspace} detail={detail} pipeline={pipeline} lead={lead} client={client} busy={busy} act={act} onCloseDeal={setClosing} onConvert={onConvert} onOpenClient={onOpenClient} onOpenDeal={onOpenDeal} />}
       {tab === 'timeline' && <Timeline workspaceId={workspace.id} detail={detail} version={timelineVersion} onRecorded={(kind, input) => {
         onChanged()
         if (kind === 'reply' && input.kind === 'reply' && input.sentiment !== 'negative') offer('replied', `You recorded a ${input.sentiment} reply.`)
@@ -98,11 +100,11 @@ export function DealDetail({ workspace, dealId, data, onCommit, onOpenLead, onOp
   </Modal>
 }
 
-function Overview({ workspace, detail, pipeline, lead, busy, act, onCloseDeal, onStartOnboarding, onOpenDeal }: {
-  workspace: WorkspaceSummary; detail: Detail; pipeline: Pipeline; lead: Lead | undefined; busy: boolean; act: (action: () => Promise<string | void>) => Promise<void>
-  onCloseDeal: (outcome: 'won' | 'lost') => void; onStartOnboarding: (lead: Lead) => void; onOpenDeal: (dealId: string) => void
+function Overview({ workspace, detail, pipeline, lead, client, busy, act, onCloseDeal, onConvert, onOpenClient, onOpenDeal }: {
+  workspace: WorkspaceSummary; detail: Detail; pipeline: Pipeline; lead: Lead | undefined; client: { id: string; name: string } | null; busy: boolean; act: (action: () => Promise<string | void>) => Promise<void>
+  onCloseDeal: (outcome: 'won' | 'lost') => void; onConvert: () => void; onOpenClient: (clientId: string) => void; onOpenDeal: (dealId: string) => void
 }) {
-  const [editing, setEditing] = useState(false), [reopenTo, setReopenTo] = useState(''), [handoff, setHandoff] = useState<string | null>(null), [archiving, setArchiving] = useState(false)
+  const [editing, setEditing] = useState(false), [reopenTo, setReopenTo] = useState(''), [archiving, setArchiving] = useState(false)
   const openStages = pipeline.stages.filter(stage => stage.category === 'open' && !stage.archived)
   return <div className="sp-section-grid">
     <section className="sp-card-block">
@@ -116,12 +118,14 @@ function Overview({ workspace, detail, pipeline, lead, busy, act, onCloseDeal, o
         </> : <>
           {detail.outcome === 'won' ? <p>Won on {shortDate(detail.actualCloseDate)}{detail.wonValue !== null && <> for <strong>{money(detail.wonValue, detail.currency)}</strong></>}.{detail.wonNotes && <span className="sp-quote">{detail.wonNotes}</span>}</p>
             : <p>Lost on {shortDate(detail.actualCloseDate)} · <strong>{detail.lostReason}</strong>{detail.lostNotes && <span className="sp-quote">{detail.lostNotes}</span>}</p>}
-          {detail.outcome === 'won' && (detail.handoff ? <div className="sp-handoff"><p><Icon name="check" size={16} /> Handed off to client work on {shortDate(detail.handoff.createdAt)}.{detail.handoff.note && <span className="sp-quote">{detail.handoff.note}</span>}</p>
-            {lead && <button className="secondary" onClick={() => onStartOnboarding(lead)}>Start client onboarding</button>}</div>
-            : handoff === null ? <div className="sp-actions"><button className="primary" disabled={busy} onClick={() => setHandoff('')}>Hand off to client work…</button></div>
-            : <div className="sp-confirm"><p>Record that this deal is handed off to client work? This happens once per deal and keeps a snapshot of the deal, its contacts and notes. It doesn’t create an account or send anything; you can start client onboarding next.</p>
-              <label>Note for the delivery team<textarea rows={2} maxLength={2000} value={handoff} onChange={event => setHandoff(event.target.value)} /></label>
-              <div className="sp-actions"><button className="secondary" onClick={() => setHandoff(null)}>Cancel</button><button className="primary" disabled={busy} onClick={() => void act(async () => { const result = await confirmHandoff(workspace.id, detail.id, handoff); setHandoff(null); return result.repeated ? 'This deal was already handed off.' : 'Handed off to client work.' })}>Confirm handoff</button></div></div>)}
+          {/* M10: a won deal becomes a client (which records its M9 handoff). Converting again opens the same client. */}
+          {(detail.outcome === 'won' || client) && <div className="sp-handoff">
+            {client ? <><p><Icon name="check" size={16} /> Converted to the client <strong>{client.name}</strong>.{detail.handoff?.note && <span className="sp-quote">{detail.handoff.note}</span>}</p>
+              <div className="sp-actions"><button className="secondary" onClick={() => onOpenClient(client.id)}>Open client</button></div></>
+              : <>{detail.handoff && <p><Icon name="check" size={16} /> Handed off to client work on {shortDate(detail.handoff.createdAt)}, but not yet a client.{detail.handoff.note && <span className="sp-quote">{detail.handoff.note}</span>}</p>}
+                <p className="sp-muted">Converting creates the client with its contacts and agreed services, records the handoff, and can start onboarding. You review everything first; the deal and its history stay as they are.</p>
+                <div className="sp-actions"><button className="primary" disabled={busy || detail.archived} onClick={onConvert}>Convert to client…</button></div></>}
+          </div>}
           {!detail.handoff && <div className="sp-reopen"><label className="sp-inline">Reopen in<select value={reopenTo} onChange={event => setReopenTo(event.target.value)}><option value="">Choose a stage…</option>{openStages.map(stage => <option key={stage.id} value={stage.id}>{stage.name}</option>)}</select></label>
             <button className="secondary" disabled={busy || !reopenTo} onClick={() => void act(async () => { await reopenDeal(workspace.id, detail.id, reopenTo, detail.version, crypto.randomUUID()); setReopenTo(''); return 'Deal reopened. Its close details stay in the timeline.' })}>Reopen deal</button></div>}
         </>}
@@ -163,7 +167,9 @@ function Overview({ workspace, detail, pipeline, lead, busy, act, onCloseDeal, o
       {detail.otherDeals.length > 0 && <p className="sp-muted">Other deals with this lead: {detail.otherDeals.map((deal, index) => <span key={deal.id}>{index > 0 && ', '}<button className="sp-link" onClick={() => onOpenDeal(deal.id)}>{deal.title}</button> ({categoryLabels[deal.outcome].toLowerCase()})</span>)}</p>}
       <div className="sp-archive">{archiving ? <div className="sp-confirm"><p>{detail.archived ? 'Restore this deal to the pipeline and analytics?' : 'Archive this deal? It leaves the pipeline and analytics but keeps its history, and you can restore it.'}</p>
         <div className="sp-actions"><button className="secondary" onClick={() => setArchiving(false)}>Cancel</button><button className="primary" disabled={busy} onClick={() => void act(async () => { await setDealArchived(workspace.id, detail.id, !detail.archived); setArchiving(false); return detail.archived ? 'Deal restored.' : 'Deal archived.' })}>{detail.archived ? 'Restore deal' : 'Archive deal'}</button></div></div>
-        : <button className="text-button" onClick={() => setArchiving(true)}>{detail.archived ? 'Restore deal…' : 'Archive deal…'}</button>}</div>
+        : <><button className="text-button" onClick={() => setArchiving(true)}>{detail.archived ? 'Restore deal…' : 'Archive deal…'}</button>
+          {/* Owners and admins can convert a deal that isn't won, with a reason the conversion keeps. */}
+          {detail.outcome !== 'won' && !client && !detail.archived && workspace.role !== 'member' && <button className="text-button" onClick={onConvert}>Convert to client by exception…</button>}</>}</div>
     </section>
   </div>
 }

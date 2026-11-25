@@ -1,6 +1,6 @@
 # Sales pipeline and deal management (M9)
 
-Status: **implemented and verified locally, 23 November 2026.** Migration `202611230001_sales_pipeline.sql` has **not** been applied to the hosted project, and the frontend has not been deployed. No Edge Function was added or changed.
+Status: **implemented and verified locally, 23 November 2026.** Migration `202611230001_sales_pipeline.sql` is in the hosted database. It had been applied outside the migration history. On 26 November 2026 the hosted schema was found identical to the file, and the migration was recorded as applied (see [CLIENT-MANAGEMENT.md](CLIENT-MANAGEMENT.md#hosted-rollout-26-november-2026)). No Edge Function was added or changed.
 
 M9 turns leads into deals and tracks them to won or lost. It builds on what exists: leads and the workspace snapshot (M2), follow-up tasks, business report opportunities (M7), contacts and outreach drafts (M8), client onboarding (M6A) and workspace roles. It is not a separate CRM.
 
@@ -15,7 +15,7 @@ M9 turns leads into deals and tracks them to won or lost. It builds on what exis
 | **Follow-ups** | The existing follow-up tasks, now with a type, priority, details, optional deal, contact and assignee, and cancellation. New filters: Today, Assigned to me, Deals, Cancelled. |
 | **Meetings and calls** | Schedule, reschedule, complete, cancel or mark no-show; log calls with an outcome and next action. |
 | **Won / lost / reopen** | Won asks for the final value and close date. Lost asks for a reason from the workspace's list. Reopening is explicit and keeps the close details in the timeline. |
-| **Client handoff** | For a won deal, **Hand off to client work…** records one handoff with a snapshot of the deal, contacts and notes, after confirmation. It creates no client or account and sends nothing; **Start client onboarding** then opens the existing onboarding with the lead filled in. A handed-off deal can't be reopened. |
+| **Client handoff** | Since M10, a won deal's **Convert to client…** records this handoff together with the new client (see [CLIENT-MANAGEMENT.md](CLIENT-MANAGEMENT.md)). Deals handed off before M10 show the handoff and can still be converted. A handed-off deal can't be reopened. |
 | **Sales analytics** | Period presets (7, 30, 90 days, this quarter, this year, custom). Open and weighted pipeline, won and lost value per currency, win rate, average won deal, average sales cycle, deals by stage, lost reasons, sources, services, overdue follow-ups and deals closing soon. |
 | **Pipeline settings** | Owners and admins: rename, recolour, set default probability, add, reorder, archive (moving the stage's deals to another stage of the same kind) and restore stages; currencies, default currency, lost reasons and the stage new deals start in. Members can see the settings. |
 | **Notifications** | The bell adds meetings in the next 48 hours and deals whose expected close date is within 3 days or past, next to due follow-ups (now marked "Assigned to you" when they are). |
@@ -98,4 +98,4 @@ Results on 23 November 2026: all ten `test:*` database suites passed; `npx playw
 - No custom deal fields, deal products or line items, quotes or proposals as documents, or forecasting beyond weighted value.
 - No email or push notifications. Reminders show in the app's bell only, for whoever has the app open.
 - The board shows up to 50 most recently active deals per stage (the list view pages through all of them), and won/lost columns show the last 90 days.
-- Clients, portals, projects, contracts and invoicing are M10 and later. The handoff record is what M10 will start from.
+- Clients and their onboarding are M10 ([CLIENT-MANAGEMENT.md](CLIENT-MANAGEMENT.md)); projects, contracts and invoicing come later.

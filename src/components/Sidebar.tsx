@@ -6,7 +6,7 @@ import { navigation, type Page } from '../lib/pages'
 import { roleLabels, type WorkspaceRole } from '../lib/workspaceOptions'
 
 export type { Page } from '../lib/pages'
-const groups = ['Pipeline', 'Sales', 'Grow', 'Workspace'] as const
+const groups = ['Pipeline', 'Sales', 'Clients', 'Grow', 'Workspace'] as const
 interface SidebarProps { page: Page; dueCount: number; email: string; role: WorkspaceRole; onNavigate:(page:Page)=>void; onReset?:()=>void }
 export function Sidebar({page,dueCount,email,role,onNavigate,onReset}:SidebarProps) {
   const nav=useRef<HTMLElement>(null)

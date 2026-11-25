@@ -2,6 +2,7 @@ import { test, expect, type Page, type BrowserContext } from '@playwright/test'
 import type { PGlite } from '@electric-sql/pglite'
 import { createDatabase } from './support/database'
 import { createOnboardingHarness } from './support/onboarding'
+import { createClientsHarness, filesRequest, memberToken, samples } from './support/clients'
 import { apiOrigin, mockSupabase, signIn, type SupabaseMockOptions } from './support/supabase'
 // Agency UI and client portal end to end. Auth and HTTP transport are simulated; every RPC runs the real
 // migration SQL in embedded PostgreSQL, and the portal goes through the real client-portal Edge handler.
@@ -51,8 +52,9 @@ test('agency builds a template, starts from a lead, collects, reviews and hands 
  await openOnboarding(page)
  await expect(page.getByRole('heading',{name:'Start your first client onboarding'})).toBeVisible()
  await page.getByRole('tab',{name:/^Templates/}).click();await page.getByRole('button',{name:'Add the starter templates'}).click()
- await expect(page.getByText('4 starter templates added.')).toBeVisible()
- for(const name of ['Paid advertising onboarding','SEO onboarding','Social media management onboarding','Email marketing onboarding'])await expect(page.locator('.ob-template',{hasText:name})).toBeVisible()
+ // Seven since M10: the M6A four plus website, digital marketing & SEO, and automation.
+ await expect(page.getByText('7 starter templates added.')).toBeVisible()
+ for(const name of ['Paid advertising onboarding','SEO onboarding','Social media management onboarding','Email marketing onboarding','Website design & development onboarding','Digital marketing & SEO onboarding','AI automation & custom software onboarding'])await expect(page.locator('.ob-template-head strong').filter({hasText:new RegExp(`^${name}$`)})).toBeVisible()
  await page.getByRole('button',{name:'New template'}).click()
  const editor=page.getByRole('dialog',{name:'New template'})
  await editor.getByLabel('Template name *').fill('Launch essentials')
@@ -146,8 +148,8 @@ test('agency builds a template, starts from a lead, collects, reviews and hands 
  await expect(page.getByRole('button',{name:'Open Acme Outdoor onboarding for Acme Outdoor'})).toContainText('Handed off')
  await page.getByLabel('Filter by status').selectOption('waiting_on_client');await expect(page.getByText('No onboarding requests match these filters.')).toBeVisible()
  await page.getByRole('button',{name:'Clear filters'}).first().click();await expect(page.locator('.ob-row')).toHaveCount(1)
- // The portal never sends a workspace or request ID: only the token, the item and the response.
- for(const body of portalBodies)expect(Object.keys(body).every(key=>['action','token','itemId','value','submit','revision'].includes(key))).toBe(true)
+ // The portal never sends a workspace or request ID: only the token, the item and the response (and, since M10, file and scope references).
+ for(const body of portalBodies)expect(Object.keys(body).every(key=>['action','token','itemId','value','submit','revision','fileName','size','fileId','scopeId'].includes(key))).toBe(true)
  expect(errors).toEqual([])
 })
 
@@ -233,4 +235,155 @@ test('members, workspace isolation, lost responses and conflicts',async({page})=
  await rpc(owner.id,'select public.remove_workspace_member($1,$2) as result',[owner.id,member.id])
  await page.getByRole('button',{name:'Check for updates'}).click()
  await expect(page.getByText('You don’t have access to this workspace’s onboarding.')).toBeVisible()
+})
+
+/**
+ * M10 with the client-files and client-portal handlers and the in-memory Storage of tests/support/clients.ts. The browser's
+ * calls to Storage (signed upload and download URLs) are routed to that store.
+ */
+async function routeFiles(target:Page|BrowserContext,harness:ReturnType<typeof createClientsHarness>,functions:('client-portal'|'client-files')[]){
+ for(const name of functions)await target.route(`${apiOrigin}/functions/v1/${name}`,async route=>{
+  const request=route.request();if(name==='client-portal'&&request.method()==='POST')portalBodies.push(JSON.parse(request.postData()??'{}'))
+  const handler=name==='client-portal'?harness.portal:harness.files
+  const response=await handler(new Request(request.url(),{method:request.method(),headers:request.headers(),body:request.method()==='POST'?request.postData():undefined}))
+  return route.fulfill({status:response.status,headers:Object.fromEntries(response.headers),body:await response.text()})
+ })
+ await target.route(`${apiOrigin}/storage/v1/**`,async route=>{
+  const request=route.request(),cors={'access-control-allow-origin':'*','access-control-allow-methods':'GET, PUT, POST','access-control-allow-headers':'content-type, x-upsert, apikey, authorization'}
+  if(request.method()==='OPTIONS')return route.fulfill({status:204,headers:cors})
+  const url=new URL(request.url())
+  // Opening a signed download link: the link was signed (and recorded) by the Edge Function; serve a stand-in file.
+  if(request.method()==='GET'&&url.pathname.includes('/object/sign/'))return route.fulfill({status:200,headers:{...cors,'content-type':'application/octet-stream'},body:'file'})
+  const response=await harness.runtime.fetch(`${harness.config.SUPABASE_URL}${url.pathname}${url.search}`,{method:request.method(),headers:request.headers(),body:request.postDataBuffer()??undefined})
+  return route.fulfill({status:response.status,headers:{...Object.fromEntries(response.headers),...cors},body:Buffer.from(await response.arrayBuffer())})
+ })
+}
+
+test('M10: stages, forms, internal steps, new field types, client uploads, history, requirements and the shared scope',async({page,context},testInfo)=>{
+ const errors:string[]=[];page.on('pageerror',error=>errors.push(error.message))
+ await start(page)
+ const ws=owner.id,harness=createClientsHarness(db)
+ await routeFiles(page,harness,['client-files'])
+ await routeFiles(context,harness,[])
+ const client=await rpc<{id:string}>(owner.id,'select public.create_client($1,$2,$3) as result',[ws,JSON.stringify({name:'Bluebird Bakery',contacts:[{fullName:'Ana Ruiz',email:'ana@bluebird.example',isPrimary:true}]}),crypto.randomUUID()])
+ await rpc(owner.id,'select public.start_client_onboarding($1,$2,$3,$4) as result',[ws,client.id,JSON.stringify({title:'Bluebird onboarding'}),crypto.randomUUID()])
+ await page.goto('/login');await signIn(page,owner.email);await openOnboarding(page)
+ // Stages: the eight defaults, then one added, moved and archived.
+ await page.getByRole('tab',{name:'Stages'}).click()
+ await expect(page.locator('.ob-stage-row')).toHaveCount(8);await expect(page.locator('.ob-stage-row').first()).toContainText('Client created')
+ await page.getByRole('button',{name:'Add stage'}).click()
+ const stageDialog=page.getByRole('dialog',{name:'Add stage'})
+ await stageDialog.getByLabel('Stage name *').fill('Legal review');await stageDialog.getByRole('button',{name:'Add stage'}).click()
+ await expect(page.getByText('Legal review added.')).toBeVisible();await expect(page.locator('.ob-stage-row')).toHaveCount(9)
+ await expect(page.locator('.ob-stage-row').nth(7)).toContainText('Legal review')
+ await page.getByRole('button',{name:'Move Legal review up'}).click();await expect(page.locator('.ob-stage-row').nth(6)).toContainText('Legal review')
+ await page.getByRole('button',{name:'Archive Legal review'}).click();await expect(page.getByRole('heading',{name:'Archived stages'})).toBeVisible()
+ // Forms: a reusable form with a heading, a short answer, several choices and a file upload.
+ await page.getByRole('tab',{name:'Forms'}).click();await page.getByRole('button',{name:'New form'}).first().click()
+ const editor=page.getByRole('dialog',{name:'New form'}),field=(index:number)=>editor.locator('.ob-editor-items > li').nth(index)
+ await editor.getByLabel('Form name *').fill('Brand questionnaire')
+ await field(0).getByLabel('Response type').selectOption('heading');await field(0).getByLabel('Heading *').fill('About your brand')
+ await expect(field(0).getByLabel('Required for readiness')).toHaveCount(0)
+ await editor.getByRole('button',{name:'Add field'}).click();await field(1).getByLabel('Response type').selectOption('short_text');await field(1).getByLabel('Item title *').fill('Brand name')
+ await editor.getByRole('button',{name:'Add field'}).click();await field(2).getByLabel('Response type').selectOption('multi_choice');await field(2).getByLabel('Item title *').fill('Brand tone')
+ await field(2).getByLabel('Options, one per line *').fill('Friendly\nFormal\nPlayful')
+ await editor.getByRole('button',{name:'Add field'}).click();await field(3).getByLabel('Response type').selectOption('file');await field(3).getByLabel('Item title *').fill('Logo files');await field(3).getByLabel('Files allowed').selectOption('2')
+ // Asking for secrets is flagged while editing.
+ await field(1).getByLabel('Guidance for the client').fill('Also send your admin password');await expect(field(1).getByText('Never ask for passwords or secrets',{exact:false})).toBeVisible()
+ await field(1).getByLabel('Guidance for the client').fill('As it appears on your website')
+ await editor.getByRole('button',{name:'Save form'}).click()
+ await expect(page.getByText('Brand questionnaire created.')).toBeVisible();await expect(page.locator('.ob-form-card',{hasText:'Brand questionnaire'})).toContainText('3 (3 required)')
+ // Templates: the website starter has file fields and six internal steps; saving keeps them and their settings.
+ await page.getByRole('tab',{name:/^Templates/}).click();await page.getByRole('button',{name:'Add the starter templates'}).click()
+ await expect(page.getByText('7 starter templates added.')).toBeVisible()
+ await page.locator('.ob-template',{hasText:'Website design & development onboarding'}).getByRole('button',{name:'View and edit'}).click()
+ const template=page.getByRole('dialog',{name:'Edit template'})
+ await expect(template.getByLabel('Step title *')).toHaveCount(6);await expect(template.getByLabel('Step title *').first()).toHaveValue('Send the welcome message')
+ await expect(template.getByLabel('Completes').first()).toHaveValue('welcome_sent')
+ await template.getByRole('button',{name:'Add step'}).click();await template.getByLabel('Step title *').nth(6).fill('Book the kickoff call')
+ await template.getByRole('button',{name:'Save template'}).click();await expect(page.getByText('Website design & development onboarding saved.',{exact:false})).toBeVisible()
+ expect((await sql("select count(*)::int as n from leadflow_private.onboarding_template_steps s join leadflow_private.onboarding_templates t on t.id=s.template_id where t.starter_key='website'")).rows[0]).toEqual({n:7})
+ expect((await sql("select i.config, i.stage_id is not null as staged from leadflow_private.onboarding_template_items i join leadflow_private.onboarding_templates t on t.id=i.template_id where t.starter_key='website' and i.title='Logo files'")).rows[0]).toEqual({config:{category:'logo',maxFiles:5},staged:true})
+ // The client's onboarding: add the form in a stage, plus internal steps.
+ await page.getByRole('tab',{name:/^Requests/}).click()
+ await expect(page.getByRole('button',{name:'Open Bluebird onboarding for Bluebird Bakery'})).toContainText('Client record')
+ await page.getByRole('button',{name:'Open Bluebird onboarding for Bluebird Bakery'}).click()
+ await expect(page.locator('.ob-meta')).toContainText('Client recordBluebird Bakery')
+ await page.locator('.ob-side').getByRole('button',{name:'Add a form'}).click()
+ const assign=page.getByRole('dialog',{name:'Add a form to this checklist'})
+ await expect(assign.getByRole('combobox',{name:'Form',exact:true})).toHaveValue(/.+/);await assign.getByRole('combobox',{name:'Stage'}).selectOption({label:'Business information'})
+ await assign.getByRole('button',{name:'Add form'}).click()
+ await expect(page.getByText('The form “Brand questionnaire” was added: 3 fields.')).toBeVisible()
+ await expect(page.locator('.ob-item')).toHaveCount(3);await expect(page.locator('.ob-display')).toContainText('About your brand')
+ await expect(item(page,'Brand name')).toContainText('Business information');await expect(item(page,'Brand name')).toContainText('Form: Brand questionnaire')
+ await expect(page.locator('.ob-form-list')).toContainText('Brand questionnaire')
+ await page.getByRole('button',{name:'Add step'}).click()
+ let stepDialog=page.getByRole('dialog',{name:'Add internal step'})
+ await stepDialog.getByLabel('Step title *').fill('Check the logo files');await stepDialog.getByRole('button',{name:'Add step'}).click()
+ await expect(page.locator('.ob-step',{hasText:'Check the logo files'})).toBeVisible()
+ await page.getByRole('button',{name:'Add step'}).click();stepDialog=page.getByRole('dialog',{name:'Add internal step'})
+ await stepDialog.getByLabel('Step title *').fill('Send the welcome message');await stepDialog.getByLabel('Completes').selectOption('welcome_sent');await stepDialog.getByRole('button',{name:'Add step'}).click()
+ const autoStep=page.locator('.ob-step',{hasText:'Send the welcome message'})
+ await expect(autoStep).toContainText('Completes automatically');await expect(autoStep.getByRole('button',{name:'Mark done'})).toHaveCount(0)
+ await page.getByRole('button',{name:'Open to client'}).click()
+ await expect(page.locator('.ob-readiness .ob-badge')).toHaveText('Waiting on client');await expect(page.locator('.ob-blockers li')).toHaveCount(5)
+ await page.getByRole('button',{name:'Create client link'}).click()
+ const url=await page.getByLabel('Copy this link now').inputValue()
+ // The client: a heading, new field types and an upload; never the internal steps.
+ const portal=await context.newPage();await routeFiles(portal,harness,['client-portal']);await portal.goto(url)
+ await expect(portal.getByRole('heading',{name:'About your brand',level:3})).toBeVisible()
+ expect(await portal.content()).not.toContain('Check the logo files')
+ await expect(portal.locator('.portal-counts')).toContainText('3 to do')
+ await portalItem(portal,'Brand name').getByLabel('Your answer').fill('Bluebird');await portalItem(portal,'Brand name').getByRole('button',{name:'Submit for review'}).click()
+ await expect(portalItem(portal,'Brand name').getByText('Waiting for review')).toBeVisible()
+ await portalItem(portal,'Brand tone').getByRole('button',{name:'Submit for review'}).click();await expect(portalItem(portal,'Brand tone').getByRole('alert')).toContainText('Choose at least one option')
+ await portalItem(portal,'Brand tone').getByLabel('Friendly').check();await portalItem(portal,'Brand tone').getByLabel('Playful').check();await portalItem(portal,'Brand tone').getByRole('button',{name:'Submit for review'}).click()
+ await expect(portalItem(portal,'Brand tone').getByText('Waiting for review')).toBeVisible()
+ await portalItem(portal,'Logo files').getByLabel('Choose files to upload',{exact:false}).setInputFiles({name:'logo.png',mimeType:'image/png',buffer:Buffer.from(samples.png)})
+ await expect(portalItem(portal,'Logo files').getByText('1 file uploaded and checked.',{exact:false})).toBeVisible()
+ await expect(portalItem(portal,'Logo files').locator('.portal-file-list')).toContainText('logo.png')
+ // A file that isn't what its name says is refused by the content check.
+ await portalItem(portal,'Logo files').getByLabel('Choose a file to upload',{exact:false}).setInputFiles({name:'fake.png',mimeType:'image/png',buffer:Buffer.from(samples.fakePng)})
+ await expect(portalItem(portal,'Logo files').getByRole('alert')).toContainText('fake.png')
+ await expect(portalItem(portal,'Logo files').locator('.portal-file-list li')).toHaveCount(1)
+ await portalItem(portal,'Logo files').getByRole('button',{name:'Submit for review'}).click();await expect(portalItem(portal,'Logo files').getByText('Waiting for review')).toBeVisible()
+ // The agency reviews: downloads the upload, checks the history, records a requirement and finishes a step.
+ await page.getByRole('button',{name:'Check for updates'}).click()
+ await expect(page.locator('.ob-readiness .ob-badge')).toHaveText('Needs review')
+ await item(page,'Logo files').getByRole('button',{name:'Download logo.png'}).click()
+ await expect.poll(()=>harness.state.downloads.length).toBe(1)
+ await item(page,'Brand name').getByRole('button',{name:'Accept'}).click();await expect(item(page,'Brand name').locator('.ob-state')).toHaveText('Accepted')
+ await item(page,'Brand name').getByRole('button',{name:'History of Brand name'}).click()
+ const history=page.getByRole('dialog',{name:'Submissions: Brand name'})
+ await expect(history).toContainText('Submission 1');await expect(history).toContainText('Accepted');await expect(history).toContainText('Bluebird')
+ await history.getByRole('button',{name:'Close',exact:true}).click()
+ await item(page,'Brand tone').getByRole('button',{name:'Create requirement'}).click()
+ const requirement=page.getByRole('dialog',{name:'Create a requirement from this answer'})
+ await expect(requirement.getByLabel('Description')).toHaveValue('Friendly, Playful');await requirement.getByLabel('Category').selectOption('design')
+ await requirement.getByRole('button',{name:'Add requirement'}).click();await expect(page.getByText('Requirement “Brand tone” added to Bluebird Bakery as a draft.')).toBeVisible()
+ expect((await sql('select title, category, source, status, source_item_id is not null as linked from leadflow_private.client_requirements')).rows).toEqual([{title:'Brand tone',category:'design',source:'client_form',status:'draft',linked:true}])
+ await page.locator('.ob-step',{hasText:'Check the logo files'}).getByRole('button',{name:'Mark done'}).click()
+ await expect(page.locator('.ob-step',{hasText:'Check the logo files'}).locator('.ob-state')).toHaveText('Done')
+ await expect(page.locator('.ob-stage-strip')).toContainText('Business information')
+ await page.screenshot({path:testInfo.outputPath('m10-agency-request.png'),fullPage:true})
+ // The agency confirms a scope and shares a file; the client sees both and acknowledges the scope.
+ await rpc(owner.id,'select public.save_client_service($1,$2,$3) as result',[ws,client.id,JSON.stringify({name:'Website design',agreedScope:'A five-page website',deliverables:'Design and build',exclusions:'Copywriting',status:'confirmed'})])
+ await rpc(owner.id,'select public.confirm_client_scope($1,$2,$3) as result',[ws,client.id,JSON.stringify({outstandingQuestions:'Which launch date?',notes:'INTERNAL scope note',sharedWithClient:true})])
+ const token=memberToken(owner.id)
+ const prepared=await (await harness.files(filesRequest({workspaceId:ws,action:'upload',clientId:client.id,fileName:'welcome-pack.pdf',size:samples.pdf.length,category:'content',visibility:'shared'},token))).json() as {document:{id:string;mimeType:string};uploadUrl:string}
+ expect((await harness.put(prepared.uploadUrl,samples.pdf,prepared.document.mimeType)).ok).toBe(true)
+ expect((await harness.files(filesRequest({workspaceId:ws,action:'finish',documentId:prepared.document.id},token))).status).toBe(200)
+ await portal.reload()
+ await expect(portal.getByRole('heading',{name:/^Files from /})).toBeVisible();await expect(portal.locator('.portal-shared')).toContainText('welcome-pack.pdf')
+ await portal.locator('.portal-shared').getByRole('button',{name:'Download welcome-pack.pdf'}).click();await expect.poll(()=>harness.state.downloads.length).toBe(2)
+ const scope=portal.locator('.portal-scope')
+ await expect(scope).toContainText('Website design');await expect(scope).toContainText('Copywriting');await expect(scope).toContainText('Which launch date?')
+ await expect(scope).toContainText('not a signature, contract or legal acceptance');expect(await portal.content()).not.toContain('INTERNAL scope note')
+ await scope.getByRole('button',{name:'I’ve read this scope'}).click();await expect(scope.getByText('You acknowledged this scope on',{exact:false})).toBeVisible()
+ expect((await sql('select client_acknowledged_at is not null as acknowledged from leadflow_private.client_scope_confirmations')).rows).toEqual([{acknowledged:true}])
+ await portal.setViewportSize({width:390,height:844});expect(await noHorizontalScroll(portal)).toBe(true)
+ await portal.screenshot({path:testInfo.outputPath('m10-client-portal-mobile.png'),fullPage:true})
+ await page.setViewportSize({width:390,height:844});expect(await noHorizontalScroll(page)).toBe(true)
+ for(const body of portalBodies)expect(Object.keys(body).every(key=>['action','token','itemId','value','submit','revision','fileName','size','fileId','scopeId'].includes(key))).toBe(true)
+ expect(errors).toEqual([])
 })
