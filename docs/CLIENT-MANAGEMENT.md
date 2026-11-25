@@ -244,7 +244,7 @@ Done at the owner's request, on project `fzgxpwmqzmvgmijviaar`:
 - `tests/onboarding.spec.ts` covers the extended checklist, forms, stages and portal.
 - Existing suites were updated for the new task fields and functions (`test:db`, `test:tenancy`), the seven starters and internal steps (`test:onboarding`), the rollback order (`test:sales`, `test:outreach`, `test:analysis`) and the conversion replacing the M9 handoff button (`tests/sales.spec.ts`).
 
-Results: see the [verification ledger](../DEVELOPMENT_ROADMAP.md#current-verification-ledger).
+Results on 25–26 November 2026: every `test:*` database suite passed; `npx playwright test` 51/51; `npm run test:production` 51/51; lint, `tsc -b`, `check:edge` and `build` clean. See the [verification ledger](../DEVELOPMENT_ROADMAP.md#current-verification-ledger).
 
 ## Limitations and not built
 

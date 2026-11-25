@@ -290,6 +290,23 @@ Next steps: apply `202610200002` and `202610200003`, deploy `submit-inquiry`, th
 
 ## Current verification ledger
 
+**M10 client onboarding and client management, 25–26 November 2026 (local, then hosted).** All passed:
+- `npx oxlint` (no warnings), `npx tsc -b`, `npm run check:edge` and `npm run build`;
+- the new `npm run test:clients`, including paging the timeline by `(time, id)` so events written in one transaction are never skipped;
+- `test:db`, `test:tenancy` (exact grant list updated), `test:m3`, `test:integrations`, `test:onboarding` (seven starters, internal steps), `test:discovery`, `test:apollo`, `test:analysis`, `test:outreach` and `test:sales` (all roll back M10 first where needed);
+- `npx playwright test`: 51/51, including 2 new client tests and 1 new onboarding test;
+- `npm run test:production`: 51/51.
+
+Storage was simulated in these tests; no outside service was contacted and nothing was sent. On 26 November the migration was applied to the hosted project and the two Edge Functions deployed, with the read-only checks and smoke test described in [CLIENT-MANAGEMENT.md](docs/CLIENT-MANAGEMENT.md#hosted-rollout-26-november-2026).
+
+**Found and fixed by these tests:**
+- archived clients could still be edited;
+- automatic steps recorded the triggering member, so they couldn't be told apart from manual completions or undone automatically;
+- an `IF` condition with a `CASE … THEN` inside broke PL/pgSQL parsing;
+- the M6A onboarding test assumed templates had no internal steps;
+- client tasks have no lead, so the browser's data check would have refused to load a workspace containing them;
+- the client timeline's page boundary could skip events that share a timestamp.
+
 **M9 sales pipeline and deal management, 23 November 2026 (local).** All passed:
 - `npx oxlint` (no warnings), `npx tsc -b`, `npm run check:edge` and `npm run build`;
 - the new `npm run test:sales`;
