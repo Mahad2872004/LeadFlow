@@ -291,7 +291,9 @@ Details: [docs/PROJECTS.md](docs/PROJECTS.md).
 
 ## M12 — Client collaboration and approvals
 
-**Status: implemented and verified locally, 27 November 2026. The same day, migration `202611270001` was applied to the hosted project and checked (RLS, grants, columns), and `client-hub`, `portal-notifications`, `client-files` and `project-assistant` were deployed and smoke-tested.** Not done: the frontend isn't deployed; `APP_URL`, the password-reset redirect URL and the email worker schedule aren't set up.
+**Status: implemented and verified locally, 27 November 2026. The same day, migration `202611270001` was applied to the hosted project and checked (RLS, grants, columns), and `client-hub`, `portal-notifications`, `client-files` and `project-assistant` were deployed and smoke-tested. The frontend went live with commit `e5ac376`. Production moved to https://leadflowglobal.vercel.app; the allowed origins, `PORTAL_URL` and `APP_URL` were updated for it.** The Auth Site URL and redirect URLs were updated through `supabase config push`. Not done (dashboard settings):
+- the Turnstile hostname (the inquiry form shows error 110200 on the new address);
+- the email worker schedule.
 
 - **Client accounts:**
   - invitations (single-use, hashed, 7 days, renew or revoke, optional email);
@@ -322,7 +324,7 @@ Details: [docs/PROJECTS.md](docs/PROJECTS.md).
 Details: [docs/CLIENT-COLLABORATION.md](docs/CLIENT-COLLABORATION.md).
 
 **Next:**
-1. ~~Apply `202611270001` and deploy the four Edge Functions~~ (done 27 November 2026). With the owner's approval: set `APP_URL`, add the password-reset redirect URL, schedule the worker, then commit and deploy the frontend.
+1. ~~Apply `202611270001`, deploy the four Edge Functions, set `APP_URL`, deploy the frontend~~ (done 27 November 2026). ~~The Auth Site URL and redirect URLs~~ (done). Then, in the dashboards: the Turnstile hostname and the worker schedule.
 2. Run the manual checks in the M12 doc on the hosted project.
 3. M13 is not started and awaits approval.
 

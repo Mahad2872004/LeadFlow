@@ -4,7 +4,7 @@ Use this guide with the Integrations page. “Available” means a guide is avai
 
 ## Start here
 
-1. Open https://leadflow-tau-five.vercel.app/login and sign in to your internal workspace. The public root is now the marketing website; `/app` is the protected workspace entry.
+1. Open https://leadflowglobal.vercel.app/login and sign in to your internal workspace. The public root is now the marketing website; `/app` is the protected workspace entry.
 2. Keep a second tab open on Leads. Use Refresh after each submission, then reload the browser to check persistence.
 3. Use fictional contact data. Name each test `QA - METHOD - DATE`, service `Consulting`, message `Fictional manual integration test`. Use different example.com email addresses for distinct tests to avoid the five-inquiries/email/hour quota.
 4. Successful submissions can send a real notification to the configured business recipient. Plan a small number of tests. Do not reset demo data to clean up: reset replaces workspace records.
@@ -13,7 +13,7 @@ Use this guide with the Integrations page. “Available” means a guide is avai
 
 ## 1. Hosted inquiry form
 
-1. Open Integrations → Hosted inquiry form → Open hosted form. For production the URL should be `https://leadflow-tau-five.vercel.app/inquiry`, not localhost.
+1. Open Integrations → Hosted inquiry form → Open hosted form. For production the URL should be `https://leadflowglobal.vercel.app/inquiry`, not localhost.
 2. Fill the required fields using the test data above. Optional phone/company can stay empty.
 3. Complete Cloudflare verification, then select Send inquiry once.
 4. Expect “Thanks for reaching out” and a reference. Save it.
@@ -21,7 +21,7 @@ Use this guide with the Integrations page. “Available” means a guide is avai
 6. Verify the reference through the guide.
 7. Negative check: leave required fields empty or use an invalid email. Expect validation and no new lead.
 
-If Cloudflare fails, do not skip it. Check the displayed error code. `110200` means the current hostname is not authorized; `200500` means its frame could not load. Confirm the production widget hostname is `leadflow-tau-five.vercel.app` without protocol or path. Test another browser/network if challenges.cloudflare.com is blocked. A localhost test needs appropriate development widget/server configuration too. Do not put a secret key in the frontend.
+If Cloudflare fails, do not skip it. Check the displayed error code. `110200` means the current hostname is not authorized; `200500` means its frame could not load. Confirm the production widget hostname is `leadflowglobal.vercel.app` without protocol or path. Test another browser/network if challenges.cloudflare.com is blocked. A localhost test needs appropriate development widget/server configuration too. Do not put a secret key in the frontend.
 
 ## 2. Embeddable website form
 

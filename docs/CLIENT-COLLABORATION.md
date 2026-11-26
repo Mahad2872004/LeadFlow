@@ -1,6 +1,9 @@
 # Client collaboration and approvals (M12)
 
-Status: **implemented and verified locally, 27 November 2026. The same day, the database and Edge Functions went to the hosted project** (see [Hosted rollout](#hosted-rollout-27-november-2026)). The frontend isn't deployed yet, and `APP_URL` isn't set, so no portal email is sent.
+Status: **implemented and verified locally, 27 November 2026, and live:**
+- the database, the Edge Functions and the frontend are on production at https://leadflowglobal.vercel.app (see [Hosted rollout](#hosted-rollout-27-november-2026));
+- portal email goes out only once the `portal-notifications` worker is scheduled;
+- password-reset links need the Auth redirect URL below.
 
 M12 connects the agency's workspace with its clients:
 
@@ -333,7 +336,7 @@ Safeguards:
 | Setting | Where | Needed for |
 |---|---|---|
 | `PORTAL_ALLOWED_ORIGINS` (or `DISCOVERY_ALLOWED_ORIGINS`) | Edge Function secrets | `client-hub`: the app's origin must be listed |
-| `APP_URL` (e.g. `https://leadflow-tau-five.vercel.app`) | Edge Function secrets | Links in portal emails |
+| `APP_URL` (production: `https://leadflowglobal.vercel.app`) | Edge Function secrets | Links in portal emails |
 | `RESEND_API_KEY`, `NOTIFICATION_FROM` | Edge Function secrets (already used by M3/M6A) | Sending portal email |
 | `NOTIFICATION_WORKER_SECRET` | Edge Function secrets (already used by M3/M6A) | Calling `portal-notifications` |
 | A scheduler that POSTs to `portal-notifications` with `x-worker-secret` every few minutes | Supabase Cron, GitHub Actions or similar | Email actually going out |
@@ -342,7 +345,7 @@ Safeguards:
 
 Client accounts are created by `client-hub` with the service role, so the project's public sign-up setting doesn't affect invitations.
 
-## Deploying (reference; steps 1–2 were done on 27 November 2026, see above)
+## Deploying (reference; steps 1–4 were done on 27 November 2026, except scheduling the worker and the Auth redirect URL; see above)
 
 1. Apply `202611270001_client_collaboration.sql` with `npx supabase db push --remote`.
 2. Deploy the functions with `npx supabase functions deploy <name> --use-api`:
@@ -351,7 +354,7 @@ Client accounts are created by `client-hub` with the service role, so the projec
 
    All four have `verify_jwt = false` in `config.toml`; each checks its callers itself.
 3. Set `APP_URL` and check the other settings in [Configuration](#configuration). Add the password-reset redirect URL, then schedule the worker.
-4. Deploy the frontend (push `main`; Vercel builds it). `vercel.json` serves `/portal` with `Referrer-Policy: no-referrer` and `X-Robots-Tag: noindex`.
+4. Deploy the frontend (push `main`; Vercel builds it). Production is `https://leadflowglobal.vercel.app`. `vercel.json` serves `/portal` with `Referrer-Policy: no-referrer` and `X-Robots-Tag: noindex`.
 5. Check by hand (below).
 
 ## Hosted rollout (27 November 2026)
@@ -386,16 +389,38 @@ Done at the owner's request, on project `fzgxpwmqzmvgmijviaar`:
    - set: `PORTAL_ALLOWED_ORIGINS`, `DISCOVERY_ALLOWED_ORIGINS`, `RESEND_API_KEY`, `NOTIFICATION_FROM` and `NOTIFICATION_WORKER_SECRET`;
    - **`APP_URL` isn't set**, so the worker won't claim or send portal email.
 
-The rollout is backward compatible with the deployed (M11) frontend:
+7. **Frontend:** commit `e5ac376` was fast-forwarded to `main`, and Vercel reported the production deployment complete.
+8. **New production address:** production moved from `https://leadflow-tau-five.vercel.app`, which now answers "deployment not found", to **`https://leadflowglobal.vercel.app`**.
+   - On the new address:
+     - every route answers 200;
+     - the bundles contain the client portal and the new agency screens;
+     - `/portal` is served with `Referrer-Policy: no-referrer` and `X-Robots-Tag: noindex`;
+     - no bundle contains the old address.
+   - Every Edge Function refused the new origin (403). At the owner's request, these secrets were set:
+     - `DISCOVERY_ALLOWED_ORIGINS`, `PORTAL_ALLOWED_ORIGINS` and `INQUIRY_ALLOWED_ORIGINS` = `https://leadflowglobal.vercel.app,https://leadflow-tau-five.vercel.app,http://localhost:5173`;
+     - `PORTAL_URL=https://leadflowglobal.vercel.app/client-portal`;
+     - `APP_URL=https://leadflowglobal.vercel.app`.
+   - Afterwards, all nine origin-checked functions accept both addresses and still refuse an unknown origin (403).
+   - **Supabase Auth.** The hosted Site URL was `http://localhost:3000`, and the only redirect URL was the old address's `/app`. So sign-up confirmations and password resets from the new address would have fallen back to localhost.
+     - `npx supabase config push`, from a file declaring only these two settings and checked first with `config diff`, set:
+       - the Site URL to `https://leadflowglobal.vercel.app`;
+       - the redirect URLs to the new address's `/app`, `/portal/reset` and `/**`, plus the old address's `/app`.
+     - A fresh `config pull` confirmed both, with every other Auth setting unchanged.
+   - **Live browser check on the new address:**
+     - the marketing pages, sign-in, the `/app` redirect, portal sign-in and forgot password work;
+     - the invitation page reaches `client-hub` across origins;
+     - the onboarding link page loads;
+     - **the inquiry form's Turnstile widget shows error 110200 (hostname not authorized)**.
+
+Before the frontend went out, the rollout was backward compatible with the deployed (M11) frontend:
 - the redefined functions only add fields, or refuse client accounts;
 - `client-files` and `project-assistant` keep their M11 behaviour.
 
-**Still to do:**
-- deploy the frontend;
-- set `APP_URL`;
-- add `<site>/portal/reset` to the Auth redirect URLs;
-- schedule `portal-notifications`;
-- the manual checks below.
+**Still to do** (dashboard settings, not code):
+- ~~Supabase Auth Site URL and redirect URLs~~ (done, see above).
+- **Cloudflare Turnstile:** add `leadflowglobal.vercel.app` to the widget's hostnames. Until then, the inquiry form's CAPTCHA fails with error 110200 (confirmed on the live site).
+- **Email:** schedule `portal-notifications` (POST with `x-worker-secret`, every few minutes).
+- **Checks:** the manual checks below, on the new address.
 
 ## Manual verification (hosted)
 

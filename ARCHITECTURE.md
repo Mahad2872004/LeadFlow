@@ -166,7 +166,7 @@ M11 adds projects on top of clients, the onboarding completion snapshot, follow-
 
 Details: [docs/PROJECTS.md](docs/PROJECTS.md).
 
-## Client collaboration and approvals (M12; database and Edge Functions deployed, frontend not)
+## Client collaboration and approvals (M12; deployed)
 
 M12 adds a client-facing portal on top of M10 clients, M11 projects and deliverables, M10 file storage and the client activity history.
 

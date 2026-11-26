@@ -80,7 +80,7 @@ The **client portal** (`/portal`) gives each client person their own sign-in and
 - the agency manages invitations, roles and project access, and has a review queue across projects;
 - the assistant can summarize feedback and draft replies for a person to edit and send.
 
-Implemented and verified locally. On 27 November 2026 the migration was applied to the hosted project and `client-hub`, `portal-notifications`, `client-files` and `project-assistant` were deployed. The frontend isn't deployed yet. See [docs/CLIENT-COLLABORATION.md](docs/CLIENT-COLLABORATION.md).
+Live on https://leadflowglobal.vercel.app since 27 November 2026: the migration, the four Edge Functions and the frontend. Email needs the worker scheduled, and password reset needs the Auth redirect URL. See [docs/CLIENT-COLLABORATION.md](docs/CLIENT-COLLABORATION.md).
 
 ## Set up a Supabase project
 

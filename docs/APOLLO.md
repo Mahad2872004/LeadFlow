@@ -25,7 +25,7 @@ Added 1 November 2026. **Status: implemented, tested locally with a simulated Ap
    | `APOLLO_API_KEYS` | Yes, or `APOLLO_API_KEY` | Comma-separated `label:key` pairs, for example `primary:abc123,client-b:def456`. Labels use letters, numbers, `-` and `_`; they're lowercased and become the account IDs shown in LeadFlow. A bare key with no label is read as the account `default`. Quotes and spaces around values are ignored. |
    | `APOLLO_API_KEY` | Alternative | One key; its account is called `default`. |
    | `APOLLO_WORKSPACE_IDS` | Yes | Comma-separated LeadFlow workspace IDs allowed to use Apollo (no spaces), or `*` for all. These are LeadFlow IDs, not Apollo IDs; see "Finding your workspace ID" below. Apollo's terms allow use only for your own internal business, so don't list customers' workspaces, and replace `*` with specific IDs if other businesses ever sign up. |
-   | `DISCOVERY_ALLOWED_ORIGINS` | Already set | Every address the app runs on, comma-separated, with no spaces and no trailing `/`. It's shared with lead discovery. Include local development addresses, for example `https://leadflow-tau-five.vercel.app,http://localhost:5173`. |
+   | `DISCOVERY_ALLOWED_ORIGINS` | Already set | Every address the app runs on, comma-separated, with no spaces and no trailing `/`. It's shared with lead discovery. Include local development addresses, for example `https://leadflowglobal.vercel.app,http://localhost:5173`. |
    | `APOLLO_WEBHOOK_BASE_URL` | No | Defaults to `SUPABASE_URL`. It must be HTTPS for phone reveals. |
 
    No frontend (`VITE_`) variable is needed, and keys are never stored in the database or sent to the browser. Secrets take effect without redeploying.

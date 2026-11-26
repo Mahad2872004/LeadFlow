@@ -108,7 +108,7 @@ That research is in `docs/expanded-vision-research/`, currently kept in the git 
 
    | Secret | Purpose |
    |---|---|
-   | `DISCOVERY_ALLOWED_ORIGINS` | Comma-separated origins of the LeadFlow app, e.g. `https://leadflow-tau-five.vercel.app`. If unset, the function falls back to `PORTAL_ALLOWED_ORIGINS`, then `INQUIRY_ALLOWED_ORIGINS`. Set it explicitly. |
+   | `DISCOVERY_ALLOWED_ORIGINS` | Comma-separated origins of the LeadFlow app, e.g. `https://leadflowglobal.vercel.app`. If unset, the function falls back to `PORTAL_ALLOWED_ORIGINS`, then `INQUIRY_ALLOWED_ORIGINS`. Set it explicitly. |
    | `OSM_NOMINATIM_URL` | Base URL of a Nominatim server, e.g. a self-hosted one or a commercial host. The public `https://nominatim.openstreetmap.org/` is permitted only for moderate, user-triggered use within its policy. |
    | `OSM_OVERPASS_URL` | Full interpreter URL of a self-hosted or paid Overpass server, ending in `/api/interpreter`. |
    | `OSM_USER_AGENT` | An application-specific User-Agent with a contact, e.g. `LeadFlow/1.0 (ops@yourdomain.example)`. |

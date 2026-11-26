@@ -243,7 +243,7 @@ Project `fzgxpwmqzmvgmijviaar`, Supabase CLI 2.122.0.
    - row counts are unchanged;
    - every table has RLS, and `anon` can execute no function;
    - REST calls with only the publishable key to `onboarding_overview_for`, `portal_open` and `claim_onboarding_reminder` return 401.
-6. **Secrets set:** `PORTAL_URL=https://leadflow-tau-five.vercel.app/client-portal` and `PORTAL_ALLOWED_ORIGINS=https://leadflow-tau-five.vercel.app`.
+6. **Secrets set:** `PORTAL_URL=https://leadflow-tau-five.vercel.app/client-portal` and `PORTAL_ALLOWED_ORIGINS=https://leadflow-tau-five.vercel.app`. (On 26 November 2026 production moved to `https://leadflowglobal.vercel.app`; `PORTAL_URL` and the allowed origins were updated; see [CLIENT-COLLABORATION.md](CLIENT-COLLABORATION.md#hosted-rollout-27-november-2026).)
 7. **Functions deployed:** `client-portal` v1 and `onboarding-reminders` v1, both with gateway JWT verification off. Live smoke tests, which created no records:
    - a preflight from the site returns 204, with the CORS origin limited to the site and `Referrer-Policy: no-referrer`;
    - another origin gets 403;
