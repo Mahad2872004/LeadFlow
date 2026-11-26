@@ -330,7 +330,7 @@ Details: [docs/CLIENT-COLLABORATION.md](docs/CLIENT-COLLABORATION.md).
 
 ## M13 — Automation and workflow engine
 
-**Status: implemented and verified locally, 27 November 2026. The same day, both migrations (`202611270002`, `202611270003`), the three Edge Functions and the every-minute `leadflow-automation-worker` Cron job were deployed to the hosted project and checked. The frontend isn’t deployed yet.**
+**Status: implemented and verified locally, 27 November 2026. The same day, both migrations (`202611270002`, `202611270003`), the three Edge Functions and the every-minute `leadflow-automation-worker` Cron job were deployed to the hosted project and checked, and the frontend went live (commit `4440abc` on `main`).**
 
 - **Automation Center:** overview with real counts, workflows, 12 templates, execution history, failed executions, settings (pause all automations, safeguards).
 - **Visual builder:**
@@ -359,7 +359,7 @@ Details: [docs/CLIENT-COLLABORATION.md](docs/CLIENT-COLLABORATION.md).
 Details: [docs/AUTOMATION.md](docs/AUTOMATION.md).
 
 **Next:**
-1. ~~Apply both migrations, deploy the three functions, schedule `leadflow-automation-worker`~~ (done 27 November 2026). Deploy the frontend. Consider scheduling the analysis and portal email workers.
+1. ~~Apply both migrations, deploy the three functions, schedule `leadflow-automation-worker`~~ (done 27 November 2026); ~~deploy the frontend~~ (done). Consider scheduling the analysis and portal email workers.
 2. Run the manual checks in docs/AUTOMATION.md on the hosted project.
 3. M14 is not started and awaits approval.
 
@@ -396,7 +396,7 @@ Next steps: apply `202610200002` and `202610200003`, deploy `submit-inquiry`, th
 
 ## Current verification ledger
 
-**M13 automation and workflow engine, 27 November 2026 (local, then the hosted database, Edge Functions and Cron; frontend not deployed).**
+**M13 automation and workflow engine, 27 November 2026 (local, then the hosted database, Edge Functions, Cron and frontend).**
 
 Passed:
 - `npx tsc -b`, `npm run lint` (no warnings), `npm run check:edge` and `npm run build`;

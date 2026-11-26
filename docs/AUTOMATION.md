@@ -2,7 +2,7 @@
 
 **Status: implemented and verified locally, 27 November 2026.**
 
-The same day, the backend went to the hosted project: both migrations, the three Edge Functions and the every-minute Cron job. See [Hosted rollout](#13-hosted-rollout-27-november-2026). **The frontend isn’t deployed yet**, so the Automation Center isn’t visible on the live site.
+The same day, M13 went live on https://leadflowglobal.vercel.app: both migrations, the three Edge Functions, the every-minute Cron job and the frontend (commit `4440abc` on `main`). See [Hosted rollout](#13-hosted-rollout-27-november-2026).
 
 The Automation Center (sidebar → Workspace → **Automations**) lets owners and admins build workflows:
 - a trigger, then conditions, actions, delays, waits for events and branches;
@@ -462,7 +462,7 @@ Rollback: `supabase/rollbacks/202611270003_automation_engine.down.sql`, then `20
 ## 11. Known limitations
 
 - **Not yet verified on the hosted project:**
-  - a real workflow run (no workflow exists until the frontend is deployed);
+  - a real workflow run (none has been created on the hosted project yet);
   - hosted Gemini answers for drafting;
   - real email delivery of automation alerts;
   - a real webhook sender.
@@ -578,4 +578,7 @@ Done at the owner's request, on project `fzgxpwmqzmvgmijviaar`.
 6. **Cron:** only the `leadflow-automation-worker` block of `supabase/ops/schedule-workers.sql` was run (every minute). Its first two runs succeeded, and the worker answered 200 both times (`{"tick":{"checked":0,"released":0,"scheduled":0},"outcomes":[]}`). This shows the Vault secret matches the function's secret and the engine runs as the service role.
 
    The analysis worker and the portal email worker were left unscheduled, as they were: scheduling them is a separate decision, because the analysis worker uses provider credits.
-7. **Frontend:** not deployed. Pushing `main` makes Vercel build it.
+7. **Frontend:** at the owner's request, commit `4440abc` was fast-forwarded to `main` (no force). Vercel served the new build about a minute later.
+   - `/`, `/app`, `/login`, `/features`, `/inquiry` and `/portal` answer 200.
+   - The production bundle loads a separate Automation chunk that calls `automation_center_for` and `automation_dry_run`.
+   - With the site's public key and no sign-in, the Data API refuses `automation_center_for`, `automation_workflows_for`, `automation_advance`, `automation_tick` and `automation_receive_webhook` (42501). This shows its schema includes the new functions and anonymous callers can run none of them.

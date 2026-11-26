@@ -101,7 +101,7 @@ What it does:
 
 Important decisions stay with people. No workflow sends outreach, marks deals won or lost, confirms scope or approves on a client's behalf.
 
-Implemented and verified locally on 27 November 2026. The same day, the migrations, Edge Functions and the worker’s Cron job were deployed to the hosted project and checked. The frontend isn’t deployed yet. See [docs/AUTOMATION.md](docs/AUTOMATION.md).
+Live on https://leadflowglobal.vercel.app since 27 November 2026: the migrations, the three Edge Functions, the worker’s Cron job and the frontend. The analysis and portal email workers aren’t scheduled yet. See [docs/AUTOMATION.md](docs/AUTOMATION.md).
 
 ## Set up a Supabase project
 
