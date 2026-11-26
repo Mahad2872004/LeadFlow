@@ -78,9 +78,13 @@ export interface ClientDocument {
   id: string; clientId: string | null; requestId: string | null; itemId: string | null; fileName: string; extension: string; mimeType: string; size: number; category: DocumentCategory
   description: string; visibility: 'internal' | 'shared'; status: 'pending' | 'available' | 'rejected' | 'deleted'; rejectedReason: string | null; uploaderType: 'member' | 'client'
   uploadedBy: string | null; stageId: string | null; createdAt: string; verifiedAt: string | null; itemTitle: string | null
-  /** M11: the project a file belongs to. Project files are always internal. */
+  /** M11: the project a file belongs to. M12: project files can be shared with the client portal. */
   projectId?: string | null; projectName?: string | null
+  /** M12: what an attachment belongs to (its sharing follows that), and whether a client person uploaded it in the portal. */
+  versionId?: string | null; commentId?: string | null; feedbackId?: string | null; updateId?: string | null; fromPortal?: boolean
 }
+/** M12: attachments to a version, comment, feedback item or update are shared or not with what they belong to. */
+export const isAttachment = (document: Pick<ClientDocument, 'versionId' | 'commentId' | 'feedbackId' | 'updateId'>) => !!(document.versionId || document.commentId || document.feedbackId || document.updateId)
 export interface TimelineEvent { id: string; group: ClientTimelineGroup; source: 'client' | 'onboarding' | 'task'; kind: string; summary: string | null; detail: Record<string, unknown>; at: string; actorType: 'member' | 'client' | 'system'; actorName: string | null; requestTitle: string | null; itemTitle: string | null }
 export interface CompletionItem { key: 'contact' | 'services' | 'requirements' | 'scope' | 'onboarding'; label: string; met: boolean; detail: string }
 export interface Dashboard {

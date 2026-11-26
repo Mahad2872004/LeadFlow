@@ -75,6 +75,9 @@ Completion happens once. It does the following:
 
 The snapshot doesn't change when the client changes later.
 
+
+> **M12:** client people can now have their own portal accounts (the client's **Portal access** tab), in addition to the onboarding link described here. See [CLIENT-COLLABORATION.md](CLIENT-COLLABORATION.md). The onboarding link is unchanged, except that it never shows project files.
+
 ## Onboarding engine extensions (M6A → M10)
 
 - **Stages.** Each workspace gets eight default stages on first use: Client created, Welcome & introduction, Business information, Requirements gathering, Access & assets, Scope confirmation, Final review, Onboarding completed. Owners and admins can rename, describe, add (before "completed"), reorder and archive them, keeping at least two active. Archived stages stay attached to existing work and can't be chosen for new work. Checklist items and internal steps belong to a stage. Each request shows per-stage progress: resolved over required, and how many items wait on the client, on review or on agency steps, and how many are overdue.

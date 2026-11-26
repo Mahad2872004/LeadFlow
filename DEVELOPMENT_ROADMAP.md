@@ -287,7 +287,44 @@ Details: [docs/PROJECTS.md](docs/PROJECTS.md).
 **Next:**
 1. ~~Apply `202611260001`, deploy `project-assistant`, re-deploy `client-files`~~ (done 26 November 2026). ~~Commit, then deploy the frontend~~ (done 26 November 2026).
 2. Run the manual checks in the M11 doc on the hosted project.
-3. M12 is not started and awaits approval.
+3. M12 started 27 November 2026; see below.
+
+## M12 — Client collaboration and approvals
+
+**Status: implemented and verified locally, 27 November 2026. The same day, migration `202611270001` was applied to the hosted project and checked (RLS, grants, columns), and `client-hub`, `portal-notifications`, `client-files` and `project-assistant` were deployed and smoke-tested.** Not done: the frontend isn't deployed; `APP_URL`, the password-reset redirect URL and the email worker schedule aren't set up.
+
+- **Client accounts:**
+  - invitations (single-use, hashed, 7 days, renew or revoke, optional email);
+  - activation that creates a Supabase Auth account marked as a client account;
+  - sign-in, password recovery and sign-out (including other devices);
+  - roles (client admin, member, reviewer) with all or selected projects;
+  - immediate revocation.
+- **Client portal (`/portal`):** overview, projects (overview, milestones, deliverables, discussion, files, updates), reviews, messages, files, notifications and settings. Only what the agency shared.
+- **Reviews and approvals:**
+  - versions that freeze when shared;
+  - review requests with message, due date and reviewers;
+  - approve, request changes (structured feedback with attachments) or reject;
+  - decisions per version, immutable;
+  - resubmission, withdrawal and first-view tracking.
+- **Discussions:** internal or client-visible comments, replies, edit and delete with history, and plain text.
+- **Files:** shared project files, attachments to versions, comments, feedback and updates, and client uploads, each checked per scope.
+- **Notifications:** in-app for both sides, deduplicated, with per-event email preferences and an email outbox and worker.
+- **Agency tools:**
+  - the project's Client portal tab (sharing, preview as client, visibility, reviews, discussion, updates, client uploads, history);
+  - the client's Portal access tab;
+  - Projects → Client reviews;
+  - client activity in the notification center;
+  - email preferences.
+- **AI:** feedback summaries, reply drafts, review notes and discussion summaries, as suggestions only.
+
+**Not built:** client admins managing client people; real-time updates; per-project agency subscriptions; download tracking; chat, billing, contracts, time tracking and the rest of the specification's out-of-scope list.
+
+Details: [docs/CLIENT-COLLABORATION.md](docs/CLIENT-COLLABORATION.md).
+
+**Next:**
+1. ~~Apply `202611270001` and deploy the four Edge Functions~~ (done 27 November 2026). With the owner's approval: set `APP_URL`, add the password-reset redirect URL, schedule the worker, then commit and deploy the frontend.
+2. Run the manual checks in the M12 doc on the hosted project.
+3. M13 is not started and awaits approval.
 
 ## Production readiness and controlled beta (formerly listed as M7; not scheduled)
 
@@ -321,6 +358,28 @@ Use consented, bounded beta accounts with a named operator and support channel. 
 Next steps: apply `202610200002` and `202610200003`, deploy `submit-inquiry`, then the frontend; hosted two-account verification; a decision on opening public sign-up; then invitations and member management. See [docs/MULTI-TENANCY.md](docs/MULTI-TENANCY.md).
 
 ## Current verification ledger
+
+**M12 client collaboration and approvals, 27 November 2026 (local, then hosted database and Edge Functions).**
+
+Passed:
+- `npx oxlint` (no warnings), `npx tsc -b`, `npm run check:edge` and `npm run build`;
+- the new `npm run test:collaboration`;
+- all 12 earlier database suites. M12 is rolled back first where a suite tests earlier rollbacks, and the tenancy grant list now has the 52 new signed-in functions.
+- `npx playwright test`: 60/60, including the 2 new collaboration tests:
+  - the agency invites, shares and requests a review; the client activates from the invitation, requests changes, sees only client-visible replies and approves version 2;
+  - another client is refused by URL, and password recovery goes through Supabase Auth.
+
+`npm run test:production`: 59/60. The failure was in the new recovery test, not the app: it expected the dev server's port (5175) in the reset redirect, and the production build runs on 4175. After the fix, both collaboration tests passed on the production build and on the dev server. The full production suite wasn't re-run after that one-line test change.
+
+Storage, the Auth admin API, Resend and the AI model were simulated; nothing was sent.
+
+**Found and fixed by these tests:**
+- marking chosen notifications as read compared numeric IDs with a JSON key test and matched nothing;
+- the usage reservation refused the new assistant operations;
+- the M11 test asserted that project files are always internal, which M12 deliberately changes (sharing is now allowed, and onboarding links still never show project files);
+- before the tests ran, loading the migration caught a misread function signature in the generated grant list and a stray parenthesis in a generated query.
+
+**Hosted:** the migration, read-only checks and smoke tests are described in [CLIENT-COLLABORATION.md](docs/CLIENT-COLLABORATION.md#hosted-rollout-27-november-2026).
 
 **Interactive app and landing page, with the M11 frontend release, 26 November 2026 (local, then production).** All passed:
 - `npx oxlint` (no warnings), `npx tsc -b`, `npm run check:edge` and `npm run build`;

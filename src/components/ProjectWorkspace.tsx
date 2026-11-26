@@ -8,6 +8,7 @@ import { ProjectTasks } from './ProjectTasks'
 import { ProjectFiles } from './ProjectFiles'
 import { ProjectActivity } from './ProjectActivity'
 import { ProjectAssistant, type AssistantRequest } from './ProjectAssistant'
+import { ProjectCollaboration } from './ProjectCollaboration'
 import type { WorkspaceSummary } from '../lib/backend'
 import type { Data } from '../lib/model'
 import { errorText, money, shortDate, type SalesMember } from '../lib/sales'
@@ -18,8 +19,8 @@ import {
 } from '../lib/projects'
 import './ProjectWorkspace.css'
 
-export type ProjectTab = 'overview' | 'timeline' | 'milestones' | 'deliverables' | 'tasks' | 'files' | 'activity' | 'settings'
-const tabs: [ProjectTab, string][] = [['overview', 'Overview'], ['timeline', 'Timeline'], ['milestones', 'Milestones'], ['deliverables', 'Deliverables'], ['tasks', 'Tasks'], ['files', 'Files'], ['activity', 'Activity'], ['settings', 'Settings']]
+export type ProjectTab = 'overview' | 'timeline' | 'milestones' | 'deliverables' | 'tasks' | 'files' | 'activity' | 'portal' | 'settings'
+const tabs: [ProjectTab, string][] = [['overview', 'Overview'], ['timeline', 'Timeline'], ['milestones', 'Milestones'], ['deliverables', 'Deliverables'], ['tasks', 'Tasks'], ['files', 'Files'], ['activity', 'Activity'], ['portal', 'Client portal'], ['settings', 'Settings']]
 type ActResult = string | void | { message?: string; workspaceChanged?: boolean }
 /** Runs a change, reloads the project (and the task snapshot when the server changed tasks), and reports the outcome. */
 export type ProjectAct = (action: () => Promise<ActResult>) => Promise<boolean>
@@ -29,8 +30,10 @@ export type ProjectAct = (action: () => Promise<ActResult>) => Promise<boolean>
  * records change through role-checked database functions; project tasks are the workspace's follow-up tasks and change
  * through the workspace snapshot (onCommit). Archived clients' projects are read-only.
  */
-export function ProjectWorkspace({ workspace, projectId, data, day, userId, members, initialTab = 'overview', onBack, onCommit, onOpenClient, onOpenDeal, onWorkspaceChanged, onChanged }: {
-  workspace: WorkspaceSummary; projectId: string; data: Data; day: string; userId: string; members: SalesMember[]; initialTab?: ProjectTab; onBack: () => void
+export function ProjectWorkspace({ workspace, projectId, data, day, userId, members, initialTab = 'overview', initialDeliverable = null, onBack, onCommit, onOpenClient, onOpenDeal, onWorkspaceChanged, onChanged }: {
+  workspace: WorkspaceSummary; projectId: string; data: Data; day: string; userId: string; members: SalesMember[]; initialTab?: ProjectTab
+  /** M12: open this deliverable's client review on the Client portal tab. */
+  initialDeliverable?: string | null; onBack: () => void
   onCommit: (next: Data, message: string) => Promise<boolean>; onOpenClient: (clientId: string) => void; onOpenDeal: (dealId: string) => void
   onWorkspaceChanged: () => Promise<void>; onChanged: (message?: string) => void
 }) {
@@ -110,6 +113,7 @@ export function ProjectWorkspace({ workspace, projectId, data, day, userId, memb
       {tab === 'tasks' && <ProjectTasks detail={detail} data={data} day={day} userId={userId} members={members} locked={locked} onCommit={commitTasks} />}
       {tab === 'files' && <ProjectFiles workspace={workspace} detail={detail} tasks={tasks} locked={locked} manager={manager} onChanged={message => { void load().catch(() => undefined); setNotice(message); onChanged(message) }} />}
       {tab === 'activity' && <ProjectActivity workspace={workspace} detail={detail} revision={revision} />}
+      {tab === 'portal' && <ProjectCollaboration workspace={workspace} detail={detail} userId={userId} locked={locked} initialDeliverable={initialDeliverable} onChanged={message => onChanged(message)} />}
       {tab === 'settings' && <Settings workspace={workspace} detail={detail} busy={busy} locked={locked} act={act} onStatus={setStatusDialog} />}
     </div>
     {statusDialog && <StatusDialog detail={detail} tasks={tasks} next={statusDialog} busy={busy} onClose={() => setStatusDialog(null)}

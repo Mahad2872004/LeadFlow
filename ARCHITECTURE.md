@@ -166,6 +166,41 @@ M11 adds projects on top of clients, the onboarding completion snapshot, follow-
 
 Details: [docs/PROJECTS.md](docs/PROJECTS.md).
 
+## Client collaboration and approvals (M12; database and Edge Functions deployed, frontend not)
+
+M12 adds a client-facing portal on top of M10 clients, M11 projects and deliverables, M10 file storage and the client activity history.
+
+- **Identity:**
+  - Client people have their own Supabase Auth accounts, created from single-use, hashed, expiring invitations by `client-hub` with the Auth admin API. They're marked `app_metadata.account_type = 'client'`, which only the server can set.
+  - `client_users` links an account to one client with a role (admin, member, reviewer) and project access (all or selected).
+  - `current_profile()` refuses client accounts, so they can't list, create or open workspaces.
+- **Authorization:**
+  - Portal functions (`hub_*`) start from the caller's active access to the record's client, then check project access, what was shared and the role.
+  - Everything else returns the same "not found", so IDs can't be probed.
+  - Client functions take no workspace ID.
+- **Sharing is explicit:**
+  - `projects.portal_shared` plus a client-facing summary;
+  - `client_visible` on milestones and deliverables;
+  - published versions and published updates;
+  - client-visible comments;
+  - shared project files.
+- **Reviews:**
+  - Versions freeze when published.
+  - One open review per deliverable.
+  - Decisions are per review and version, immutable (a trigger), with reviewer snapshots.
+  - Feedback is never deleted.
+  - `review_status` on deliverables is separate from the internal delivery status.
+- **Conversation:**
+  - `project_comments` carry a visibility (internal or client), one level of replies, and an edit and delete history for the agency.
+  - Published updates keep their corrections.
+- **Notifications:**
+  - `portal_notifications` holds one row per person and event (deduplicated).
+  - Emails go through `portal_email_outbox`: composed once, leased, retried with one idempotency key, and cancelled when access is lost. The `portal-notifications` worker sends them through Resend when a scheduler calls it.
+- **Files:** `client_documents` gains version, comment, feedback and update links and the uploading client person. Every portal download is authorized by `hub_document_access` when it's signed. Onboarding links never serve project files.
+- **AI:** `project-assistant` adds feedback summaries, reply drafts, review notes and discussion summaries. It reads shared data as the member, cites facts, and never sees internal notes when drafting replies. It only ever suggests.
+
+Details: [docs/CLIENT-COLLABORATION.md](docs/CLIENT-COLLABORATION.md).
+
 ## Current ingress and delivery
 
 Public intake validates origin, normalized fields, payload size, request UUID, honeypot, Turnstile success/action/hostname and durable quotas. The destination is deployment-secret configuration, not a client-selected owner. Inbound automation rejects browser-Origin requests and validates its bearer credential; the database derives the owner from the credential. Origin rejection alone is not authentication.

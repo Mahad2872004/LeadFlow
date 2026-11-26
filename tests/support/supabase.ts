@@ -6,7 +6,9 @@ import type { PGlite } from '@electric-sql/pglite'
  * bearer token, so database authorization is exercised exactly as written.
  */
 export const apiOrigin = 'http://127.0.0.1:54329'
-export interface TestUser { id: string; email: string; password: string; confirmed?: boolean }
+export interface TestUser { id: string; email: string; password: string; confirmed?: boolean
+  /** M12: client portal accounts carry { account_type: 'client' }, set by the server and included in their tokens. */
+  appMetadata?: Record<string, unknown> }
 /** Status 0 drops the connection, as a network failure would. */
 export interface Reply { status: number; body?: unknown }
 export interface SupabaseMockOptions {
@@ -19,7 +21,7 @@ export interface SupabaseMockOptions {
   afterRpc?: (name: string, reply: Reply) => Reply | void
 }
 const encode = (value: unknown) => Buffer.from(JSON.stringify(value)).toString('base64url')
-export const tokenFor = (user: { id: string; email: string }) => [encode({ alg: 'HS256', typ: 'JWT' }), encode({ sub: user.id, email: user.email, role: 'authenticated', aud: 'authenticated', exp: Math.floor(Date.now() / 1000) + 3600 }), 'test-signature'].join('.')
+export const tokenFor = (user: { id: string; email: string; appMetadata?: Record<string, unknown> }) => [encode({ alg: 'HS256', typ: 'JWT' }), encode({ sub: user.id, email: user.email, role: 'authenticated', aud: 'authenticated', app_metadata: { provider: 'email', ...user.appMetadata }, exp: Math.floor(Date.now() / 1000) + 3600 }), 'test-signature'].join('.')
 const json = (request: Request): Record<string, unknown> => { try { return request.postDataJSON() ?? {} } catch { return {} } }
 export class SupabaseMock {
   readonly users = new Map<string, TestUser>()
@@ -27,6 +29,8 @@ export class SupabaseMock {
   /** Every RPC with its arguments, for checking which workspace a request targeted. */
   readonly rpcLog: { name: string; args: Record<string, unknown>; user: string }[] = []
   readonly resent: string[] = []
+  /** Password-recovery requests (email and redirect), as Supabase would email them. */
+  readonly recoveries: { email: string; redirectTo: string | null }[] = []
   readonly signupRedirects: (string | null)[] = []
   constructor(readonly db: PGlite, public options: SupabaseMockOptions = {}) {
     for (const user of options.users ?? []) this.users.set(user.email.toLowerCase(), { confirmed: true, ...user })
@@ -47,7 +51,7 @@ export class SupabaseMock {
   confirm(email: string) { const user = this.users.get(email.toLowerCase()); if (user) user.confirmed = true }
   async addUser(user: TestUser) { await this.admin('insert into auth.users(id,email) values($1,$2)', [user.id, user.email]); this.users.set(user.email.toLowerCase(), { confirmed: true, ...user }) }
   private userJson(user: TestUser) {
-    return { id: user.id, aud: 'authenticated', role: 'authenticated', email: user.email, email_confirmed_at: user.confirmed ? '2026-10-20T00:00:00Z' : null, phone: '', app_metadata: { provider: 'email', providers: ['email'] }, user_metadata: {}, identities: [], created_at: '2026-10-20T00:00:00Z', updated_at: '2026-10-20T00:00:00Z' }
+    return { id: user.id, aud: 'authenticated', role: 'authenticated', email: user.email, email_confirmed_at: user.confirmed ? '2026-10-20T00:00:00Z' : null, phone: '', app_metadata: { provider: 'email', providers: ['email'], ...user.appMetadata }, user_metadata: {}, identities: [], created_at: '2026-10-20T00:00:00Z', updated_at: '2026-10-20T00:00:00Z' }
   }
   private session(user: TestUser) {
     return { access_token: tokenFor(user), token_type: 'bearer', expires_in: 3600, expires_at: Math.floor(Date.now() / 1000) + 3600, refresh_token: `refresh-${user.id}`, user: this.userJson(user) }
@@ -69,9 +73,13 @@ export class SupabaseMock {
     const signupEnabled = this.options.signupEnabled ?? true, confirmEmail = this.options.confirmEmail ?? false
     if (endpoint === 'settings') return route.fulfill({ json: { disable_signup: !signupEnabled, mailer_autoconfirm: !confirmEmail, external: { email: true } } })
     if (endpoint === 'logout') return route.fulfill({ status: 204 })
+    if (endpoint === 'recover') { this.recoveries.push({ email: String(body.email ?? ''), redirectTo: url.searchParams.get('redirect_to') }); return route.fulfill({ json: {} }) }
     if (endpoint === 'resend') { this.resent.push(String(body.email)); return route.fulfill({ json: {} }) }
     if (endpoint === 'user') {
       const caller = this.caller(request), user = [...this.users.values()].find(candidate => candidate.id === caller.sub)
+      if (user && request.method() === 'PUT') {
+        if (typeof body.password === 'string') { if (body.password.length < 6) return failure(422, 'weak_password', 'Password should be at least 6 characters.'); user.password = body.password }
+      }
       return user ? route.fulfill({ json: this.userJson(user) }) : failure(401, 'bad_jwt', 'Invalid JWT')
     }
     if (endpoint === 'signup') {

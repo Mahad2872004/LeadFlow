@@ -4,6 +4,7 @@ import { dateLabel, initials } from '../lib/format'
 import { useAuth, useWorkspaces } from '../lib/session'
 import { businessTypes, roleLabels, roleSummaries, workspaceNameError, type BusinessType, type WorkspaceRole } from '../lib/workspaceOptions'
 import { Icon } from './Icon'
+import { CollabEmailSettings } from './CollabEmailSettings'
 const timeZones=(()=>{try{return Intl.supportedValuesOf('timeZone')}catch{return ['UTC']}})()
 const permissions:[string,WorkspaceRole[]][]=[['View, add and update leads, follow-ups and activity',['owner','admin','member']],['Remove leads or follow-ups, or reset demo data',['owner','admin']],['Edit workspace details and the website form',['owner','admin']],['Revoke integration credentials',['owner','admin']],['Grant or remove the admin role',['owner']]]
 export function WorkspaceSettings({workspace}:{workspace:WorkspaceSummary}){
@@ -16,6 +17,7 @@ export function WorkspaceSettings({workspace}:{workspace:WorkspaceSummary}){
       <p className="settings-fine">LeadFlow checks these permissions in the database on every request, not only in this screen.</p>
     </section>
     <Members workspaceId={workspace.id}/>
+    <CollabEmailSettings key={`client-emails:${workspace.id}`} workspaceId={workspace.id}/>
   </div>
 }
 function WorkspaceDetails({workspace}:{workspace:WorkspaceSummary}){

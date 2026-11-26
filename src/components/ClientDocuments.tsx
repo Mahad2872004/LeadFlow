@@ -5,8 +5,7 @@ import type { WorkspaceSummary } from '../lib/backend'
 import { errorText, shortDate } from '../lib/sales'
 import {
   clientDocuments, deleteDocument, documentCategories, documentCategoryLabels, downloadDocument, filesConfig, formatBytes, updateDocument, uploadDocument,
-  type ClientDetail, type ClientDocument, type DocumentCategory,
-} from '../lib/clients'
+  type ClientDetail, type ClientDocument, type DocumentCategory, isAttachment } from '../lib/clients'
 
 interface Upload { key: string; name: string; progress: number; error: string }
 
@@ -96,8 +95,10 @@ function EditDocument({ document, busy, onClose, onSave }: { document: ClientDoc
   return <Modal title={`Edit ${document.fileName}`} onClose={onClose}>
     <form className="sp-form" onSubmit={event => { event.preventDefault(); void onSave({ category, description: description.trim(), visibility }) }}>
       <div className="sp-row"><label>Category<select value={category} onChange={event => setCategory(event.target.value as DocumentCategory)}>{documentCategories.map(item => <option key={item} value={item}>{documentCategoryLabels[item]}</option>)}</select></label>
-        <label>Who can see it<select value={visibility} disabled={!!document.projectId} onChange={event => setVisibility(event.target.value as 'internal' | 'shared')}><option value="internal">Your team only</option><option value="shared">Shared with the client</option></select></label></div>
-      {document.projectId && <p className="sp-muted">This file belongs to the project “{document.projectName}”. Project files stay internal.</p>}
+        <label>Who can see it<select value={visibility} disabled={isAttachment(document)} onChange={event => setVisibility(event.target.value as 'internal' | 'shared')}><option value="internal">Your team only</option><option value="shared">Shared with the client</option></select></label></div>
+      {document.projectId && <p className="sp-muted">This file belongs to the project “{document.projectName}”. {isAttachment(document)
+        ? 'It’s attached to a version, comment, feedback item or update, and is shared with it.'
+        : 'Shared project files appear on the client portal for people who can open that project, never on onboarding links.'}</p>}
       {document.uploaderType === 'client' && visibility === 'shared' && <p className="sp-muted">Files the client uploaded already appear with their answer; “shared” lists files from your team on their page.</p>}
       <label>Description<textarea rows={2} maxLength={1000} value={description} onChange={event => setDescription(event.target.value)} /></label>
       <div className="modal-actions"><button type="button" className="secondary" onClick={onClose}>Cancel</button><button className="primary" disabled={busy}>Save</button></div>

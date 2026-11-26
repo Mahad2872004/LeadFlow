@@ -89,7 +89,19 @@ assert.deepEqual(await executable('authenticated'),['create_workspace(text,text,
  'project_timeline(uuid,uuid,jsonb,timestamp with time zone,text,integer)','project_entity_history(uuid,uuid,text,uuid)','project_calendar_for(uuid,date,date,jsonb)',
  'save_project_milestone(uuid,uuid,jsonb,integer)','reorder_project_milestones(uuid,uuid,jsonb)','remove_project_milestone(uuid,uuid,uuid)','save_project_deliverable(uuid,uuid,jsonb,integer,uuid)',
  'remove_project_deliverable(uuid,uuid,uuid)','project_templates_for(uuid)','project_template_for(uuid,uuid)','save_project_template(uuid,jsonb,integer,uuid)','set_project_template_archived(uuid,uuid,boolean)',
- 'save_project_as_template(uuid,uuid,text,uuid)','project_template_plan(uuid,uuid,date)','project_documents_for(uuid,uuid)','project_ai_context(uuid,uuid,uuid)'].sort(),'Signed-in users get exactly the dashboard functions.')
+ 'save_project_as_template(uuid,uuid,text,uuid)','project_template_plan(uuid,uuid,date)','project_documents_for(uuid,uuid)','project_ai_context(uuid,uuid,uuid)',
+ // Client collaboration (202611270001): role-checked agency functions and the hub_ portal functions (each checks the caller's client access).
+ // Invitation status/activation and the email outbox are service-role only.
+ 'add_project_comment(uuid,uuid,jsonb,uuid)','client_portal_access_for(uuid,uuid)','collab_queue_for(uuid)','create_deliverable_version(uuid,uuid,text)','delete_project_comment(uuid,uuid)',
+ 'delete_project_update(uuid,uuid)','deliverable_collab_for(uuid,uuid)','discard_deliverable_version(uuid,uuid)','edit_project_comment(uuid,uuid,text)','hub_accept_invitation(text)','hub_accounts()',
+ 'hub_add_comment(uuid,jsonb,uuid)','hub_add_feedback(uuid,jsonb,uuid)','hub_begin_document(uuid,jsonb,bigint)','hub_comments(uuid,jsonb)','hub_decide(uuid,jsonb,uuid)','hub_delete_comment(uuid)',
+ 'hub_deliverable(uuid)','hub_document_access(uuid,text)','hub_edit_comment(uuid,text)','hub_files(uuid,uuid)','hub_home(uuid)','hub_mark_notifications(uuid,jsonb)','hub_notifications(uuid,boolean)',
+ 'hub_project(uuid)','hub_remove_document(uuid)','hub_save_settings(uuid,jsonb)','hub_settings(uuid)','invite_client_user(uuid,uuid,jsonb,uuid)','mark_member_notifications(uuid,jsonb)',
+ 'mark_project_discussion_read(uuid,uuid)','member_notification_settings(uuid)','member_notifications_for(uuid,boolean)','project_collab_ai_context(uuid,uuid,uuid)','project_collab_for(uuid,uuid)',
+ 'project_comment_history(uuid,uuid)','project_comments_for(uuid,uuid,jsonb)','project_portal_preview(uuid,uuid)','publish_deliverable_version(uuid,uuid)','publish_project_update(uuid,uuid)',
+ 'renew_client_invitation(uuid,uuid,boolean)','request_deliverable_review(uuid,uuid,jsonb,uuid)','revoke_client_invitation(uuid,uuid)','save_member_notification_settings(uuid,jsonb)',
+ 'save_project_update(uuid,uuid,uuid,jsonb,integer,uuid)','set_client_user_active(uuid,uuid,boolean)','set_client_visibility(uuid,text,uuid,boolean)','set_feedback_status(uuid,uuid,jsonb)',
+ 'set_project_portal(uuid,uuid,jsonb,integer)','update_client_user(uuid,uuid,jsonb,integer)','update_deliverable_version(uuid,uuid,text)','withdraw_deliverable_review(uuid,uuid,text)'].sort(),'Signed-in users get exactly the dashboard functions.')
 for(const fn of ['portal_open(text)','portal_save_item(text,uuid,jsonb,boolean,integer)','claim_onboarding_reminder(text,text)','finish_onboarding_reminder(uuid,uuid,text,text,text)'])assert.ok((await executable('service_role')).includes(fn),fn)
 for(const fn of ['receive_workspace_inquiry(uuid,text,uuid,jsonb,text,jsonb)','receive_form_inquiry(uuid,uuid,jsonb,text,text)','receive_inquiry(uuid,text,uuid,jsonb,text,jsonb)','receive_webhook(text,uuid,jsonb,text)'])assert.ok((await executable('service_role')).includes(fn),fn)
 assert.deepEqual(await rows("select p.oid::regprocedure::text as fn from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname in ('public','leadflow_private') and p.prosecdef and not coalesce('search_path=\"\"'=any(p.proconfig),false)"),[],'Every security-definer function pins an empty search path.')

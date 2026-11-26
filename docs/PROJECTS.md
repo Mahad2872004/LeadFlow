@@ -296,6 +296,12 @@ Done at the owner's request, on project `fzgxpwmqzmvgmijviaar`:
 
 Results on 26 November 2026: all 12 `test:*` database suites passed; `npx playwright test` 53/53; `npm run test:production` 53/53; lint, `tsc -b`, `check:edge` and `build` clean. See the [verification ledger](../DEVELOPMENT_ROADMAP.md#current-verification-ledger).
 
+## M12 changes
+
+[M12](CLIENT-COLLABORATION.md) lets the agency share projects with the client portal:
+- Project files can now be **shared**, and the portal checks project access on every download. Onboarding links still never show project files.
+- Milestones and deliverables gain a client-visible flag. Deliverables gain a client review status, kept apart from the internal statuses above.
+
 ## Known limitations
 
 - No client-facing project portal, client approvals, revision requests, comments or messaging (later milestone).

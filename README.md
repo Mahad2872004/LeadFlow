@@ -69,6 +69,19 @@ Implemented and verified locally. On 26 November 2026 the migration was applied 
 
 Implemented and verified locally. On 26 November 2026 the migration was applied to the hosted project, and `project-assistant` and the updated `client-files` were deployed. The frontend went live the same day (commit `33e859a` on `main`). See [docs/PROJECTS.md](docs/PROJECTS.md).
 
+## Client collaboration and approvals (M12)
+
+The **client portal** (`/portal`) gives each client person their own sign-in and a dedicated space:
+- clients see projects, milestones, deliverables, files and updates **only once the agency shares them**;
+- the agency sends a deliverable version for review, and the client approves, requests changes with structured feedback, or rejects;
+- every decision is recorded for that version and kept;
+- discussions mark each comment internal or visible to the client;
+- notifications and optional emails tell each side what needs attention;
+- the agency manages invitations, roles and project access, and has a review queue across projects;
+- the assistant can summarize feedback and draft replies for a person to edit and send.
+
+Implemented and verified locally. On 27 November 2026 the migration was applied to the hosted project and `client-hub`, `portal-notifications`, `client-files` and `project-assistant` were deployed. The frontend isn't deployed yet. See [docs/CLIENT-COLLABORATION.md](docs/CLIENT-COLLABORATION.md).
+
 ## Set up a Supabase project
 
 1. Create a Supabase project. In Authentication, disable anonymous sign-ins. Either keep public sign-up disabled and create users with a confirmed email in the dashboard, or enable it after following the [sign-up checklist](docs/MULTI-TENANCY.md#onboarding-and-workspace-management) (redirect URLs, SMTP, password length). Each account gets its own personal workspace. Accounts share data only through explicit workspace membership (see [multi-tenancy](docs/MULTI-TENANCY.md)).
@@ -121,6 +134,7 @@ npm run test:outreach
 npm run test:sales
 npm run test:clients
 npm run test:projects
+npm run test:collaboration
 npm run check:edge
 npm test
 npm run test:production

@@ -464,6 +464,7 @@ for(const [sql,params] of [['select public.client_detail($1,$2)',[O,client]],['s
 await actAs(db,null,'postgres')
 const requestsBefore=await one('select count(*)::int from leadflow_private.onboarding_requests')
 // M11 (projects) builds on clients, so it is rolled back first and re-applied after.
+await db.exec(readFileSync('supabase/rollbacks/202611270001_client_collaboration.down.sql','utf8'))
 await db.exec(readFileSync('supabase/rollbacks/202611260001_project_delivery.down.sql','utf8'))
 await db.exec(readFileSync('supabase/rollbacks/202611250001_client_management.down.sql','utf8'))
 assert.equal(await one("select to_regclass('leadflow_private.clients')"),null)

@@ -9,6 +9,7 @@ import { ClientScope } from './ClientScope'
 import { ClientDocuments } from './ClientDocuments'
 import { ClientActivity } from './ClientActivity'
 import { ClientProjects } from './ClientProjects'
+import { ClientPortalAccess } from './ClientPortalAccess'
 import type { WorkspaceSummary } from '../lib/backend'
 import { cancelTask, clientTaskTypes, createClientTask, priorities, toggleTask, today, type Data, type Lead, type Priority, type TaskType } from '../lib/model'
 import { errorText, money, priorityLabels, shortDate, taskTypeLabels, dateTime, type SalesMember } from '../lib/sales'
@@ -20,8 +21,8 @@ import {
   type ClientContact, type ClientContactRole, type ClientDetail, type ClientIndexEntry, type CompletionItem, type ContactInput, type Handoff, type PreferredChannel, type ProfileFields, type WelcomeChannel,
 } from '../lib/clients'
 
-export type ClientTab = 'overview' | 'contacts' | 'onboarding' | 'scope' | 'documents' | 'tasks' | 'activity' | 'projects'
-const tabs: [ClientTab, string][] = [['overview', 'Overview'], ['contacts', 'Contacts'], ['onboarding', 'Onboarding'], ['scope', 'Services & scope'], ['documents', 'Documents'], ['tasks', 'Tasks'], ['activity', 'Activity & notes'], ['projects', 'Projects']]
+export type ClientTab = 'overview' | 'contacts' | 'onboarding' | 'scope' | 'documents' | 'tasks' | 'activity' | 'projects' | 'portal'
+const tabs: [ClientTab, string][] = [['overview', 'Overview'], ['contacts', 'Contacts'], ['onboarding', 'Onboarding'], ['scope', 'Services & scope'], ['documents', 'Documents'], ['tasks', 'Tasks'], ['activity', 'Activity & notes'], ['projects', 'Projects'], ['portal', 'Portal access']]
 /** Runs a change, reloads the client, and reports the outcome. Resolves true when the change succeeded. */
 export type Act = (action: () => Promise<string | void>) => Promise<boolean>
 
@@ -96,6 +97,7 @@ export function ClientWorkspace({ workspace, clientId, data, day, members, leads
       {tab === 'documents' && <ClientDocuments workspace={workspace} detail={detail} locked={locked} manager={manager} onChanged={message => { void load().catch(() => undefined); setNotice(message); onChanged(message) }} />}
       {tab === 'tasks' && <Tasks detail={detail} data={data} day={day} members={members} locked={locked} onCommit={onCommit} />}
       {tab === 'activity' && <ClientActivity workspace={workspace} detail={detail} revision={revision} />}
+      {tab === 'portal' && <ClientPortalAccess workspace={workspace} detail={detail} locked={locked} onChanged={message => onChanged(message)} />}
       {tab === 'projects' && <>
         {onOpenProject && <ClientProjects workspace={workspace} client={detail} members={members} clients={clients} version={revision} onOpenProject={onOpenProject}
           onCreated={(result, name) => { void (async () => { if (result.workspaceChanged) await onWorkspaceChanged?.(); setNotice(`Project “${name}” created.`); onChanged(`Project “${name}” created.`); onOpenProject(result.id) })() }} />}

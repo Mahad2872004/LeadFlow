@@ -53,7 +53,9 @@ export function createClientFilesHandler(runtime: Runtime) {
         // M11: a file can belong to one of the client's projects (and its milestone, deliverable or task); the database checks them.
         const document = await asUser<{ id: string; path: string }>('begin_client_document', { target_workspace: workspaceId, target_client: body.clientId,
           details: { fileName: body.fileName, mimeType: type.mime, size: body.size, category: body.category, description: body.description, visibility: body.visibility,
-            requestId: body.requestId, stageId: body.stageId, projectId: body.projectId, milestoneId: body.milestoneId, deliverableId: body.deliverableId, taskId: body.taskId },
+            requestId: body.requestId, stageId: body.stageId, projectId: body.projectId, milestoneId: body.milestoneId, deliverableId: body.deliverableId, taskId: body.taskId,
+            // M12: attachments to a draft version, one of the member's own comments, or a draft update.
+            versionId: body.versionId, commentId: body.commentId, updateId: body.updateId },
           max_bytes: maxDocumentBytes(runtime) })
         if (document instanceof Response) return document
         await ensureBucket(runtime)

@@ -5,6 +5,8 @@ import { isThemedPath, watchTheme } from './lib/theme'
 const Dashboard=lazy(()=>import('./Dashboard'))
 const InquiryPage=lazy(()=>import('./components/InquiryPage'))
 const ClientPortal=lazy(()=>import('./components/ClientPortal'))
+// M12: the account-based client portal (projects, reviews, messages and files), separate from the agency app.
+const ClientHub=lazy(()=>import('./components/hub/ClientHub'))
 const Marketing=lazy(()=>import('./marketing/Marketing'))
 const authMeta:Record<string,[string,string]>={'/login':['Sign in — LeadFlow','Sign in to your LeadFlow workspace.'],'/signup':signupOpen?['Create your account — LeadFlow','Create a LeadFlow account and set up your first workspace.']:['Request access — LeadFlow','Accounts are administrator-provisioned. Request access or sign in to an existing workspace.']}
 export default function Routes(){
@@ -12,6 +14,7 @@ export default function Routes(){
  const appPage=path==='/app'||path.startsWith('/app/')
  const privatePage=appPage||path==='/login'||path==='/signup'
  const portalPage=path==='/client-portal'
+ const hubPage=path==='/portal'||path.startsWith('/portal/')
  const themed=isThemedPath(path)
  // Dark mode covers the marketing site, the app, its sign-in pages and the client portal; the embeddable inquiry form stays light.
  useEffect(()=>themed?watchTheme():undefined,[themed])
@@ -27,5 +30,12 @@ export default function Routes(){
   const tags=[['robots','noindex,nofollow'],['referrer','no-referrer']].map(([name,content])=>{const meta=document.createElement('meta');meta.name=name;meta.content=content;document.head.appendChild(meta);return meta})
   return()=>tags.forEach(meta=>meta.remove())
  },[portalPage])
- return <Suspense fallback={<p role="status" style={{padding:32,fontFamily:'system-ui'}}>Loading LeadFlow…</p>}>{path==='/inquiry'?<InquiryPage/>:portalPage?<ClientPortal/>:privatePage?<Dashboard/>:<Marketing path={path}/>}</Suspense>
+ // The client portal: private pages (and invitation links with a token in the fragment) stay out of search engines and referrers.
+ useEffect(()=>{
+  if(!hubPage)return
+  document.title='Client portal — LeadFlow';document.querySelector('meta[name="description"]')?.setAttribute('content','Your projects, reviews, messages and files with your agency.')
+  const tags=[['robots','noindex,nofollow'],['referrer','no-referrer']].map(([name,content])=>{const meta=document.createElement('meta');meta.name=name;meta.content=content;document.head.appendChild(meta);return meta})
+  return()=>tags.forEach(meta=>meta.remove())
+ },[hubPage])
+ return <Suspense fallback={<p role="status" style={{padding:32,fontFamily:'system-ui'}}>Loading LeadFlow…</p>}>{path==='/inquiry'?<InquiryPage/>:portalPage?<ClientPortal/>:hubPage?<ClientHub/>:privatePage?<Dashboard/>:<Marketing path={path}/>}</Suspense>
 }

@@ -113,14 +113,26 @@ export interface MilestoneInput { id?: string; name: string; description: string
 export interface DeliverableInput { id?: string; title: string; description: string; milestoneId: string | null; ownerId: string | null; dueDate: string | null; priority: ProjectPriority; status: DeliverableStatus; notes: string; clientServiceId: string | null }
 export type ProjectDocument = ClientDocument & { projectId: string | null; projectName: string | null; milestoneId: string | null; deliverableId: string | null; taskId: string | null }
 export type AiOperation = 'plan' | 'breakdown' | 'summary' | 'risks'
+/** M12 client-collaboration assistance: suggestions for the agency only, never sent or applied automatically. */
+export type CollabAiOperation = 'feedback_summary' | 'response_draft' | 'review_prep' | 'discussion_summary'
+/** A suggested point and the recorded facts (F1, F2…) it is based on. */
+export interface AiPoint { text: string; basedOn: string[] }
 /** A suggestion, with the recorded project data it is based on. Nothing becomes a record until a person approves it. */
 export interface AiResult {
-  operation: AiOperation; generatedAt: string; model: string | null
+  operation: AiOperation | CollabAiOperation; generatedAt: string; model: string | null
   /** The recorded data the answer is based on; risks cite these by id. */
   facts: { id: string; label: string; value: string }[]
   summary?: { overview: string; completed: string[]; outstanding: string[]; blockers: string[]; upcoming: string[] }
   risks?: { title: string; detail: string; basedOn: string[]; suggestion: string; severity: 'low' | 'medium' | 'high' }[]
   plan?: Plan & { notes: string[] }
+  /** M12: client feedback grouped into actionable points. */
+  feedbackSummary?: { overview: string; groups: { category: 'content' | 'design' | 'functional' | 'technical' | 'clarification'; points: AiPoint[] }[] }
+  /** M12: a suggested reply to one feedback item; a person edits and sends it. */
+  responseDraft?: { body: string; basedOn: string[] }
+  /** M12: what changed in the latest version, and which feedback it addresses. */
+  reviewPrep?: { changed: AiPoint[]; addressed: AiPoint[]; unresolved: AiPoint[] }
+  /** M12: a long discussion in short, with its open questions. */
+  discussionSummary?: { overview: string; decisions: AiPoint[]; openQuestions: AiPoint[] }
   warnings: string[]
 }
 
@@ -199,11 +211,14 @@ async function invoke<T>(name: string, workspaceId: string, body: Record<string,
   if (!response.ok) throw new FunctionError(typeof result.error === 'string' ? result.error : 'This isn’t available right now.', response.status, typeof result.code === 'string' ? result.code : '')
   return result as T
 }
-export interface ProjectFileTarget { clientId: string; projectId: string; milestoneId?: string | null; deliverableId?: string | null; taskId?: string | null }
+export interface ProjectFileTarget { clientId: string; projectId: string; milestoneId?: string | null; deliverableId?: string | null; taskId?: string | null
+  /** M12 attachments: a draft version's files, one of your own comments, or a draft update. */
+  versionId?: string | null; commentId?: string | null; updateId?: string | null }
 /** Prepare (the database checks access, type and size), send straight to Storage, then the upload check. */
-export async function uploadProjectFile(workspace: string, target: ProjectFileTarget, file: File, details: { category: DocumentCategory; description: string }, onProgress?: (fraction: number) => void): Promise<ProjectDocument> {
+export async function uploadProjectFile(workspace: string, target: ProjectFileTarget, file: File, details: { category: DocumentCategory; description: string; visibility?: 'internal' | 'shared' }, onProgress?: (fraction: number) => void): Promise<ProjectDocument> {
   const prepared = await invoke<{ document: { id: string; mimeType: string }; uploadUrl: string }>('client-files', workspace, { action: 'upload', clientId: target.clientId, projectId: target.projectId,
-    milestoneId: target.milestoneId ?? null, deliverableId: target.deliverableId ?? null, taskId: target.taskId ?? null, fileName: file.name, size: file.size, visibility: 'internal', ...details })
+    milestoneId: target.milestoneId ?? null, deliverableId: target.deliverableId ?? null, taskId: target.taskId ?? null, versionId: target.versionId ?? null, commentId: target.commentId ?? null,
+    updateId: target.updateId ?? null, fileName: file.name, size: file.size, visibility: 'internal', ...details })
   try { await putSignedFile(prepared.uploadUrl, file, prepared.document.mimeType, onProgress) }
   catch (cause) { throw new FunctionError(cause instanceof Error ? cause.message : 'The upload didn’t finish. Try again.', 0) }
   return (await invoke<{ document: ProjectDocument }>('client-files', workspace, { action: 'finish', documentId: prepared.document.id })).document
@@ -220,7 +235,7 @@ export const deleteProjectFile = (workspace: string, document: string) => invoke
 // The AI assistant (project-assistant Edge Function): suggestions only, based on the project's recorded data. A plan or
 // breakdown becomes records only through applyPlan, after a person reviews and edits it.
 export const assistantConfig = (workspace: string) => invoke<{ configured: boolean; model: string | null; monthlyLimit: number }>('project-assistant', workspace, { action: 'config' }, 15000)
-export const askAssistant = (workspace: string, project: string, operation: AiOperation, options: { deliverableId?: string; templateId?: string | null; instructions?: string } = {}) =>
+export const askAssistant = (workspace: string, project: string, operation: AiOperation | CollabAiOperation, options: { deliverableId?: string; feedbackId?: string; templateId?: string | null; instructions?: string } = {}) =>
   invoke<AiResult>('project-assistant', workspace, { action: operation, projectId: project, ...options }, 120000)
 
 /** One line per project event, for timelines. */

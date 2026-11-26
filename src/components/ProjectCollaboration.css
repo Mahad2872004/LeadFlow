@@ -1,0 +1,232 @@
+/* M12: agency-side client collaboration (project Client portal tab, deliverable review, portal access, review queue). */
+
+.cb-tab { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; min-width: 0 }
+.cb-tab > * { min-width: 0 }
+.cb-tab .panel { margin-bottom: 0 }
+.cb-lead { margin: 0; color: var(--lf-muted); font-size: 13.5px; line-height: 1.55 }
+
+/* Status strip */
+.cb-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1px; margin: 0; overflow: hidden; border: 1px solid var(--lf-line); border-radius: var(--lf-radius-lg); background: var(--lf-line) }
+.cb-strip > div { min-width: 0; padding: 12px 16px; background: var(--lf-surface) }
+.cb-strip dt { color: var(--lf-muted); font-size: 12px; font-weight: 600 }
+.cb-strip dd { margin: 3px 0 0; color: var(--lf-ink); font-size: 18px; font-weight: 650; font-variant-numeric: tabular-nums; overflow-wrap: anywhere }
+.cb-strip dd small { display: block; margin-top: 2px; color: var(--lf-muted); font-size: 12px; font-weight: 500 }
+.cb-strip .is-share dd { font-size: 15px }
+
+/* Section heads inside panels */
+.cb-section-body { padding: 0 22px 20px }
+.cb-section-body > :first-child { margin-top: 0 }
+.cb-heading-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center }
+.cb-heading-actions .secondary, .cb-heading-actions .primary { min-height: 34px; padding: 0 12px; font-size: 13px }
+
+/* Switch */
+.cb-switch { display: inline-flex; align-items: center; gap: 10px; margin: 0; color: var(--lf-ink); font-size: 14px; font-weight: 600; cursor: pointer }
+.cb-switch input { position: absolute; width: 1px; height: 1px; opacity: 0 }
+.cb-switch-track { position: relative; flex-shrink: 0; width: 38px; height: 22px; border-radius: 999px; background: var(--lf-line-strong); transition: background-color .15s }
+.cb-switch-track::after { content: ''; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(10, 24, 19, .25); transition: transform .15s }
+.cb-switch input:checked + .cb-switch-track { background: var(--lf-brand) }
+.cb-switch input:checked + .cb-switch-track::after { transform: translateX(16px) }
+.cb-switch input:focus-visible + .cb-switch-track { outline: 2px solid var(--lf-brand); outline-offset: 2px }
+.cb-switch input:disabled + .cb-switch-track { opacity: .5 }
+.cb-switch.is-small { gap: 8px; font-size: 13px; font-weight: 550 }
+.cb-switch.is-small .cb-switch-track { width: 32px; height: 18px }
+.cb-switch.is-small .cb-switch-track::after { width: 12px; height: 12px }
+.cb-switch.is-small input:checked + .cb-switch-track::after { transform: translateX(14px) }
+
+/* Sharing */
+.cb-share { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px 24px }
+.cb-share-state { display: grid; gap: 10px; align-content: start }
+.cb-share-state p { margin: 0; color: var(--lf-muted); font-size: 13px; line-height: 1.55 }
+.cb-never { margin: 0; padding: 10px 12px; border: 1px dashed var(--lf-line-strong); border-radius: 10px; color: var(--lf-muted); font-size: 12.5px; line-height: 1.5 }
+.cb-overview-form label { display: block; margin-bottom: 12px; color: var(--lf-ink); font-size: 13px; font-weight: 600 }
+.cb-overview-form textarea, .cb-overview-form input { margin-top: 6px }
+.cb-overview-view { display: grid; gap: 8px; font-size: 13.5px; line-height: 1.55 }
+.cb-overview-view h4 { margin: 6px 0 2px; color: var(--lf-muted); font-size: 12px; font-weight: 650; letter-spacing: .04em; text-transform: uppercase }
+.cb-overview-view p { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere }
+.cb-overview-view ul { margin: 0; padding-left: 18px }
+
+/* Visibility lists */
+.cb-visibility { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 24px }
+.cb-visibility h3 { margin: 0 0 8px; color: var(--lf-ink); font-size: 14px }
+.cb-vis-list { display: grid; gap: 0; margin: 0; padding: 0; list-style: none }
+.cb-vis-list li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 0; border-top: 1px solid var(--lf-line) }
+.cb-vis-list li:first-child { border-top: 0 }
+.cb-vis-list li > span { min-width: 0; font-size: 13.5px; overflow-wrap: anywhere }
+.cb-vis-list small { display: block; color: var(--lf-muted); font-size: 12px }
+
+/* Review chips */
+.cb-review { display: inline-flex; align-items: center; gap: 5px; padding: 2px 9px; border: 1px solid var(--lf-line); border-radius: 999px; background: var(--lf-subtle); color: var(--lf-muted); font-size: 12px; font-weight: 650; white-space: nowrap }
+.cb-review.is-shared { border-color: var(--lf-info-line); background: var(--lf-info-soft); color: var(--lf-info) }
+.cb-review.is-awaiting_review, .cb-review.is-resubmitted { border-color: var(--lf-warning-line); background: var(--lf-warning-soft); color: var(--lf-warning) }
+.cb-review.is-changes_requested, .cb-review.is-rejected { border-color: var(--lf-danger-line); background: var(--lf-danger-soft); color: var(--lf-danger) }
+.cb-review.is-approved { border-color: var(--lf-success-line); background: var(--lf-success-soft); color: var(--lf-success) }
+.cb-tag { display: inline-flex; align-items: center; gap: 4px; padding: 1px 8px; border-radius: 999px; background: var(--lf-subtle); color: var(--lf-muted); font-size: 11.5px; font-weight: 650; white-space: nowrap }
+.cb-tag.is-client { background: var(--lf-brand-soft); color: var(--lf-brand-strong) }
+.cb-tag.is-draft { background: var(--lf-warning-soft); color: var(--lf-warning) }
+
+/* Tables scroll sideways inside their frame. The frame is the positioning context, so screen-reader-only labels inside
+   (absolutely positioned) are clipped with the table instead of widening the page on phones. */
+.cb-wrap { position: relative }
+
+/* Review table */
+.cb-table td .cb-review { margin-top: 1px }
+.cb-table .cb-row-open { cursor: pointer }
+.cb-table .cb-row-open:focus-within { background: var(--lf-hover) }
+.cb-filterbar { padding: 0 22px 12px }
+.cb-filterbar .sp-segment { margin-bottom: 0 }
+
+/* Comments */
+.cb-thread { display: grid; gap: 12px }
+.cb-comments { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none }
+.cb-comment { padding: 12px 14px; border: 1px solid var(--lf-line); border-radius: 12px; background: var(--lf-surface) }
+.cb-comment.is-internal { border-style: dashed; background: var(--lf-subtle) }
+.cb-comment.is-client { border-left: 3px solid var(--lf-brand) }
+.cb-comment.is-from-client { border-left-color: var(--lf-info) }
+.cb-comment-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-bottom: 6px; font-size: 12.5px }
+.cb-comment-head strong { color: var(--lf-ink); font-size: 13.5px }
+.cb-comment-head time, .cb-comment-head .cb-quiet { color: var(--lf-muted) }
+.cb-body { margin: 0; color: var(--lf-text); font-size: 13.5px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere }
+.cb-deleted { margin: 0; color: var(--lf-muted); font-size: 13px; font-style: italic }
+.cb-comment-actions { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 8px }
+.cb-comment-actions .text-button { min-height: 26px; font-size: 12.5px }
+.cb-replies { display: grid; gap: 8px; margin: 10px 0 0 14px; padding: 0 0 0 12px; border-left: 2px solid var(--lf-line); list-style: none }
+.cb-composer { display: grid; gap: 8px; padding: 12px; border: 1px solid var(--lf-line); border-radius: 12px; background: var(--lf-surface) }
+.cb-composer textarea { width: 100%; min-height: 76px; margin: 0 }
+.cb-composer-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px }
+.cb-composer-foot select { width: auto; min-height: 36px; margin: 0 }
+.cb-composer-foot .cb-attach { color: var(--lf-muted); font-size: 12.5px }
+.cb-composer-foot .cb-attach input { max-width: 220px; font-size: 12px }
+.cb-composer.is-client { border-color: var(--lf-brand); box-shadow: 0 0 0 3px var(--lf-brand-ring) }
+.cb-composer-note { margin: 0; color: var(--lf-muted); font-size: 12px }
+.cb-history { display: grid; gap: 8px; margin: 8px 0 0; padding: 10px 12px; border-radius: 10px; background: var(--lf-subtle); list-style: none; font-size: 12.5px }
+.cb-history li p { margin: 2px 0 0; white-space: pre-wrap; overflow-wrap: anywhere }
+
+/* Files */
+.cb-files { display: grid; gap: 6px; margin: 8px 0 0; padding: 0; list-style: none }
+.cb-files li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 12px; padding: 7px 10px; border: 1px solid var(--lf-line); border-radius: 10px; font-size: 13px }
+.cb-files li > span { min-width: 0; overflow-wrap: anywhere }
+.cb-files small { color: var(--lf-muted); font-size: 12px }
+.cb-files .text-button { min-height: 26px; font-size: 12.5px }
+.cb-file-actions { display: flex; flex-wrap: wrap; gap: 10px }
+.cb-uploads { display: grid; gap: 4px; margin: 6px 0 0; padding: 0; list-style: none; font-size: 12.5px }
+.cb-uploads li { display: flex; gap: 8px; justify-content: space-between }
+.cb-uploads li.is-error { color: var(--lf-danger) }
+
+/* Updates */
+.cb-updates { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none }
+.cb-update { padding: 14px 16px; border: 1px solid var(--lf-line); border-radius: 12px; background: var(--lf-surface) }
+.cb-update.is-draft { border-style: dashed }
+.cb-update h4 { margin: 0; color: var(--lf-ink); font-size: 14.5px; overflow-wrap: anywhere }
+.cb-update-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; margin-bottom: 6px }
+.cb-update-meta { color: var(--lf-muted); font-size: 12px }
+
+/* History */
+.cb-events { display: grid; gap: 0; margin: 0; padding: 0; list-style: none }
+.cb-events li { display: grid; grid-template-columns: 10px minmax(0, 1fr); gap: 10px; padding: 8px 0; border-top: 1px solid var(--lf-line); font-size: 13px }
+.cb-events li:first-child { border-top: 0 }
+.cb-events li i { width: 8px; height: 8px; margin-top: 6px; border-radius: 50%; background: var(--lf-line-strong) }
+.cb-events li.is-client i { background: var(--lf-info) }
+.cb-events li.is-member i { background: var(--lf-brand) }
+.cb-events small { display: block; color: var(--lf-muted); font-size: 12px }
+.cb-two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px }
+.cb-two > * { min-width: 0 }
+
+/* Deliverable review drawer */
+dialog.cb-review-dialog { width: min(820px, 100vw) }
+.cb-dr { display: grid; gap: 18px; min-width: 0 }
+.cb-dr h3 { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 8px; color: var(--lf-ink); font-size: 14.5px }
+.cb-dr-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; color: var(--lf-muted); font-size: 13px }
+.cb-dr-actions { display: flex; flex-wrap: wrap; gap: 8px }
+.cb-dr-actions .primary, .cb-dr-actions .secondary { min-height: 34px; padding: 0 12px; font-size: 13px }
+.cb-card { min-width: 0; padding: 12px 14px; border: 1px solid var(--lf-line); border-radius: 12px; background: var(--lf-surface) }
+.cb-card + .cb-card { margin-top: 8px }
+.cb-card.is-draft { border-style: dashed; background: var(--lf-subtle) }
+.cb-card-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 10px }
+.cb-card-head strong { color: var(--lf-ink) }
+.cb-card p { margin: 6px 0 0; font-size: 13px; line-height: 1.5; overflow-wrap: anywhere }
+.cb-card textarea { width: 100%; margin: 6px 0 0 }
+.cb-decision { margin-top: 8px; padding: 8px 10px; border-radius: 10px; background: var(--lf-subtle); font-size: 13px }
+.cb-decision.is-approved { background: var(--lf-success-soft) }
+.cb-decision.is-changes_requested, .cb-decision.is-rejected { background: var(--lf-danger-soft) }
+.cb-feedback-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px }
+.cb-status-form { display: flex; flex-wrap: wrap; align-items: end; gap: 8px; margin-top: 10px }
+.cb-status-form label { display: grid; gap: 4px; margin: 0; color: var(--lf-muted); font-size: 12px; font-weight: 600 }
+.cb-status-form select, .cb-status-form input { width: auto; min-width: 140px; min-height: 34px; margin: 0 }
+.cb-status-form input[type=text] { min-width: 200px }
+.cb-status-form .secondary { min-height: 34px; padding: 0 12px; font-size: 13px }
+.cb-preview { padding: 14px 16px; border: 1px solid var(--lf-brand); border-radius: 12px; background: var(--lf-brand-soft) }
+.cb-preview h4 { margin: 0 0 6px; color: var(--lf-ink); font-size: 14px }
+.cb-preview p { margin: 4px 0; font-size: 13px; white-space: pre-wrap; overflow-wrap: anywhere }
+.cb-preview-label { display: block; margin-bottom: 6px; color: var(--lf-brand-strong); font-size: 11.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase }
+.cb-reviewers { display: grid; gap: 4px; margin: 6px 0 12px; padding: 0; border: 0 }
+.cb-reviewers legend { margin-bottom: 4px; color: var(--lf-ink); font-size: 13px; font-weight: 600 }
+.cb-check { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 13px; font-weight: 500 }
+.cb-check input { width: 16px; height: 16px; margin: 0 }
+
+/* AI */
+.cb-ai { padding: 14px 16px; border: 1px solid var(--lf-line); border-radius: 12px; background: var(--lf-subtle) }
+.cb-ai-buttons { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px }
+.cb-ai-buttons .secondary { min-height: 32px; padding: 0 10px; font-size: 12.5px }
+.cb-ai-result { margin-top: 12px; padding: 12px 14px; border: 1px solid var(--lf-line); border-radius: 10px; background: var(--lf-surface); font-size: 13px; line-height: 1.55 }
+.cb-ai-result h4 { margin: 10px 0 4px; color: var(--lf-ink); font-size: 13px }
+.cb-ai-result ul { margin: 0; padding-left: 18px }
+.cb-ai-result p { margin: 4px 0; white-space: pre-wrap; overflow-wrap: anywhere }
+.cb-ai-label { display: inline-flex; align-items: center; gap: 4px; color: var(--lf-brand-strong); font-size: 11.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase }
+.cb-based { color: var(--lf-muted); font-size: 11.5px }
+
+/* Portal preview */
+.cb-pv { display: grid; gap: 14px; font-size: 13.5px }
+.cb-pv-hero { padding: 16px 18px; border-radius: 14px; background: var(--lf-accent-bg); color: #fff }
+.cb-pv-hero h3 { margin: 4px 0 8px; color: #fff; font-size: 19px }
+.cb-pv-hero small { color: var(--lf-night-muted, rgba(255, 255, 255, .7)) }
+.cb-pv-bar { display: block; height: 6px; margin-top: 10px; overflow: hidden; border-radius: 999px; background: rgba(255, 255, 255, .2) }
+.cb-pv-bar i { display: block; height: 100%; border-radius: inherit; background: var(--lf-lime, #a6e35b) }
+.cb-pv section h4 { margin: 0 0 6px; color: var(--lf-ink); font-size: 13.5px }
+.cb-pv ul { margin: 0; padding-left: 18px }
+.cb-pv p { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere }
+
+/* Access */
+.cb-people { display: grid; gap: 0; margin: 0; padding: 0; list-style: none }
+.cb-person { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 16px; align-items: center; padding: 12px 22px; border-top: 1px solid var(--lf-line) }
+.cb-person:first-child { border-top: 0 }
+.cb-person strong { display: block; color: var(--lf-ink); font-size: 14px; overflow-wrap: anywhere }
+.cb-person small { display: block; color: var(--lf-muted); font-size: 12.5px; overflow-wrap: anywhere }
+.cb-person.is-revoked strong { color: var(--lf-muted); text-decoration: line-through }
+.cb-person-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px 12px }
+.cb-person-actions .text-button { min-height: 28px; font-size: 12.5px }
+.cb-link-box { display: grid; gap: 8px; padding: 14px; border: 1px solid var(--lf-brand); border-radius: 12px; background: var(--lf-brand-soft) }
+.cb-link-box code { display: block; padding: 8px 10px; border-radius: 8px; background: var(--lf-surface); color: var(--lf-ink); font-size: 12.5px; word-break: break-all }
+.cb-link-box p { margin: 0; font-size: 13px; line-height: 1.5 }
+.cb-projects-pick { display: grid; gap: 6px; max-height: 200px; margin: 4px 0 12px; overflow: auto; padding: 8px 10px; border: 1px solid var(--lf-line); border-radius: 10px }
+.cb-role-help { margin: -6px 0 12px; color: var(--lf-muted); font-size: 12.5px }
+
+/* Notifications */
+.cb-activity { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--lf-line) }
+.cb-activity-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px }
+.cb-activity-head h3 { margin: 0; color: var(--lf-ink); font-size: 14px }
+.cb-activity-list { display: grid; gap: 0; margin: 0; padding: 0; list-style: none }
+.cb-activity-list li { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; padding: 9px 0; border-top: 1px solid var(--lf-line) }
+.cb-activity-list li:first-child { border-top: 0 }
+.cb-activity-list li.is-unread strong::before { content: ''; display: inline-block; width: 7px; height: 7px; margin: 0 6px 1px 0; border-radius: 50%; background: var(--lf-brand) }
+.cb-activity-list strong { display: block; color: var(--lf-ink); font-size: 13.5px; overflow-wrap: anywhere }
+.cb-activity-list p { margin: 2px 0 0; color: var(--lf-muted); font-size: 12.5px; overflow-wrap: anywhere }
+.cb-activity-list time { color: var(--lf-faint); font-size: 12px }
+.cb-activity-list .text-button { flex-shrink: 0; min-height: 28px; font-size: 12.5px }
+
+/* Settings */
+.cb-email-settings ul { display: grid; gap: 8px; margin: 0 0 12px; padding: 0; list-style: none }
+
+@media (max-width: 860px) {
+  .cb-share, .cb-visibility, .cb-two { grid-template-columns: minmax(0, 1fr) }
+}
+@media (max-width: 560px) {
+  .cb-section-body { padding: 0 14px 16px }
+  .cb-filterbar { padding: 0 14px 12px }
+  .cb-person { grid-template-columns: minmax(0, 1fr); padding: 12px 14px }
+  .cb-person-actions { justify-content: flex-start }
+  .cb-replies { margin-left: 4px; padding-left: 8px }
+  .cb-status-form input[type=text] { min-width: 0; width: 100% }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cb-switch-track, .cb-switch-track::after { transition: none }
+}

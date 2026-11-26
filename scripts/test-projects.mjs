@@ -281,12 +281,13 @@ const call=async(user,body,handler=harness.files)=>{const response=await handler
 const upload=async(user,bytes,fields)=>{const prepared=await call(user,{action:'upload',clientId:client,size:bytes.length,...fields});if(prepared.status!==200)return prepared
   assert.equal((await harness.put(prepared.body.uploadUrl,bytes,prepared.body.document.mimeType)).status,200);return call(user,{action:'finish',documentId:prepared.body.document.id})}
 const brief=await upload(member,samples.pdf,{fileName:'design-brief.pdf',category:'requirements',visibility:'shared',projectId:P,deliverableId:homepage.id})
-assert.equal(brief.status,200);assert.equal(brief.body.document.projectId,P);assert.equal(brief.body.document.deliverableId,homepage.id);assert.equal(brief.body.document.visibility,'internal','project files are always internal')
+assert.equal(brief.status,200);assert.equal(brief.body.document.projectId,P);assert.equal(brief.body.document.deliverableId,homepage.id);assert.equal(brief.body.document.visibility,'shared','M12: project files can be shared (the client portal still checks project access; onboarding links never show them)')
 assert.equal((await upload(member,samples.pdf,{fileName:'x.pdf',projectId:bakeryProject})).status,422,"another client's project is refused")
 assert.equal((await upload(member,samples.pdf,{fileName:'x.pdf',projectId:P,milestoneId:soon.id})).status,422,"another project's milestone is refused")
 assert.equal((await upload(member,samples.pdf,{fileName:'x.pdf',deliverableId:homepage.id})).status,422,'a deliverable needs its project')
 assert.equal((await upload(member,samples.text,{fileName:'notes.txt',projectId:P,taskId:design.id})).status,200)
-await fails(member,'select public.update_client_document($1,$2,$3)',[W,brief.body.document.id,{visibility:'shared'}],/stay internal/)
+assert.equal((await as(member,'select public.update_client_document($1,$2,$3)',[W,brief.body.document.id,{visibility:'internal'}])).visibility,'internal')
+assert.equal((await as(member,'select public.update_client_document($1,$2,$3)',[W,brief.body.document.id,{visibility:'shared'}])).visibility,'shared')
 const files=await as(member,'select public.project_documents_for($1,$2)',[W,P])
 assert.deepEqual(files.project.map(d=>d.fileName).sort(),['design-brief.pdf','notes.txt']);assert.ok(files.client.every(d=>d.projectId===null))
 assert.equal((await call(member,{action:'preview',documentId:brief.body.document.id})).status,200)
@@ -404,6 +405,7 @@ await as(owner,"select public.set_client_status($1,$2,'unarchive',$3,'')",[W,cli
 // 19. Rollback keeps clients and their tasks (as client tasks); the migration applies again.
 await actAs(db,null,'postgres')
 const taskCount=await one('select count(*)::int from public.follow_up_tasks')
+await db.exec(readFileSync('supabase/rollbacks/202611270001_client_collaboration.down.sql','utf8'))
 await db.exec(readFileSync('supabase/rollbacks/202611260001_project_delivery.down.sql','utf8'))
 assert.equal(await one("select to_regclass('leadflow_private.projects')"),null)
 assert.equal(await one('select count(*)::int from public.follow_up_tasks'),taskCount,'project tasks stay as client tasks')

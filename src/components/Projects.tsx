@@ -5,6 +5,7 @@ import { HealthBadge, PriorityChip, ProgressBar, ProjectStatusChip } from './Pro
 import { NewProjectDialog } from './NewProjectDialog'
 import { ProjectCalendar } from './ProjectCalendar'
 import { ProjectTemplates } from './ProjectTemplates'
+import { ReviewQueue } from './ReviewQueue'
 import type { WorkspaceSummary } from '../lib/backend'
 import { taskState } from '../lib/dates'
 import { setTaskWorkStatus, toggleTask, waitingFor, workStatuses, type Data, type Task, type WorkStatus } from '../lib/model'
@@ -16,8 +17,8 @@ import {
 } from '../lib/projects'
 import './Projects.css'
 
-export type PortfolioTab = 'overview' | 'projects' | 'my_tasks' | 'calendar' | 'templates'
-const tabs: [PortfolioTab, string][] = [['overview', 'Overview'], ['projects', 'All projects'], ['my_tasks', 'My tasks'], ['calendar', 'Calendar'], ['templates', 'Templates']]
+export type PortfolioTab = 'overview' | 'projects' | 'my_tasks' | 'calendar' | 'reviews' | 'templates'
+const tabs: [PortfolioTab, string][] = [['overview', 'Overview'], ['projects', 'All projects'], ['my_tasks', 'My tasks'], ['calendar', 'Calendar'], ['reviews', 'Client reviews'], ['templates', 'Templates']]
 const pageSize = 25
 const baseFilters: ProjectFilters = { search: '', status: 'open', health: '', clientId: '', ownerId: '', priority: '', projectType: '', sort: 'updated', direction: 'desc' }
 const kindLabels = { project: 'Project target', milestone: 'Milestone', deliverable: 'Deliverable', task: 'Task' } as const
@@ -26,9 +27,11 @@ const kindLabels = { project: 'Project target', milestone: 'Milestone', delivera
  * Projects: the delivery overview, every project, the signed-in member's project tasks, a deadline calendar and
  * reusable templates. Opening a project shows its workspace (ProjectWorkspace). Every figure comes from the database.
  */
-export function Projects({ workspace, data, day, userId, members, clients, version, initialTab = 'overview', onOpenProject, onOpenClient, onWorkspaceChanged, onCommit, onChanged }: {
+export function Projects({ workspace, data, day, userId, members, clients, version, initialTab = 'overview', onOpenProject, onOpenReview, onOpenClient, onWorkspaceChanged, onCommit, onChanged }: {
   workspace: WorkspaceSummary; data: Data; day: string; userId: string; members: SalesMember[]; clients: ClientIndexEntry[]; version: number; initialTab?: PortfolioTab
-  onOpenProject: (projectId: string) => void; onOpenClient: (clientId: string) => void; onWorkspaceChanged: () => Promise<void>
+  onOpenProject: (projectId: string) => void
+  /** M12: open a project on its Client portal tab, optionally at one deliverable's review. */
+  onOpenReview?: (projectId: string, deliverableId?: string) => void; onOpenClient: (clientId: string) => void; onWorkspaceChanged: () => Promise<void>
   onCommit: (next: Data, message: string) => Promise<boolean>; onChanged: (message?: string) => void
 }) {
   const [tab, setTab] = useState<PortfolioTab>(initialTab), [filters, setFilters] = useState<ProjectFilters>(baseFilters), [creating, setCreating] = useState(false)
@@ -45,6 +48,7 @@ export function Projects({ workspace, data, day, userId, members, clients, versi
       {tab === 'projects' && <ProjectList workspace={workspace} members={members} clients={clients} version={reload} filters={filters} onFilters={setFilters} onOpenProject={onOpenProject} onOpenClient={onOpenClient} onNew={() => setCreating(true)} />}
       {tab === 'my_tasks' && <MyTasks workspace={workspace} data={data} day={day} userId={userId} version={reload} view={taskView} onView={setTaskView} onOpenProject={onOpenProject} onCommit={onCommit} />}
       {tab === 'calendar' && <ProjectCalendar workspace={workspace} clients={clients} version={reload} onOpenProject={onOpenProject} />}
+      {tab === 'reviews' && <ReviewQueue workspace={workspace} version={reload} onOpen={(project, deliverable) => onOpenReview ? onOpenReview(project, deliverable) : onOpenProject(project)} />}
       {tab === 'templates' && <ProjectTemplates workspace={workspace} onChanged={message => onChanged(message)} />}
     </div>
     {creating && <NewProjectDialog workspace={workspace} members={members} clients={clients} start={{}} onClose={() => setCreating(false)}

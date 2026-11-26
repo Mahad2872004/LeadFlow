@@ -79,7 +79,7 @@
 
 /* ---------- List ---------- */
 .sp-list-filters { padding-top: 0 }
-.sp-table-wrap { overflow-x: auto; border-top: 1px solid var(--lf-line); contain: inline-size }
+.sp-table-wrap { position: relative; overflow-x: auto; border-top: 1px solid var(--lf-line); contain: inline-size }
 .sp-table { width: 100%; border-collapse: collapse; font-size: 13.5px }
 .sp-table th { padding: 10px 14px; border-bottom: 1px solid var(--lf-line); background: var(--lf-subtle); color: var(--lf-muted); font-size: 12px; font-weight: 600; text-align: left; white-space: nowrap }
 .sp-table td { padding: 12px 14px; border-bottom: 1px solid var(--lf-line); color: var(--lf-text); vertical-align: top }
