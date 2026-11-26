@@ -275,3 +275,15 @@ export function followUpDates(sentAt: string, intervals: number[]): string[] {
   const start = new Date(sentAt)
   return intervals.filter(days => Number.isInteger(days) && days > 0 && days <= 90).slice(0, 3).map(days => { const date = new Date(start); date.setDate(date.getDate() + days); return date.toISOString().slice(0, 10) })
 }
+
+/** The record save_generated_draft stores for a checked draft: shared by the outreach function and automation workflows. */
+export function draftRecord(context: OutreachContext, options: GenerateOptions, checked: CheckedDraft,
+  answer: { provider: string; model: string; inputTokens: number; outputTokens: number }, parentId: string | null = null) {
+  const opportunity = context.opportunities.find(item => item.id === options.opportunityId)
+  return { contactId: context.contact?.id ?? null, contactName: context.contact ? context.contact.fullName || context.contact.label || context.contact.email : '', analysisId: context.analysis?.id ?? null,
+    opportunityId: opportunity?.id ?? null, opportunityTitle: opportunity?.title ?? '', serviceId: opportunity?.serviceId ?? checked.claims.find(claim => claim.serviceId)?.serviceId ?? null,
+    channel: options.channel, angle: options.angle, sequenceStep: options.sequenceStep, parentId, subject: checked.subject, body: checked.body, claims: checked.claims, grounding: checked.grounding,
+    warnings: checked.warnings, provider: answer.provider, model: answer.model, inputTokens: answer.inputTokens, outputTokens: answer.outputTokens,
+    settings: { tone: context.preferences.tone, length: context.preferences.length, objective: context.preferences.objective, channel: options.channel, sequenceStep: options.sequenceStep,
+      instructions: options.instructions, angleSummary: checked.angleSummary } }
+}

@@ -389,7 +389,7 @@ assert.ok(/contacts [0-9a-f-]{36} website -> verify \(saved\)/.test(logText)&&/o
 // 19. Rollback removes everything M8 added and keeps leads and reports; the migration re-applies.
 const leadCount=await op('select count(*)::int from public.leads'),analyses=await op('select count(*)::int from leadflow_private.business_analyses')
 // M9 (sales pipeline) and M10 (clients) build on contacts and drafts, so they are rolled back first and re-applied after.
-await actAs(db,null,'postgres');for(const name of ['202611270001_client_collaboration','202611260001_project_delivery','202611250001_client_management','202611230001_sales_pipeline','202611190001_outreach_intelligence'])await db.exec(readFileSync(`supabase/rollbacks/${name}.down.sql`,'utf8'))
+await actAs(db,null,'postgres');for(const name of ['202611270003_automation_engine','202611270002_automation','202611270001_client_collaboration','202611260001_project_delivery','202611250001_client_management','202611230001_sales_pipeline','202611190001_outreach_intelligence'])await db.exec(readFileSync(`supabase/rollbacks/${name}.down.sql`,'utf8'))
 assert.equal(await op("select to_regclass('leadflow_private.lead_contacts')"),null);assert.deepEqual([await op('select count(*)::int from public.leads'),await op('select count(*)::int from leadflow_private.business_analyses')],[leadCount,analyses])
 for(const name of ['202611190001_outreach_intelligence','202611230001_sales_pipeline','202611250001_client_management','202611260001_project_delivery'])await db.exec(readFileSync(`supabase/migrations/${name}.sql`,'utf8'))
 assert.deepEqual((await contactsOf(owner,'studio')).contacts,[])

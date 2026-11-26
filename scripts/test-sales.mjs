@@ -393,6 +393,7 @@ assert.equal((await snapshot(member)).data.tasks.find(item=>item.id==='t-deal').
 // 23. Rollback removes the pipeline and keeps leads and tasks; the migration applies again.
 // M10 (clients) and M11 (projects) build on deals and the task columns, so they are rolled back first and re-applied after.
 await actAs(db,null,'postgres')
+await db.exec(readFileSync('supabase/rollbacks/202611270003_automation_engine.down.sql','utf8'));await db.exec(readFileSync('supabase/rollbacks/202611270002_automation.down.sql','utf8'))
 await db.exec(readFileSync('supabase/rollbacks/202611270001_client_collaboration.down.sql','utf8'))
 await db.exec(readFileSync('supabase/rollbacks/202611260001_project_delivery.down.sql','utf8'))
 await db.exec(readFileSync('supabase/rollbacks/202611250001_client_management.down.sql','utf8'))

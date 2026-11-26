@@ -82,6 +82,27 @@ The **client portal** (`/portal`) gives each client person their own sign-in and
 
 Live on https://leadflowglobal.vercel.app since 27 November 2026: the migration, the four Edge Functions and the frontend. Email needs the worker scheduled, and password reset needs the Auth redirect URL. See [docs/CLIENT-COLLABORATION.md](docs/CLIENT-COLLABORATION.md).
 
+## Automation and workflow engine (M13)
+
+**Automation** connects the modules above with workflows that run on the server.
+
+What it does:
+- **Triggers** from real events: new leads, status changes, business reports, deals won, onboarding completed, project deadlines, client approvals and feedback; also schedules and signed webhooks.
+- **Conditions and branches** over registered fields only.
+- **Actions** that reuse each module's own functions: tasks, notes, notifications and email, business reports, contact searches, AI outreach drafts, deals, onboarding, projects, milestones and review requests.
+- **Timing:** delays and waits for events, stored, never slept.
+- **Safety:**
+  - versioned publishing;
+  - dry runs and live tests;
+  - step-level history, with retries from the failed step;
+  - permissions checked again on every action;
+  - loop protection and rate limits.
+- **AI drafting** that only proposes.
+
+Important decisions stay with people. No workflow sends outreach, marks deals won or lost, confirms scope or approves on a client's behalf.
+
+Implemented and verified locally on 27 November 2026. The same day, the migrations, Edge Functions and the worker’s Cron job were deployed to the hosted project and checked. The frontend isn’t deployed yet. See [docs/AUTOMATION.md](docs/AUTOMATION.md).
+
 ## Set up a Supabase project
 
 1. Create a Supabase project. In Authentication, disable anonymous sign-ins. Either keep public sign-up disabled and create users with a confirmed email in the dashboard, or enable it after following the [sign-up checklist](docs/MULTI-TENANCY.md#onboarding-and-workspace-management) (redirect URLs, SMTP, password length). Each account gets its own personal workspace. Accounts share data only through explicit workspace membership (see [multi-tenancy](docs/MULTI-TENANCY.md)).
@@ -135,6 +156,7 @@ npm run test:sales
 npm run test:clients
 npm run test:projects
 npm run test:collaboration
+npm run test:automation
 npm run check:edge
 npm test
 npm run test:production

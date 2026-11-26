@@ -2,7 +2,7 @@ import { NotificationCenter } from './components/NotificationCenter'
 import { useLocalDay } from './hooks/useLocalDay'
 import { isTaskDue, taskState } from './lib/dates'
 import { ActivityTimeline } from './components/ActivityTimeline'
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from 'react'
 import { LeadForm } from './components/LeadForm'
 import { Modal } from './components/Modal'
 import { activity, cancelTask, changeStatus, createLead, createTask, statuses, toggleTask, updateLead, sources, type Data, type Lead, type LeadInput } from './lib/model'
@@ -21,6 +21,8 @@ import './interactions.css'
 import { Toast } from './components/Toast'
 import { useEnterMotion } from './hooks/useMotion'
 import { IntegrationsHub } from './components/IntegrationsHub'
+// M13: the Automation Center loads on first visit.
+const AutomationCenter = lazy(() => import('./components/Automation').then(module => ({ default: module.AutomationCenter })))
 import { ClientOnboarding } from './components/ClientOnboarding'
 import { LeadDiscovery } from './components/LeadDiscovery'
 import { leadLists, type LeadList } from './lib/apollo'
@@ -70,6 +72,7 @@ const headings:Record<Page,[string,string]>={
  Activity:['Activity','A running history of your workspace.'],
  'Sales pipeline':['Sales pipeline','Every deal, where it stands and what it’s worth.'],
  'Sales analytics':['Sales analytics','Pipeline value, win rate and why deals are won or lost, from your own deals.'],
+ Automations:['Automations','Workflows that handle the repetitive steps; your team keeps the decisions.'],
  Integrations:['Integrations','Connect your website and tools. Keep every opportunity in one place.'],
  Settings:['Workspace settings','Details, members, and your access for this workspace.'],
 }
@@ -196,7 +199,7 @@ function App({workspace,page,onPageChange:setPage,initialNotice}:{workspace:Work
  const projectNames=new Map(projects.map(project=>[project.id,project.name]))
  const freshCount=data?data.leads.filter(l=>l.status==='New').length:0
  const [title,description]=page==='Overview'&&data&&data.leads.length?[`Good ${hour<12?'morning':hour<18?'afternoon':'evening'}`,`${due.length} follow-up${due.length===1?'':'s'} due · ${freshCount} new lead${freshCount===1?'':'s'} · ${data.leads.length} in your pipeline`]:headings[page]
- const dataPage=page!=='Integrations'&&page!=='Settings'&&page!=='Onboarding'&&page!=='Clients'&&page!=='Projects'&&page!=='Discovery'&&page!=='Sales pipeline'&&page!=='Sales analytics'
+ const dataPage=page!=='Integrations'&&page!=='Automations'&&page!=='Settings'&&page!=='Onboarding'&&page!=='Clients'&&page!=='Projects'&&page!=='Discovery'&&page!=='Sales pipeline'&&page!=='Sales analytics'
  function shell(content:ReactNode){
   return <div className="app-shell" aria-busy={busy||!data} onClickCapture={event=>{if((busy||pending)&&!(event.target as HTMLElement).closest('[data-recovery]')){event.preventDefault();event.stopPropagation()}}}><a className="skip-link" href="#main-content">Skip to content</a><Sidebar page={page} dueCount={due.length} email={user.email} role={workspace.role} onNavigate={navigateTo} onReset={canReset?()=>data&&openModal('reset'):undefined}/>
   <main id="main-content" tabIndex={-1}><header className="topbar"><div className="breadcrumb"><span className="breadcrumb-workspace">{workspace.name}</span> <span>/</span> <strong>{page}</strong></div><button className="command-trigger" aria-label="Search or jump to" aria-keyshortcuts="Control+K Meta+K" onClick={()=>setPalette(true)}><Icon name="search" size={16}/><span>Search or jump to…</span><kbd>{isMac?'⌘K':'Ctrl K'}</kbd></button><div className="header-actions"><ThemeToggle/><span className={'local-label'+(pending?' is-unsaved':busy?' is-saving':'')}><span className="live-dot"/>{pending?'Not saved':busy?'Saving…':'All changes saved'}</span><button className="text-button" data-recovery disabled={busy||!!pending} onClick={leave}>Sign out</button>{data&&<><button className="text-button" disabled={busy||!!pending} onClick={reload}>Refresh</button><NotificationCenter key={resetVersion} events={notice} tasks={data.tasks} leads={data.leads} day={day} open={showNotices} onOpen={setShowNotices} onClear={()=>setNotice([])} onReview={setSelected} sales={reminders} onOpenDeal={showDeal} userId={user.id} clients={clientNames} onOpenClient={id=>showClient(id,'tasks')} workspaceId={workspace.id} onOpenProject={(id,deliverable)=>showProject(id,'portal',deliverable)}/></>}</div></header>
@@ -256,6 +259,7 @@ function App({workspace,page,onPageChange:setPage,initialNotice}:{workspace:Work
  {dataPage&&data.leads.length===0&&(page==='Overview'?<section className="panel welcome-panel"><div><p className="eyebrow">GETTING STARTED</p><h2>{workspace.name} is ready for its first lead</h2><p>{emptyHint}</p></div><div className="welcome-actions"><button className="primary" onClick={()=>openModal('lead')}><Icon name="plus" size={17}/> Add your first lead</button><button className="secondary" onClick={()=>setPage('Integrations')}>Connect your website</button></div></section>:<p>{emptyHint}</p>)}
  <div className="page-heading"><div>{page==='Overview'&&<p className="page-kicker">{longDayLabel(day)}</p>}<h1>{title}</h1><p>{description}</p></div>{dataPage&&<div className="page-actions">{page==='Overview'&&<button className="secondary" onClick={()=>navigateTo('Discovery')}><Icon name="compass" size={17}/> Find businesses</button>}<button className="primary" onClick={()=>openModal(page==='Follow-ups'?'task':'lead')}><Icon name="plus" size={17}/> {page==='Follow-ups'?'Add follow-up':'Add lead'}</button></div>}</div>
  {page==='Integrations'&&<IntegrationsHub workspaceId={workspace.id} role={workspace.role}/>}
+ {page==='Automations'&&<Suspense fallback={<section className="panel"><p role="status">Loading automations…</p></section>}><AutomationCenter workspace={workspace} onNotice={message=>setNotice(n=>[message,...n].slice(0,20))}/></Suspense>}
  {page==='Settings'&&<><WorkspaceSettings workspace={workspace}/><AgencyServices workspace={workspace}/><OutreachSettings workspace={workspace}/></>}
  {page==='Onboarding'&&<ClientOnboarding workspace={workspace} leads={data.leads} startLead={onboardingLead} onOpenClient={id=>showClient(id,'onboarding')}/>}
  {page==='Clients'&&(openClient?<ClientWorkspace key={openClient.id} workspace={workspace} clientId={openClient.id} data={data} day={day} members={members} leads={data.leads} initialTab={openClient.tab} initialRequest={openClient.request??null}

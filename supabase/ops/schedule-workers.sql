@@ -1,4 +1,4 @@
--- Schedules LeadFlow's background workers (email, business analysis and contact searches) with Supabase Cron. Hosted operations only: this is not a migration,
+-- Schedules LeadFlow's background workers (email, business analysis, contact searches and automations) with Supabase Cron. Hosted operations only: this is not a migration,
 -- because local tests run without pg_cron. Safe to re-run: cron.schedule replaces a job with the same name.
 -- Prerequisite: a Vault secret named leadflow_worker_secret holding the same value as the Edge Function
 -- secret NOTIFICATION_WORKER_SECRET (docs/CLIENT-ONBOARDING.md#reminder-scheduler). No secret is stored here.
@@ -36,7 +36,19 @@ select cron.schedule('leadflow-analysis-worker', '*/2 * * * *', $job$
     timeout_milliseconds := 120000)
 $job$);
 
+-- Automations (M13): every minute. Each call releases expired leases, fires due schedules and scheduled checks, then
+-- advances due workflow runs for about 50 seconds. Delays and waits are stored rows, so nothing sleeps between calls.
+select cron.schedule('leadflow-automation-worker', '* * * * *', $job$
+  select net.http_post(
+    url := 'https://fzgxpwmqzmvgmijviaar.supabase.co/functions/v1/automation-worker',
+    headers := jsonb_build_object('Content-Type', 'application/json',
+      'x-worker-secret', (select decrypted_secret from vault.decrypted_secrets where name = 'leadflow_worker_secret')),
+    body := '{}'::jsonb,
+    timeout_milliseconds := 60000)
+$job$);
+
 -- Inspect recent runs:
 --   select jobid, status, return_message, start_time from cron.job_run_details order by start_time desc limit 10;
 --   select id, status_code, left(content, 200), error_msg, created from net._http_response order by created desc limit 10;
 -- Stop: select cron.unschedule('leadflow-onboarding-reminders'); select cron.unschedule('leadflow-retry-notifications'); select cron.unschedule('leadflow-analysis-worker');
+--   select cron.unschedule('leadflow-automation-worker');

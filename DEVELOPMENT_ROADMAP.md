@@ -326,7 +326,42 @@ Details: [docs/CLIENT-COLLABORATION.md](docs/CLIENT-COLLABORATION.md).
 **Next:**
 1. ~~Apply `202611270001`, deploy the four Edge Functions, set `APP_URL`, deploy the frontend~~ (done 27 November 2026). ~~The Auth Site URL and redirect URLs~~ (done). Then, in the dashboards: the Turnstile hostname and the worker schedule.
 2. Run the manual checks in the M12 doc on the hosted project.
-3. M13 is not started and awaits approval.
+3. M13 was approved and is implemented locally (see M13 below).
+
+## M13 — Automation and workflow engine
+
+**Status: implemented and verified locally, 27 November 2026. The same day, both migrations (`202611270002`, `202611270003`), the three Edge Functions and the every-minute `leadflow-automation-worker` Cron job were deployed to the hosted project and checked. The frontend isn’t deployed yet.**
+
+- **Automation Center:** overview with real counts, workflows, 12 templates, execution history, failed executions, settings (pause all automations, safeguards).
+- **Visual builder:**
+  - triggers, conditions (AND/OR, nested), branches, delays, waits for events and actions;
+  - a variable picker scoped to each step;
+  - server validation on every edit, unsaved-change protection;
+  - dry runs that write nothing, and confirmed live tests;
+  - versioned publishing, version history and restore to draft;
+  - webhook endpoints.
+- **Engine:**
+  - transactional event capture from M1–M12;
+  - server-side execution as the publisher, with permissions re-checked;
+  - step-level history with sanitized inputs and outputs;
+  - retries with backoff; retry from the failed step; full rerun with confirmation; cancellation;
+  - loop protection, rate and concurrency limits, usage counters.
+- **AI drafting:** proposals built only from the registry, never saved or published by themselves.
+
+**Not built:**
+- client invitations or client-visible updates as actions;
+- onboarding summaries;
+- lead assignment;
+- triggers that can't be observed (lead updated, health changed, replies);
+- marketing-site copy for automations;
+- everything in the specification's out-of-scope list.
+
+Details: [docs/AUTOMATION.md](docs/AUTOMATION.md).
+
+**Next:**
+1. ~~Apply both migrations, deploy the three functions, schedule `leadflow-automation-worker`~~ (done 27 November 2026). Deploy the frontend. Consider scheduling the analysis and portal email workers.
+2. Run the manual checks in docs/AUTOMATION.md on the hosted project.
+3. M14 is not started and awaits approval.
 
 ## Production readiness and controlled beta (formerly listed as M7; not scheduled)
 
@@ -360,6 +395,17 @@ Use consented, bounded beta accounts with a named operator and support channel. 
 Next steps: apply `202610200002` and `202610200003`, deploy `submit-inquiry`, then the frontend; hosted two-account verification; a decision on opening public sign-up; then invitations and member management. See [docs/MULTI-TENANCY.md](docs/MULTI-TENANCY.md).
 
 ## Current verification ledger
+
+**M13 automation and workflow engine, 27 November 2026 (local, then the hosted database, Edge Functions and Cron; frontend not deployed).**
+
+Passed:
+- `npx tsc -b`, `npm run lint` (no warnings), `npm run check:edge` and `npm run build`;
+- the new `npm run test:automation` (20 sections);
+- all 13 earlier database suites (M13 rolled back first where earlier rollbacks are tested; 23 new signed-in functions in the tenancy grant list);
+- `npx playwright test`: 64 tests including 4 new automation tests. The first run had 63/64: an Integrations test also matched the new sidebar item, which was renamed Automations. Both specs then passed;
+- `npm run test:production`: 64/64.
+
+Auth, HTTP, the AI model and Resend were simulated; nothing was sent. Details and the bugs these tests found: [docs/AUTOMATION.md](docs/AUTOMATION.md#12-tests-executed-27-november-2026-local).
 
 **M12 client collaboration and approvals, 27 November 2026 (local, then hosted database and Edge Functions).**
 

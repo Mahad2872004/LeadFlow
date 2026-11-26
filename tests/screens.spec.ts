@@ -182,3 +182,56 @@ test('app screens', async ({ page }) => {
     await nav(page, 'Sales analytics'); await expect(page.locator('.sp-summary')).toBeVisible(); await page.waitForTimeout(300); await shot(page, 'sales-analytics')
   })
 })
+
+// M13: the Automation Center with real workflows and runs. SCREENS_ONLY=automation captures only these.
+test('automation screens', async ({ page }) => {
+  if (only && !only.some(prefix => prefix.startsWith('automation'))) return
+  const { createAutomationHarness } = await import('./support/automation')
+  db = await createDatabase([owner.id])
+  await db.query('update auth.users set email=$2 where id=$1', [owner.id, owner.email])
+  const as = async (sql: string, params: unknown[] = []) => db.transaction(async tx => {
+    await tx.query("select set_config('request.jwt.claim.sub',$1,true), set_config('request.jwt.claims',$2,true)", [owner.id, JSON.stringify({ sub: owner.id, role: 'authenticated' })]); await tx.exec('set local role authenticated')
+    return Object.values((await tx.query<Record<string, unknown>>(sql, params)).rows[0] ?? {})[0] as Record<string, unknown>
+  })
+  const lead = (id: string, name: string, company: string, website = `https://${id}.example/`) => ({ id, name, email: '', phone: '', company, service: 'Other', source: 'Website', message: '', status: 'New',
+    createdAt: '2026-11-20T00:00:00.000Z', website, industry: 'Dental clinics', address: '', city: 'Austin', region: 'TX', postcode: '', country: 'US' })
+  const saveLeads = async (leads: unknown[]) => { const current = await as('select public.load_workspace_for($1)', [owner.id]) as { data: Record<string, unknown>; revision: number }
+    await as('select public.save_workspace_for($1,$2,$3,$4)', [owner.id, JSON.stringify({ ...current.data, leads }), current.revision, crypto.randomUUID()]) }
+  await as('select public.load_workspace()')
+  for (const key of ['lead_qualification', 'qualified_follow_up', 'feedback_triage', 'project_overdue']) {
+    const created = await as('select public.automation_from_template($1,$2,$3)', [owner.id, key, crypto.randomUUID()]) as { id: string }
+    if (key !== 'feedback_triage') { const detail = await as('select public.automation_workflow_detail($1,$2)', [owner.id, created.id]) as { version: number }; await as('select public.automation_publish($1,$2,$3,$4)', [owner.id, created.id, detail.version, 'First version']) }
+  }
+  await saveLeads([lead('harbor', 'Avery Stone', 'Harbor Dental'), lead('bright', 'Sam Ortiz', 'Brightpath Studio'), lead('nosite', 'Nora Lane', 'Lane Bakery', '')])
+  const current = await as('select public.load_workspace_for($1)', [owner.id]) as { data: { leads: Record<string, unknown>[] } }
+  await saveLeads(current.data.leads.map(item => item.id === 'bright' ? { ...item, status: 'Qualified' } : item))
+  for (let i = 0; i < 20; i++) if (!Object.values((await db.query<Record<string, unknown>>("select public.automation_advance(null,'{\"analysis\":{\"monthlyAnalyses\":0}}'::jsonb)")).rows[0] ?? {})[0]) break
+  const harness = createAutomationHarness(db, origins)
+  await mockSupabase(page, db, { users: [owner] })
+  await page.route(`${apiOrigin}/functions/v1/automation`, async route => {
+    const request = route.request()
+    const response = await harness.automation(new Request(request.url(), { method: request.method(), headers: request.headers(), body: request.method() === 'POST' ? request.postData() : undefined }))
+    return route.fulfill({ status: response.status, headers: Object.fromEntries(response.headers), body: await response.text() })
+  })
+  await page.goto('/login'); await signIn(page, owner.email)
+  await page.getByRole('button', { name: 'Automations', exact: true }).click()
+  await expect(page.locator('.au-metrics')).toBeVisible(); await shot(page, 'automation-overview')
+  await page.getByRole('tab', { name: 'My workflows' }).click(); await expect(page.locator('.au-card').first()).toBeVisible(); await shot(page, 'automation-workflows')
+  await page.getByRole('tab', { name: 'Templates' }).click(); await shot(page, 'automation-templates')
+  await page.getByRole('tab', { name: 'Execution history' }).click(); await expect(page.locator('.au-table')).toBeVisible(); await shot(page, 'automation-history')
+  await page.getByRole('row').filter({ hasText: 'Qualified lead follow-up' }).first().getByRole('button', { name: 'View' }).click()
+  await expect(page.locator('.au-path-log')).toBeVisible(); await shot(page, 'automation-run'); await page.keyboard.press('Escape')
+  await page.getByRole('tab', { name: 'Failed executions' }).click(); await shot(page, 'automation-failed')
+  await page.getByRole('tab', { name: 'Settings' }).click(); await shot(page, 'automation-settings')
+  await page.getByRole('tab', { name: 'My workflows' }).click()
+  await page.locator('.au-card').filter({ hasText: 'Client feedback triage' }).getByRole('button', { name: 'Edit' }).click()
+  await expect(page.locator('.au-paths')).toBeVisible(); await page.locator('.au-node-button').filter({ hasText: 'Design revision task' }).click(); await shot(page, 'automation-builder')
+  await page.getByRole('button', { name: 'Test', exact: true }).click(); await page.getByRole('button', { name: 'Run dry test' }).click()
+  await expect(page.locator('.au-trace')).toBeVisible(); await shot(page, 'automation-test'); await page.keyboard.press('Escape')
+  await page.locator('.au-node-button').filter({ hasText: 'Client feedback submitted' }).click(); await shot(page, 'automation-trigger')
+  await page.getByRole('button', { name: 'Workflows' }).click()
+  harness.ai.answer = () => ({ name: 'Analyze new leads', summary: 'Starts a business report for each new lead with a website, then notifies owners and admins.', sideEffects: [], unsupported: ['Emailing the lead automatically'],
+    definitionJson: JSON.stringify({ trigger: { type: 'lead.created', config: {}, filter: null }, steps: [{ id: 'n1', type: 'action', action: 'analysis.start', inputs: { subject: 'trigger.lead.id' } }] }) })
+  await page.getByRole('button', { name: 'Describe with AI' }).click(); await page.getByLabel('What should happen?').fill('When a new lead arrives, analyze its website and email the lead.')
+  await page.getByRole('button', { name: 'Draft workflow' }).click(); await expect(page.locator('.au-draft')).toBeVisible(); await shot(page, 'automation-ai')
+})

@@ -569,6 +569,7 @@ assert.ok(await count("select count(*) from leadflow_private.outreach_usage wher
 // ---------- 16. Rollback keeps projects, deliverables and files; the migration applies again ----------
 await actAs(db,null,'postgres')
 const filesBefore=await count("select count(*) from leadflow_private.client_documents where status='available'")
+await db.exec(readFileSync('supabase/rollbacks/202611270003_automation_engine.down.sql','utf8'));await db.exec(readFileSync('supabase/rollbacks/202611270002_automation.down.sql','utf8'))
 await db.exec(readFileSync('supabase/rollbacks/202611270001_client_collaboration.down.sql','utf8'))
 assert.equal(await op("select to_regclass('leadflow_private.client_users')::text"),null)
 assert.equal(await op("select to_regprocedure('public.hub_home(uuid)')::text"),null)

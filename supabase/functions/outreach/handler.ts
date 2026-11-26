@@ -3,7 +3,7 @@ import { rpc, rpcAs, RpcError, type Runtime } from '../_shared/runtime.ts'
 import { ProviderError, type AiClient } from '../_shared/analysis/providers.ts'
 import { configuredAccounts } from '../_shared/apollo/client.ts'
 import { advanceContactJob } from '../_shared/outreach/discovery.ts'
-import { buildOutreachPrompt, channelLimits, DraftRejected, outreachAngles, outreachChannels, outreachSchema, outreachSystemPrompt, validateDraft,
+import { buildOutreachPrompt, channelLimits, draftRecord, DraftRejected, outreachAngles, outreachChannels, outreachSchema, outreachSystemPrompt, validateDraft,
   type GenerateOptions, type OutreachAngle, type OutreachChannel, type OutreachContext } from '../_shared/outreach/compose.ts'
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 const subjectOf = (token: string) => { try { return JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))).sub as string } catch { return null } }
@@ -141,15 +141,10 @@ export function createOutreachHandler(runtime: Runtime, deps: OutreachDeps) {
         console.log(`outreach generate rejected ${rejected.code}`)
         return respond(422, { error: rejected.message, code: rejected.code })
       }
-      const opportunity = context.opportunities.find(item => item.id === options.opportunityId)
       try {
         const saved = await rpc<Record<string, unknown>>(runtime, 'save_generated_draft', { target_workspace: workspaceId, actor, target_lead: leadId, request_id: body.requestId, draft_id: draftId,
           expected_version: body.expectedVersion ?? null, replace_edited: body.replaceEdited === true, usage: usage(answer.inputTokens, answer.outputTokens, 'ok'),
-          draft: { contactId: context.contact?.id ?? null, contactName: context.contact ? context.contact.fullName || context.contact.label || context.contact.email : '', analysisId: context.analysis?.id ?? null,
-            opportunityId: opportunity?.id ?? null, opportunityTitle: opportunity?.title ?? '', serviceId: opportunity?.serviceId ?? checked.claims.find(claim => claim.serviceId)?.serviceId ?? null,
-            channel, angle, sequenceStep, parentId, subject: checked.subject, body: checked.body, claims: checked.claims, grounding: checked.grounding,
-            warnings: checked.warnings, provider: answer.provider, model: answer.model, inputTokens: answer.inputTokens, outputTokens: answer.outputTokens,
-            settings: { tone: context.preferences.tone, length: context.preferences.length, objective: context.preferences.objective, channel, sequenceStep, instructions: options.instructions, angleSummary: checked.angleSummary } } })
+          draft: draftRecord(context, options, checked, answer, parentId) })
         console.log(`outreach generate ${String(saved.id)} ${checked.grounding}`)
         return respond(200, { draft: saved, existing: saved.existing === true })
       } catch (error) {

@@ -201,6 +201,34 @@ M12 adds a client-facing portal on top of M10 clients, M11 projects and delivera
 
 Details: [docs/CLIENT-COLLABORATION.md](docs/CLIENT-COLLABORATION.md).
 
+## Automation and workflow engine (M13; local)
+
+M13 adds automations on top of every earlier module. It reuses each module's role-checked functions, the task, notification and email systems, Supabase Cron, the AI client and ledger, and the M3 request patterns. It adds no parallel ones.
+
+- **Workflows are data:**
+  - a trigger, then condition, branch, delay, wait and action steps;
+  - checked against a registry kept in the database (`automation_catalog`): 44 triggers, 16 actions, typed fields and operators;
+  - published as immutable, compiled versions.
+- **Events:**
+  - Statement triggers on `leads` and `follow_up_tasks` compare each snapshot write with the last state seen. This state is kept only while something listens.
+  - Deferred row triggers on the other modules' tables fire at commit.
+  - Both call `automation_emit`, which records the event and queues runs in the same transaction (a transactional outbox). It evaluates trigger filters, and wakes runs waiting for that record.
+- **Execution:**
+  - The `automation-worker` Edge Function, called by Cron every minute, runs `automation_tick` (leases, schedules, scheduled checks, retention), then `automation_advance` repeatedly.
+  - Each call executes one run's steps in subtransactions, as the member who published the version, through the existing functions.
+  - Waits and delays are stored. AI outreach drafts run in the worker with the outreach composer.
+- **Safety:**
+  - permissions re-checked per action, and lost access pauses the workflow;
+  - consequential actions need confirmation and an owner or admin;
+  - idempotency keys per run and step;
+  - loop protection by causal chain;
+  - per-workflow and per-workspace rate limits, 3 concurrent runs per workspace;
+  - sanitized logs (no emails, phone numbers or credentials).
+- **Webhooks:** `automation-webhook` verifies an HMAC signature with a key derived from `EMAIL_HASH_SECRET` (nothing stored), a 5-minute timestamp window and event-ID replay protection.
+- **UI:** the Automation Center (overview, workflows, templates, history, failed runs, settings), the visual builder with dry runs and live tests, and AI drafting through the `automation` function (suggestions only).
+
+Details: [docs/AUTOMATION.md](docs/AUTOMATION.md).
+
 ## Current ingress and delivery
 
 Public intake validates origin, normalized fields, payload size, request UUID, honeypot, Turnstile success/action/hostname and durable quotas. The destination is deployment-secret configuration, not a client-selected owner. Inbound automation rejects browser-Origin requests and validates its bearer credential; the database derives the owner from the credential. Origin rejection alone is not authentication.

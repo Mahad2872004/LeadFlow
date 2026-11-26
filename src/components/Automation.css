@@ -1,0 +1,259 @@
+/* M13 Automation Center and workflow builder. Built on the shared tokens (index.css), so light and dark themes follow. */
+
+.au-page { display: grid; gap: 16px; min-width: 0 }
+.au-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px }
+.au-toolbar .sp-tabs { margin: 0 }
+.au-toolbar-actions { display: flex; flex-wrap: wrap; gap: 8px }
+.au-panel { padding: 20px 22px; min-width: 0 }
+.au-panel .section-heading { align-items: flex-start; gap: 12px; flex-wrap: wrap }
+.au-panel h3 { margin: 0 0 6px; font-size: 15px }
+.au-muted { color: var(--lf-muted); font-size: 13.5px }
+.au-help { display: block; margin: 4px 0 0; color: var(--lf-muted); font-size: 12.5px; line-height: 1.5 }
+.au-note { grid-column: 1 / -1; margin: 0; color: var(--lf-muted); font-size: 13px }
+.au-error, .au-warning, .au-info { margin: 8px 0; padding: 10px 12px; border: 1px solid; border-radius: var(--lf-radius-sm); font-size: 13.5px; line-height: 1.5 }
+.au-error { border-color: var(--lf-danger-line); background: var(--lf-danger-soft); color: var(--lf-danger) }
+.au-warning { border-color: var(--lf-warning-line); background: var(--lf-warning-soft); color: var(--lf-ink) }
+.au-info { border-color: var(--lf-info-line); background: var(--lf-info-soft); color: var(--lf-ink) }
+.au-warning h4, .au-warning ul { margin: 4px 0 }
+.au-error-text { display: block; color: var(--lf-danger); font-size: 12.5px }
+.au-warning-text { display: block; color: var(--lf-warning); font-size: 12px }
+.au-banner { margin: 0 }
+
+/* Pills */
+.au-pill, .au-status, .au-run-status { display: inline-flex; align-items: center; gap: 4px; min-height: 22px; padding: 1px 9px; border: 1px solid var(--lf-line); border-radius: 999px;
+  background: var(--lf-subtle); color: var(--lf-muted); font-size: 11.5px; font-weight: 650; white-space: nowrap; vertical-align: middle }
+.au-pill-success, .au-status-active, .au-run-completed { border-color: var(--lf-success-line); background: var(--lf-success-soft); color: var(--lf-success) }
+.au-pill-warning, .au-status-paused, .au-run-attention { border-color: var(--lf-warning-line); background: var(--lf-warning-soft); color: var(--lf-warning) }
+.au-pill-danger, .au-run-failed { border-color: var(--lf-danger-line); background: var(--lf-danger-soft); color: var(--lf-danger) }
+.au-pill-info, .au-run-queued, .au-run-running { border-color: var(--lf-info-line); background: var(--lf-info-soft); color: var(--lf-info) }
+.au-pill-ai, .au-run-waiting { border-color: var(--lf-ai-line); background: var(--lf-ai-soft); color: var(--lf-ai) }
+.au-status-archived, .au-run-cancelled { color: var(--lf-faint) }
+.au-run-text.au-run-failed, .au-run-text.au-run-attention { background: none; border: 0; padding: 0 }
+.au-run-text { font-weight: 600 }
+
+/* Overview */
+.au-metrics { margin-bottom: 0 }
+.au-overview { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 16px }
+.au-attention { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none }
+.au-attention li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; border: 1px solid var(--lf-warning-line); border-radius: var(--lf-radius-sm); background: var(--lf-warning-soft) }
+.au-attention strong { display: block; font-size: 14px }
+.au-attention small { color: var(--lf-muted) }
+.au-kv { display: grid; grid-template-columns: minmax(110px, max-content) minmax(0, 1fr); gap: 6px 14px; margin: 8px 0 0; font-size: 13px }
+.au-kv dt { color: var(--lf-muted) }
+.au-kv dd { margin: 0; overflow-wrap: anywhere }
+.au-usage dd { font-weight: 600 }
+.au-empty .empty { max-width: 640px; margin: 0 auto }
+.au-empty-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 12px }
+
+/* Workflow and template cards */
+.au-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 290px), 1fr)); gap: 12px; margin: 0; padding: 0; list-style: none }
+.au-card { display: flex; flex-direction: column; gap: 8px; min-width: 0; padding: 16px; border: 1px solid var(--lf-line); border-radius: var(--lf-radius-lg); background: var(--lf-surface); box-shadow: var(--lf-shadow-xs) }
+.au-card-head { display: flex; flex-wrap: wrap; gap: 6px }
+.au-card-title { display: grid; gap: 2px; padding: 0; border: 0; background: none; color: inherit; text-align: left; cursor: pointer }
+.au-card-title strong, .au-card-name { font-size: 15px; font-weight: 650; color: var(--lf-ink) }
+.au-card-title:hover strong { color: var(--lf-brand-strong) }
+.au-card-title small { color: var(--lf-muted); font-size: 12.5px }
+.au-card-text { margin: 0; color: var(--lf-text); font-size: 13px; line-height: 1.5 }
+.au-card-facts { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 3px 10px; margin: 0; font-size: 12.5px }
+.au-card-facts dt { color: var(--lf-muted) }
+.au-card-facts dd { margin: 0 }
+.au-card-attention { margin: 0; color: var(--lf-warning); font-size: 12.5px }
+.au-card-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin-top: auto; padding-top: 6px }
+.au-template-group + .au-template-group { margin-top: 18px }
+.au-template-group h3 { margin: 0 0 10px; color: var(--lf-muted); font-size: 12.5px; letter-spacing: .04em; text-transform: uppercase }
+.au-template-steps { margin: 0; padding-left: 18px; color: var(--lf-muted); font-size: 12.5px; line-height: 1.6 }
+
+/* History */
+.au-filters { display: flex; flex-wrap: wrap; gap: 8px }
+.au-table-wrap { overflow-x: auto; margin-top: 8px }
+.au-table { width: 100%; border-collapse: collapse; font-size: 13px }
+.au-table th { padding: 8px 10px; border-bottom: 1px solid var(--lf-line); color: var(--lf-muted); font-size: 12px; font-weight: 600; text-align: left; white-space: nowrap }
+.au-table td { padding: 10px; border-bottom: 1px solid var(--lf-line); vertical-align: top }
+.au-table td small { display: block; margin-top: 2px; color: var(--lf-muted); font-size: 12px }
+.au-table tr:last-child td { border-bottom: 0 }
+.au-run-link { font-weight: 600 }
+.au-row-actions { white-space: nowrap }
+.au-more { margin-top: 12px }
+.au-settings { display: grid; gap: 16px }
+.au-facts { display: grid; gap: 8px; margin: 0; padding-left: 18px; font-size: 13.5px; line-height: 1.55 }
+.au-facts code { font-family: var(--lf-mono); font-size: 12px; overflow-wrap: anywhere }
+
+/* Builder */
+.au-builder { display: grid; gap: 14px; min-width: 0 }
+.au-builder-head { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 12px 16px; padding: 14px 18px }
+.au-back { display: inline-flex; align-items: center; gap: 4px }
+.au-back svg { transform: rotate(90deg) }
+.au-title { display: grid; gap: 4px; min-width: 0 }
+.au-name { width: 100%; min-width: 0; padding: 4px 8px; margin-left: -8px; border: 1px solid transparent; border-radius: var(--lf-radius-sm); background: none; color: var(--lf-ink); font-size: 19px; font-weight: 650 }
+.au-name:hover:not(:disabled), .au-name:focus { border-color: var(--lf-line); background: var(--lf-surface) }
+.au-title-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; color: var(--lf-muted); font-size: 12.5px }
+.au-unsaved { color: var(--lf-warning); font-weight: 600 }
+.au-issues-count { color: var(--lf-danger); font-weight: 600 }
+.au-valid { color: var(--lf-success); font-weight: 600 }
+.au-head-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px }
+.au-builder-head > .au-error, .au-builder-head > .au-warning { grid-column: 1 / -1; margin: 0 }
+.au-builder-body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(320px, 400px); gap: 14px; align-items: start }
+
+.au-canvas { min-width: 0; min-height: 520px; padding: 26px 16px 40px; overflow: auto; border: 1px solid var(--lf-line); border-radius: var(--lf-radius-lg);
+  background-color: var(--lf-surface-2); background-image: radial-gradient(var(--lf-grid-line) 1px, transparent 1px); background-size: 18px 18px }
+.au-flow { display: flex; flex-direction: column; align-items: center; min-width: max-content; margin: 0 auto }
+.au-node { display: flex; flex-direction: column; align-items: center; width: 100% }
+.au-node-button { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; align-items: start; gap: 10px; width: 340px; max-width: 100%; padding: 12px 14px; border: 1px solid var(--lf-line);
+  border-radius: var(--lf-radius); background: var(--lf-surface); color: inherit; text-align: left; box-shadow: var(--lf-shadow-xs); cursor: pointer; transition: border-color .15s var(--lf-ease), box-shadow .15s var(--lf-ease) }
+.au-node-button:hover { border-color: var(--lf-line-strong); box-shadow: var(--lf-shadow) }
+.au-node.active > .au-node-button { border-color: var(--lf-brand); box-shadow: 0 0 0 3px var(--lf-brand-ring) }
+.au-node.invalid > .au-node-button { border-color: var(--lf-danger-line) }
+.au-node-icon { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 10px; background: var(--lf-brand-soft); color: var(--lf-brand-strong); font-size: 16px; font-weight: 700 }
+.au-node-text { display: grid; gap: 2px; min-width: 0 }
+.au-node-text small { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; color: var(--lf-muted); font-size: 11px; font-weight: 650; letter-spacing: .04em; text-transform: uppercase }
+.au-node-text strong { color: var(--lf-ink); font-size: 14px }
+.au-node-text > span { color: var(--lf-muted); font-size: 12.5px; line-height: 1.45; overflow-wrap: anywhere }
+.au-node-issues { display: grid; place-items: center; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px; background: var(--lf-danger); color: #fff; font-size: 11.5px; font-weight: 700 }
+.au-connector { position: relative; display: flex; justify-content: center; align-items: center; height: 38px }
+.au-line { position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; background: var(--lf-line-strong); transform: translateX(-1px) }
+.au-add { position: relative; display: grid; place-items: center; width: 24px; height: 24px; padding: 0; border: 1px solid var(--lf-line-strong); border-radius: 999px; background: var(--lf-surface); color: var(--lf-muted); cursor: pointer; opacity: .85 }
+.au-add:hover, .au-add:focus-visible, .au-add[aria-expanded="true"] { border-color: var(--lf-brand); color: var(--lf-brand-strong); opacity: 1 }
+.au-add-menu { position: absolute; z-index: 20; top: 32px; display: grid; width: 270px; padding: 6px; border: 1px solid var(--lf-line); border-radius: var(--lf-radius); background: var(--lf-surface); box-shadow: var(--lf-shadow-pop) }
+.au-add-menu button { display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 8px; align-items: start; padding: 8px; border: 0; border-radius: 8px; background: none; color: inherit; text-align: left; cursor: pointer }
+.au-add-menu button:hover, .au-add-menu button:focus-visible { background: var(--lf-subtle) }
+.au-add-menu strong { display: block; font-size: 13.5px }
+.au-add-menu small { color: var(--lf-muted); font-size: 12px }
+.au-end { padding: 4px 14px; border: 1px dashed var(--lf-line-strong); border-radius: 999px; color: var(--lf-muted); font-size: 12px; font-weight: 600 }
+.au-paths { display: flex; align-items: flex-start; gap: 12px; margin-top: 14px; padding: 12px; border: 1px dashed var(--lf-line-strong); border-radius: var(--lf-radius-lg); background: var(--lf-glass-canvas) }
+.au-path { display: flex; flex-direction: column; align-items: center; min-width: 250px; padding: 8px; border-radius: var(--lf-radius); background: var(--lf-surface) }
+.au-path .au-node-button { width: 300px }
+.au-otherwise { background: var(--lf-subtle) }
+.au-path-head { display: grid; gap: 2px; width: 100%; padding: 4px 6px 0; text-align: center }
+.au-path-head strong { font-size: 13px }
+.au-path-head small { color: var(--lf-muted); font-size: 11.5px; overflow-wrap: anywhere }
+
+.au-config { position: sticky; top: 12px; max-height: calc(100vh - 24px); overflow: auto; padding: 18px }
+.au-panel-body { display: grid; gap: 12px }
+.au-panel-body h3 { margin: 0; font-size: 16px }
+.au-panel-body label, .au-about label, .au-test label, .au-publish label, .au-webhook label, .au-settings label { display: grid; gap: 5px; font-size: 13px; font-weight: 600; color: var(--lf-text) }
+.au-panel-body input, .au-panel-body select, .au-panel-body textarea, .au-about textarea, .au-test input, .au-test select { width: 100%; min-width: 0 }
+.au-kicker { margin: 0; color: var(--lf-brand-strong); font-size: 11.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase }
+.au-fieldset { display: grid; gap: 10px; min-width: 0; margin: 0; padding: 12px; border: 1px solid var(--lf-line); border-radius: var(--lf-radius) }
+.au-fieldset legend { padding: 0 4px; font-size: 13px; font-weight: 650 }
+.au-row { display: flex; flex-wrap: wrap; align-items: end; gap: 8px }
+.au-row > * { flex: 1 1 100px; min-width: 0 }
+.au-check { display: flex !important; flex-direction: row; align-items: center; gap: 8px !important; font-weight: 500 !important }
+.au-check input { width: auto !important }
+.au-confirm { padding: 10px 12px; border: 1px solid var(--lf-warning-line); border-radius: var(--lf-radius-sm); background: var(--lf-warning-soft) }
+.au-required { color: var(--lf-danger) }
+.au-template { display: grid; gap: 5px; font-size: 13px; font-weight: 600 }
+.au-variable { justify-self: start; width: auto !important; max-width: 100%; font-size: 12.5px }
+.au-recipients { gap: 6px }
+.au-inline-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px }
+.au-step-actions { display: flex; flex-wrap: wrap; gap: 4px 12px; padding-top: 8px; border-top: 1px solid var(--lf-line) }
+.au-issues { padding: 10px 12px; border: 1px solid var(--lf-danger-line); border-radius: var(--lf-radius-sm); background: var(--lf-danger-soft); font-size: 13px }
+.au-issues h4, .au-effects h4 { margin: 0 0 4px; font-size: 13px }
+.au-issues ul, .au-effects ul { margin: 0; padding-left: 18px; line-height: 1.5 }
+.au-effects { padding: 10px 12px; border: 1px solid var(--lf-line); border-radius: var(--lf-radius-sm); background: var(--lf-subtle); font-size: 13px }
+.au-about { margin-top: 12px }
+.au-webhook-box { display: grid; gap: 6px; padding: 10px; border-radius: var(--lf-radius-sm); background: var(--lf-subtle); font-size: 12.5px }
+.au-webhook-box p { margin: 0 }
+
+.au-group { display: grid; gap: 8px }
+.au-subgroup { display: grid; gap: 6px; padding: 8px 10px; border-left: 3px solid var(--lf-brand-soft); border-radius: 4px; background: var(--lf-subtle) }
+.au-match { display: flex !important; align-items: center; gap: 8px !important }
+.au-match select { width: auto !important }
+.au-condition { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr) auto; align-items: center; gap: 6px }
+.au-condition > input + input { grid-column: 3 }
+.au-multi { grid-column: 3; display: grid; gap: 2px; font-size: 12.5px }
+.au-data summary { cursor: pointer; font-size: 13px; font-weight: 650 }
+.au-data ul { display: grid; gap: 4px; margin: 8px 0 0; padding: 0; list-style: none; font-size: 12px }
+.au-data li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0 8px; padding: 4px 6px; border-radius: 6px }
+.au-data li:hover { background: var(--lf-subtle) }
+.au-data code { grid-row: span 2; align-self: center; font-family: var(--lf-mono); font-size: 11px; color: var(--lf-muted); overflow-wrap: anywhere }
+.au-data small { color: var(--lf-faint) }
+
+/* Test, dry run and run detail */
+.au-test { display: grid; gap: 20px; padding: 4px 2px 12px }
+.au-test section { display: grid; gap: 10px }
+.au-test h3 { margin: 0; font-size: 15px }
+.au-sample { display: grid; gap: 6px; max-height: 280px; overflow: auto; padding: 8px; border: 1px solid var(--lf-line); border-radius: var(--lf-radius-sm) }
+.au-sample label { grid-template-columns: minmax(110px, 40%) minmax(0, 1fr); align-items: center; font-weight: 500 }
+.au-sample span { color: var(--lf-muted); font-family: var(--lf-mono); font-size: 11.5px; overflow-wrap: anywhere }
+.au-live { padding-top: 14px; border-top: 1px solid var(--lf-line) }
+.au-trace, .au-path-log { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none }
+.au-trace li, .au-path-log li { padding: 10px 12px; border: 1px solid var(--lf-line); border-left-width: 3px; border-radius: var(--lf-radius-sm); background: var(--lf-surface) }
+.au-trace-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px }
+.au-trace-head small { margin-left: auto; color: var(--lf-faint); font-size: 11.5px }
+.au-step-completed { border-left-color: var(--lf-success) !important }
+.au-step-failed { border-left-color: var(--lf-danger) !important }
+.au-step-retrying, .au-step-waiting { border-left-color: var(--lf-warning) !important }
+.au-step-skipped, .au-step-cancelled { border-left-color: var(--lf-line-strong) !important }
+.au-step-pill-completed { border-color: var(--lf-success-line); background: var(--lf-success-soft); color: var(--lf-success) }
+.au-step-pill-failed { border-color: var(--lf-danger-line); background: var(--lf-danger-soft); color: var(--lf-danger) }
+.au-step-pill-retrying, .au-step-pill-waiting { border-color: var(--lf-warning-line); background: var(--lf-warning-soft); color: var(--lf-warning) }
+.au-step-result { margin: 6px 0 0; color: var(--lf-text); font-size: 13px }
+.au-path-log details, .au-trigger-data { margin-top: 6px; font-size: 13px }
+.au-path-log summary, .au-trigger-data summary { cursor: pointer; color: var(--lf-muted); font-weight: 600 }
+.au-path-log h4 { margin: 8px 0 0; font-size: 12px; color: var(--lf-muted); text-transform: uppercase; letter-spacing: .04em }
+.au-run { display: grid; gap: 12px; padding: 4px 2px 12px }
+.au-run h3 { margin: 8px 0 0; font-size: 15px }
+.au-run-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px }
+.au-run-head .text-button { margin-left: auto }
+.au-run-actions { display: flex; flex-wrap: wrap; gap: 8px }
+.au-versions { display: grid; gap: 8px; margin: 8px 0 0; padding: 0; list-style: none }
+.au-versions li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; border: 1px solid var(--lf-line); border-radius: var(--lf-radius-sm) }
+.au-versions li > div { display: grid; gap: 2px }
+.au-versions small { color: var(--lf-muted); font-size: 12px }
+.au-publish, .au-webhook, .au-assistant { display: grid; gap: 12px }
+.au-code { margin: 0; padding: 12px; overflow-x: auto; border-radius: var(--lf-radius-sm); background: var(--lf-subtle); font-family: var(--lf-mono); font-size: 12px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere }
+.au-assistant textarea { width: 100% }
+.au-examples { display: flex; flex-wrap: wrap; gap: 6px }
+.au-chip { padding: 5px 10px; border: 1px solid var(--lf-line); border-radius: 999px; background: var(--lf-surface); color: var(--lf-text); font-size: 12px; cursor: pointer; text-align: left }
+.au-chip:hover { border-color: var(--lf-brand); color: var(--lf-brand-strong) }
+.au-draft { display: grid; gap: 8px; padding: 14px; border: 1px solid var(--lf-ai-line); border-radius: var(--lf-radius); background: var(--lf-ai-soft) }
+.au-draft h3, .au-draft p { margin: 0 }
+
+@media (max-width: 1100px) {
+  .au-builder-body { grid-template-columns: minmax(0, 1fr) }
+  .au-config { position: static; max-height: none }
+  .au-overview { grid-template-columns: minmax(0, 1fr) }
+}
+@media (max-width: 720px) {
+  .au-builder-head { grid-template-columns: minmax(0, 1fr) }
+  .au-head-actions { justify-content: flex-start }
+  .au-toolbar-actions { width: 100% }
+  .au-toolbar-actions .primary { flex: 1 }
+  .au-node-button, .au-path .au-node-button { width: min(300px, calc(100vw - 90px)) }
+  .au-condition { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto }
+  .au-condition > :nth-child(3) { grid-column: 1 / 3 }
+  .au-condition > input + input, .au-multi { grid-column: 1 / 3 }
+  .au-kv { grid-template-columns: minmax(0, 1fr) }
+  .au-kv dt { margin-top: 4px }
+  .au-panel { padding: 16px }
+}
+
+/* Form controls (the builder doesn't sit in a <form>, so the global form styles don't apply). */
+:is(.au-page, .au-builder) :is(input:not([type=checkbox]):not([type=radio]):not(.au-name), select, textarea) { min-height: 38px; padding: 7px 11px; border: 1px solid var(--lf-line-strong);
+  border-radius: 9px; background-color: var(--lf-surface); color: var(--lf-ink); font-size: 13.5px; font-weight: 400; transition: border-color .15s, box-shadow .15s }
+:is(.au-page, .au-builder) select { -webkit-appearance: none; appearance: none; padding-right: 30px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2356645e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m7 10 5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 9px center; background-size: 15px }
+:root[data-theme="dark"] :is(.au-page, .au-builder) select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238f9199' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m7 10 5 5 5-5'/%3E%3C/svg%3E") }
+:is(.au-page, .au-builder) select option { background: var(--lf-surface); color: var(--lf-ink) }
+:is(.au-page, .au-builder) textarea { line-height: 1.5; resize: vertical }
+:is(.au-page, .au-builder) :is(input, select, textarea)::placeholder { color: var(--lf-faint) }
+:is(.au-page, .au-builder) :is(input:not([type=checkbox]):not([type=radio]):not(.au-name), select, textarea):focus { border-color: var(--lf-brand); outline: none; box-shadow: 0 0 0 3px var(--lf-brand-ring) }
+:is(.au-page, .au-builder) :is(input, select, textarea):disabled { background-color: var(--lf-subtle); color: var(--lf-muted); cursor: not-allowed }
+:is(.au-page, .au-builder) input[type=checkbox] { width: 16px; height: 16px; margin: 0; accent-color: var(--lf-brand) }
+.au-label-text { display: inline }
+.au-variable { min-height: 32px !important; padding-top: 4px !important; padding-bottom: 4px !important; font-size: 12.5px !important; color: var(--lf-muted) !important }
+.au-sample:empty { display: none }
+
+/* Branches stay compact; on narrow screens their paths stack. */
+.au-path { min-width: 0; padding: 6px }
+.au-path .au-node-button { width: 212px; grid-template-columns: 28px minmax(0, 1fr) auto; padding: 10px 12px }
+.au-path .au-node-icon { width: 28px; height: 28px; font-size: 14px }
+.au-paths { gap: 8px; padding: 8px }
+.au-builder-body { grid-template-columns: minmax(0, 1fr) minmax(300px, 370px) }
+@media (max-width: 1100px) { .au-builder-body { grid-template-columns: minmax(0, 1fr) } }
+@media (max-width: 720px) {
+  .au-flow { min-width: 0 }
+  .au-paths { flex-direction: column; align-items: stretch; width: 100% }
+  .au-path .au-node-button { width: min(300px, calc(100vw - 110px)) }
+}

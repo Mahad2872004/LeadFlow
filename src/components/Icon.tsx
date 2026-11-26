@@ -32,6 +32,7 @@ const paths = {
   project: <><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 13h5M8 16h8"/></>,
   close: <path d="M6 6l12 12M18 6 6 18"/>,
   building: <><path d="M4 21V5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v16M15 9h3a2 2 0 0 1 2 2v10M3 21h18"/><path d="M8 7h3M8 11h3M8 15h3"/></>,
+  flow: <><rect x="3" y="3" width="7" height="6" rx="1.5"/><rect x="14" y="15" width="7" height="6" rx="1.5"/><path d="M6.5 9v3a3 3 0 0 0 3 3h4.5"/><circle cx="17.5" cy="6" r="2.5"/><path d="M10 6h5"/></>,
 } satisfies Record<string, ReactNode>
 export type IconName = keyof typeof paths
 export function Icon({name,size=20}:{name:IconName;size?:number}) {

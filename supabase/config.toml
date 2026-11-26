@@ -56,3 +56,15 @@ verify_jwt = false
 [functions.portal-notifications]
 # A scheduler calls this with the shared worker secret (x-worker-secret), not a Supabase token.
 verify_jwt = false
+
+[functions.automation]
+# Callers are checked by passing their token to the database (automation_center_for and the other automation functions).
+verify_jwt = false
+
+[functions.automation-worker]
+# A scheduler calls this with the shared worker secret (x-worker-secret), not a Supabase token.
+verify_jwt = false
+
+[functions.automation-webhook]
+# External systems sign each request with the endpoint's HMAC key; there is no Supabase token.
+verify_jwt = false
