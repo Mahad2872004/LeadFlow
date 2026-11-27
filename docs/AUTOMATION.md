@@ -1,6 +1,6 @@
 # Automation and workflow engine (M13)
 
-**Status: implemented and verified locally, 27 November 2026.**
+**Status: implemented and verified locally, 27 November 2026; proposal and reply triggers added 28 November.**
 
 The same day, M13 went live on https://leadflowglobal.vercel.app: both migrations, the three Edge Functions, the every-minute Cron job and the frontend (commit `4440abc` on `main`). See [Hosted rollout](#13-hosted-rollout-27-november-2026).
 
@@ -593,3 +593,7 @@ Done at the owner's request, on project `fzgxpwmqzmvgmijviaar`.
       - the test lead with its task, history, provenance and import receipt.
 
       Promptly is back to its 5 leads, and no automation records remain.
+9. **Proposal and reply triggers (28 November 2026):**
+   - commit `86ed7be` was fast-forwarded to `main`, and Vercel served the new build about 30 seconds later;
+   - `npx supabase db push --remote --dry-run` listed only `202611280001`, then `db push` applied it;
+   - read-only checks: the history lists it; `deal.proposal_sent`, `deal.reply_recorded` and the reply wait are registered; the deferred capture trigger is on `deal_activities`, and signed-in users can't call its function.
