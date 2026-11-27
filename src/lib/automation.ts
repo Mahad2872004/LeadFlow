@@ -170,6 +170,15 @@ export function exampleData(fields: Field[]): Record<string, unknown> {
   }
   return data
 }
+/** Real test data over example values, one level deep, so every field the trigger defines has a value to test with. */
+export function withExamples(example: Record<string, unknown>, real: Record<string, unknown>): Record<string, unknown> {
+  const merged: Record<string, unknown> = { ...example }
+  for (const [key, value] of Object.entries(real)) {
+    const base = merged[key]
+    merged[key] = value && typeof value === 'object' && !Array.isArray(value) && base && typeof base === 'object' && !Array.isArray(base) ? { ...base, ...value } : value
+  }
+  return merged
+}
 /** A dry run's inputs as [label, text], with the action's own labels and names for members, stages and templates. */
 export function formatInputs(action: ActionDef | null | undefined, input: Record<string, unknown>, center: CenterData): [string, string][] {
   const { lookups } = center

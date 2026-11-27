@@ -36,6 +36,17 @@ select cron.schedule('leadflow-analysis-worker', '*/2 * * * *', $job$
     timeout_milliseconds := 120000)
 $job$);
 
+-- Client portal and automation emails (M12, M13): every 5 minutes, offset by 2. Each call sends up to 20 queued emails.
+-- Needs RESEND_API_KEY, NOTIFICATION_FROM and APP_URL; without them it claims nothing.
+select cron.schedule('leadflow-portal-notifications', '2-59/5 * * * *', $job$
+  select net.http_post(
+    url := 'https://fzgxpwmqzmvgmijviaar.supabase.co/functions/v1/portal-notifications',
+    headers := jsonb_build_object('Content-Type', 'application/json',
+      'x-worker-secret', (select decrypted_secret from vault.decrypted_secrets where name = 'leadflow_worker_secret')),
+    body := '{}'::jsonb,
+    timeout_milliseconds := 60000)
+$job$);
+
 -- Automations (M13): every minute. Each call releases expired leases, fires due schedules and scheduled checks, then
 -- advances due workflow runs for about 50 seconds. Delays and waits are stored rows, so nothing sleeps between calls.
 select cron.schedule('leadflow-automation-worker', '* * * * *', $job$
@@ -51,4 +62,4 @@ $job$);
 --   select jobid, status, return_message, start_time from cron.job_run_details order by start_time desc limit 10;
 --   select id, status_code, left(content, 200), error_msg, created from net._http_response order by created desc limit 10;
 -- Stop: select cron.unschedule('leadflow-onboarding-reminders'); select cron.unschedule('leadflow-retry-notifications'); select cron.unschedule('leadflow-analysis-worker');
---   select cron.unschedule('leadflow-automation-worker');
+--   select cron.unschedule('leadflow-automation-worker'); select cron.unschedule('leadflow-portal-notifications');

@@ -405,7 +405,7 @@ await as(owner,"select public.set_client_status($1,$2,'unarchive',$3,'')",[W,cli
 // 19. Rollback keeps clients and their tasks (as client tasks); the migration applies again.
 await actAs(db,null,'postgres')
 const taskCount=await one('select count(*)::int from public.follow_up_tasks')
-await db.exec(readFileSync('supabase/rollbacks/202611270003_automation_engine.down.sql','utf8'));await db.exec(readFileSync('supabase/rollbacks/202611270002_automation.down.sql','utf8'))
+await db.exec(readFileSync('supabase/rollbacks/202611280001_automation_deal_activity.down.sql','utf8'));await db.exec(readFileSync('supabase/rollbacks/202611270003_automation_engine.down.sql','utf8'));await db.exec(readFileSync('supabase/rollbacks/202611270002_automation.down.sql','utf8'))
 await db.exec(readFileSync('supabase/rollbacks/202611270001_client_collaboration.down.sql','utf8'))
 await db.exec(readFileSync('supabase/rollbacks/202611260001_project_delivery.down.sql','utf8'))
 assert.equal(await one("select to_regclass('leadflow_private.projects')"),null)

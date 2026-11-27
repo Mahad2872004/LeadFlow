@@ -805,4 +805,49 @@ const call=async(handler,request)=>{const response=await handler(request);return
   section('overview and history: real counts only, tests apart; usage counters; keyset pagination; failed-run filter with the failing step')
 }
 
+
+// ---------- 21. Proposals and replies recorded on a deal ----------
+{
+  const deal=await as(member,'select public.create_deal($1,$2,$3,true)',[W,{leadId:'harbor',title:'SEO retainer',value:'1200',currency:'USD',ownerId:member},id()])
+  const replies=(await workflow(admin,{trigger:{type:'deal.reply_recorded',filter:g(cond('trigger.activity.sentiment','equals','positive'))},steps:[
+    {id:'n1',type:'action',action:'task.create',inputs:{subject:'trigger.deal.id',title:'Answer the {{trigger.activity.channel}} reply on {{trigger.deal.title}}',due:{mode:'days',days:0},assignee:'record_owner'}}]},'Positive reply')).id
+  await publish(admin,replies)
+  const chase=(await workflow(admin,{trigger:{type:'deal.proposal_sent'},steps:[
+    {id:'n1',type:'wait',event:'deal.reply_recorded',subject:'trigger.deal.id',timeout:{amount:7,unit:'days'},onTimeout:'continue'},
+    {id:'n2',type:'branch',cases:[{id:'b1',label:'Replied',when:g(cond('steps.n1.received','is_true')),steps:[
+      {id:'n3',type:'action',action:'deal.add_activity',inputs:{subject:'trigger.deal.id',text:'Reply received ({{steps.n1.sentiment}}) after the proposal.'}}]}],
+      otherwise:{steps:[{id:'n4',type:'action',action:'task.create',inputs:{subject:'trigger.deal.id',title:'Chase the proposal for {{trigger.deal.title}}',due:{mode:'days',days:0}}}]}}]},'Chase proposals')).id
+  await publish(admin,chase)
+  await as(member,'select public.record_deal_activity($1,$2,$3,$4)',[W,deal.id,{kind:'proposal_sent',summary:'SEO retainer proposal'},id()])
+  await advanceAll()
+  const [waiting]=await runs(chase)
+  assert.deepEqual([waiting.status,waiting.wait.event,waiting.wait.key],['waiting','deal.reply_recorded',`deal:${deal.id}`])
+  assert.match(waiting.context.trigger.activity.summary,/SEO retainer proposal/)
+  // A neutral reply: the positive-reply workflow's filter doesn't match, and the waiting run wakes and takes the Replied path.
+  await as(member,'select public.record_deal_activity($1,$2,$3,$4)',[W,deal.id,{kind:'reply',sentiment:'neutral',channel:'email'},id()])
+  assert.equal((await runs(replies)).length,0)
+  await advanceAll()
+  const done=(await runs(chase))[0]
+  assert.equal(done.status,'completed'); assert.equal(done.context.steps.n1.sentiment,'neutral')
+  assert.equal(await count("select count(*) from leadflow_private.deal_activities where deal_id=$1 and kind='note' and details like '%Reply received (neutral) after the proposal.'",[deal.id]),1)
+  assert.equal(await count(`select count(*) from public.follow_up_tasks where "dealId"=$1 and notes like 'Chase the proposal%'`,[deal.id]),0)
+  // A positive reply starts the other workflow; the task goes to the deal's owner.
+  await as(member,'select public.record_deal_activity($1,$2,$3,$4)',[W,deal.id,{kind:'reply',sentiment:'positive',channel:'whatsapp'},id()])
+  await advanceAll()
+  const answer=(await rows(`select * from public.follow_up_tasks where "dealId"=$1 and notes='Answer the whatsapp reply on SEO retainer'`,[deal.id]))
+  assert.equal(answer.length,1); assert.equal(answer[0].assigneeId,member)
+  // No reply within the wait: the run continues down Otherwise and creates the chase task.
+  await as(member,'select public.record_deal_activity($1,$2,$3,$4)',[W,deal.id,{kind:'proposal_sent',summary:'Revised proposal'},id()])
+  await advanceAll()
+  await op("update leadflow_private.automation_runs set next_run_at=now() where workflow_id=$1 and status='waiting'",[chase])
+  await advanceAll()
+  assert.equal(await count(`select count(*) from public.follow_up_tasks where "dealId"=$1 and notes='Chase the proposal for SEO retainer'`,[deal.id]),1)
+  // A call or a note is neither event.
+  await as(member,'select public.record_deal_activity($1,$2,$3,$4)',[W,deal.id,{kind:'call',outcome:'connected'},id()])
+  await as(member,'select public.record_deal_activity($1,$2,$3,$4)',[W,deal.id,{kind:'note',details:'Internal note'},id()])
+  assert.equal(await count("select count(*) from leadflow_private.automation_events where entity_id=$1 and event_type in ('deal.proposal_sent','deal.reply_recorded')",[deal.id]),4)
+  for(const w of [replies,chase])await as(admin,"select public.automation_set_status($1,$2,'paused')",[W,w])
+  section('sales activity: a proposal marked sent and a reply recorded start workflows; a run waits for a reply on that deal and branches on it or on the timeout; calls and notes are neither')
+}
+
 console.log(`\nAutomation checks passed: ${results.length} sections.`)

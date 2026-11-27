@@ -3,7 +3,7 @@ import { Icon } from './Icon'
 import { Modal } from './Modal'
 import type { WorkspaceSummary } from '../lib/backend'
 import {
-  advanceNow, assigneeLabels, countConditions, exampleData, formatInputs, defaultInputs, describeGroup, dryRun, duplicateStep, emptyDefinition, emptyGroup, errorText, fieldsAt, findStep, humanize, isGroup, issuesFor,
+  advanceNow, assigneeLabels, countConditions, exampleData, formatInputs, withExamples, defaultInputs, describeGroup, dryRun, duplicateStep, emptyDefinition, emptyGroup, errorText, fieldsAt, findStep, humanize, isGroup, issuesFor,
   issueWebhookSecret, moveStep, newStep, revokeWebhook, operatorLabels, parentOf, publishWorkflow, recipientLabels, removeStep, replaceStep, restoreVersion, sampleFor, saveWorkflow, setWorkflowStatus,
   startLiveTest, statusLabels, stepSummary, updateList, validateDefinition, valueless, workflowDetail,
   type ActionDef, type ActionInput, type ActionStep, type BranchStep, type CenterData, type Condition, type Definition, type DryRun, type Due, type Field, type Group, type IssuedWebhook,
@@ -576,7 +576,7 @@ function TestDialog({ workspace, center, definition, workflowId, dirty, valid, m
     let active = true
     const triggerFields = center.catalog.triggers.find(t => t.type === type)?.fields ?? []
     sampleFor(workspace.id, type, type === 'webhook.received' ? workflowId : record || null).then(next => {
-      if (active) { setSample(next); setData(next.empty || !Object.keys(next.data).length ? { ...exampleData(triggerFields), ...next.data } : next.data) }
+      if (active) { setSample(next); setData(withExamples(exampleData(triggerFields), next.data)) }
     }).catch(cause => { if (active) setError(errorText(cause)) })
     return () => { active = false }
   }, [workspace.id, type, record, workflowId, center])

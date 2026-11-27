@@ -38,7 +38,7 @@ These findings come from the repository, not from the original milestone prompts
 Facts that limit the trigger list:
 - Leads have no owner or assignee, so "lead assigned" and "lead updated (any field)" are not offered.
 - Project health is computed, not stored, so "health changed" cannot be observed reliably.
-- LeadFlow has no inbox, so "reply received" is only the reply a person records on a deal.
+- LeadFlow has no inbox, so "reply received" is the reply a person records on a deal (added as `deal.reply_recorded` on 28 November).
 - Outreach drafts have no approval state. A person marking a draft *ready* is the closest event.
 
 ## 2. Implementation plan
@@ -142,7 +142,7 @@ The frontend never runs a workflow. It edits drafts, previews dry runs (computed
 
 Everything a workflow can use is declared in the database (`automation_catalog()`). The builder and the AI drafter read the same registry, and validation checks against it. There are no expressions and no code.
 
-### Triggers (44)
+### Triggers (46)
 
 Each trigger has:
 - a stable ID (`group.event`);
@@ -156,7 +156,7 @@ Every payload includes the workspace context (`workspace.name`, `run.date`), the
 |---|---|---|
 | Leads | `lead.created`, `lead.status_changed`, `analysis.completed`, `analysis.failed`, `task.created`, `task.completed`, `task.overdue` (scheduled check) | leads and tasks: statement triggers comparing each write with the last state seen; reports: `business_analyses` status |
 | Contacts & outreach | `contact.created`, `outreach.draft_created`, `outreach.marked_ready`, `outreach.marked_sent` | `lead_contacts`, `outreach_drafts` |
-| Sales | `deal.created`, `deal.stage_changed`, `deal.won`, `deal.lost`, `deal.meeting_scheduled`, `deal.close_approaching` (scheduled check) | `deal_stage_history`, `deal_meetings` |
+| Sales | `deal.created`, `deal.stage_changed`, `deal.won`, `deal.lost`, `deal.meeting_scheduled`, `deal.proposal_sent`, `deal.reply_recorded` (with sentiment and channel), `deal.close_approaching` (scheduled check) | `deal_stage_history`, `deal_meetings`, `deal_activities` (proposals and replies people record) |
 | Clients & onboarding | `client.created`, `client.invited`, `client.activated`, `onboarding.started`, `onboarding.item_submitted`, `scope.confirmed`, `onboarding.completed` | `clients`, `client_invitations`, `client_users`, `onboarding_requests`, `onboarding_items`, `client_scope_confirmations`, `client_onboarding_completions` |
 | Projects | `project.created`, `project.status_changed`, `project.overdue` (scheduled), `milestone.created`, `milestone.completed`, `milestone.due_soon` (scheduled), `milestone.overdue` (scheduled), `deliverable.created`, `deliverable.status_changed` | `projects`, `project_milestones`, `project_deliverables` |
 | Client collaboration | `deliverable.shared`, `review.requested` (resubmissions flagged), `feedback.submitted`, `deliverable.changes_requested`, `deliverable.approved`, `deliverable.rejected`, `comment.client_created`, `file.client_uploaded`, `update.published` | `project_deliverables`, `deliverable_reviews`, `deliverable_decisions`, `deliverable_feedback`, `project_comments`, `client_documents`, `project_updates` |
@@ -170,7 +170,6 @@ Payloads hold only what workflows need. They never carry email addresses, phone 
 - lead assigned: leads have no owner;
 - lead updated (any field);
 - project health changed: health is computed, never stored;
-- reply received: there is no inbox, only replies people record on a deal;
 - contact verification completed.
 
 ### Actions (16)
@@ -313,7 +312,7 @@ People can:
 ### Delays and waits
 
 - **Delays:** minutes, hours or days (up to 90 days), or until a date and time.
-- **Waits for an event:** a report completed, a task completed, a deal stage changed or won, a client submitting information, onboarding completed, a deliverable approved or changes requested, client feedback.
+- **Waits for an event:** a report completed, a task completed, a deal stage changed or won, a reply recorded on the deal, a client submitting information, onboarding completed, a deliverable approved or changes requested, client feedback.
   - Each wait matches the record the run names, for example `task:<id>`.
   - It has a timeout (1 hour to 30 days) that either continues (the step reports `received: false`) or stops.
   - A matching event wakes the run immediately.
@@ -433,12 +432,12 @@ To **create leads** from Zapier, Make or n8n, keep using `inbound-lead` (M3); th
 - `DISCOVERY_ALLOWED_ORIGINS` / `PORTAL_ALLOWED_ORIGINS` (browser origins for `automation`).
 
 Order:
-1. Apply `202611270002_automation.sql`, then `202611270003_automation_engine.sql` (`supabase db push`).
+1. Apply `202611270002_automation.sql`, `202611270003_automation_engine.sql` and `202611280001_automation_deal_activity.sql` (`supabase db push`).
 2. Deploy the Edge Functions `automation`, `automation-worker` and `automation-webhook` (`verify_jwt = false` is in `supabase/config.toml`; each checks its own callers).
 3. Schedule the worker: run the `leadflow-automation-worker` block of `supabase/ops/schedule-workers.sql` (every minute; uses the existing `leadflow_worker_secret` Vault secret). The analysis worker must also be scheduled for `analysis.start` and `contacts.discover` to progress, and the portal-notifications worker for automation emails.
 4. Deploy the frontend.
 
-Rollback: `supabase/rollbacks/202611270003_automation_engine.down.sql`, then `202611270002_automation.down.sql`. Then unschedule the job and remove the functions. Records workflows created stay.
+Rollback: `supabase/rollbacks/202611280001_automation_deal_activity.down.sql`, then `202611270003_automation_engine.down.sql`, then `202611270002_automation.down.sql`. Then unschedule the job and remove the functions. Records workflows created stay.
 
 ## 10. Manual verification (hosted)
 
@@ -462,17 +461,11 @@ Rollback: `supabase/rollbacks/202611270003_automation_engine.down.sql`, then `20
 ## 11. Known limitations
 
 - **Not yet verified on the hosted project:**
-  - a real workflow run (none has been created on the hosted project yet);
   - hosted Gemini answers for drafting;
-  - real email delivery of automation alerts;
   - a real webhook sender.
 
-  These ran against simulations locally. The hosted backend itself is deployed and checked ([section 13](#13-hosted-rollout-27-november-2026)).
-- On the hosted project, **the analysis worker and the portal email worker aren’t scheduled**. Until they are:
-  - reports started by `analysis.start` and searches started by `contacts.discover` only progress while someone has them open;
-  - automation emails stay queued.
-
-  In-app notifications work regardless.
+  These ran against simulations locally. A real run, with its task, notification and email, was checked live on 28 November ([section 13](#13-hosted-rollout-27-november-2026)). Email delivery means Resend accepted the email; arrival in the inbox wasn’t checked.
+- The analysis worker (every 2 minutes) and the portal email worker (every 5 minutes) were scheduled on the hosted project on 28 November. Reports and contact searches a workflow starts now finish on their own, and emails go out within about 5 minutes.
 - Runs start within about a minute (the worker's schedule), not instantly. **Run now** (live tests and retries) advances immediately.
 - Snapshot change detection for leads and tasks runs only while a workflow or waiting run listens. Changes made while nothing listened are not replayed when a workflow is activated.
 - When a workflow creates tasks, notes or status changes on leads and tasks, the workspace revision moves. An open browser tab then sees the existing "changed in another session" message and reloads before saving, as with intake, imports and AI plans.
@@ -484,7 +477,7 @@ Rollback: `supabase/rollbacks/202611270003_automation_engine.down.sql`, then `20
   - client invitations, client-visible updates and direct client notifications as actions;
   - onboarding summaries;
   - lead assignment;
-  - "lead updated", "health changed", "proposal sent" and "reply received" triggers;
+  - "lead updated", "lead assigned" and "health changed" triggers (they can’t be observed reliably);
   - per-workflow custom retry settings;
   - parallel branches (paths are alternatives);
   - editing the marketing website to describe automations (left for approval).
@@ -494,7 +487,7 @@ Rollback: `supabase/rollbacks/202611270003_automation_engine.down.sql`, then `20
 
 **Passed:**
 - `npx tsc -b`, `npm run lint` (oxlint, no warnings), `npm run check:edge` and `npm run build`.
-- The new `npm run test:automation`: 20 sections, against the real migrations in PGlite and the real `automation`, `automation-worker` and `automation-webhook` handlers. It covers:
+- The new `npm run test:automation`: 20 sections (21 with the 28 November addition), against the real migrations in PGlite and the real `automation`, `automation-worker` and `automation-webhook` handlers. It covers:
   - grants and private tables, and that no secrets are stored;
   - the registry and all 12 templates;
   - every condition operator, AND/OR groups, nesting limits, null and missing values, and paths outside the context;
@@ -577,8 +570,26 @@ Done at the owner's request, on project `fzgxpwmqzmvgmijviaar`.
    - `outreach` asks for sign-in (401).
 6. **Cron:** only the `leadflow-automation-worker` block of `supabase/ops/schedule-workers.sql` was run (every minute). Its first two runs succeeded, and the worker answered 200 both times (`{"tick":{"checked":0,"released":0,"scheduled":0},"outcomes":[]}`). This shows the Vault secret matches the function's secret and the engine runs as the service role.
 
-   The analysis worker and the portal email worker were left unscheduled, as they were: scheduling them is a separate decision, because the analysis worker uses provider credits.
+   The analysis worker and the portal email worker were scheduled on 28 November (see step 8).
 7. **Frontend:** at the owner's request, commit `4440abc` was fast-forwarded to `main` (no force). Vercel served the new build about a minute later.
    - `/`, `/app`, `/login`, `/features`, `/inquiry` and `/portal` answer 200.
    - The production bundle loads a separate Automation chunk that calls `automation_center_for` and `automation_dry_run`.
    - With the site's public key and no sign-in, the Data API refuses `automation_center_for`, `automation_workflows_for`, `automation_advance`, `automation_tick` and `automation_receive_webhook` (42501). This shows its schema includes the new functions and anonymous callers can run none of them.
+8. **Workers and a live check (28 November 2026, at the owner's request):**
+   1. A read-only check found nothing queued: no unsent emails and no unfinished analyses or contact searches. Scheduling the workers therefore sent no backlog.
+   2. Scheduled: `leadflow-analysis-worker` (every 2 minutes) and the new `leadflow-portal-notifications` (every 5 minutes, offset by 2). In their first hour, all five Cron jobs succeeded with no failures. The workers answered 200 (`{"steps":[]}`, `{"outcomes":[]}`).
+   3. In the Promptly workspace, as its owner and through the app's own functions:
+      - a temporary workflow was published: **Lead created** (filtered to "Automation check…") → create a task → notify the publisher, with email;
+      - a clearly named test lead was imported through `import_leads`.
+
+      Results:
+      - the import recorded one `lead.created` event and queued one run in the same transaction;
+      - the Cron worker completed it about 35 seconds later: the task was created, assigned and due today; the in-app notification was created;
+      - the email worker sent the email, and Resend accepted it on the first attempt;
+      - the step log held only the rendered title, record IDs and counts: no email address.
+   4. Afterwards, everything the check created was removed:
+      - the workflow (archived, then deleted through `automation_delete`), its runs, events and counters;
+      - the notification and its email record;
+      - the test lead with its task, history, provenance and import receipt.
+
+      Promptly is back to its 5 leads, and no automation records remain.

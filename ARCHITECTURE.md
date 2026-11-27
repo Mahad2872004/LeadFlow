@@ -207,7 +207,7 @@ M13 adds automations on top of every earlier module. It reuses each module's rol
 
 - **Workflows are data:**
   - a trigger, then condition, branch, delay, wait and action steps;
-  - checked against a registry kept in the database (`automation_catalog`): 44 triggers, 16 actions, typed fields and operators;
+  - checked against a registry kept in the database (`automation_catalog`): 46 triggers, 16 actions, typed fields and operators;
   - published as immutable, compiled versions.
 - **Events:**
   - Statement triggers on `leads` and `follow_up_tasks` compare each snapshot write with the last state seen. This state is kept only while something listens.
